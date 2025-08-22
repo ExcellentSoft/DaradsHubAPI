@@ -3,12 +3,47 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaradsHubAPI.Core", "DaradsHubAPI.Core\DaradsHubAPI.Core.csproj", "{04E23297-9C13-4DBD-92CB-20BA3730C696}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaradsHubAPI.Domain", "DaradsHubAPI.Domain\DaradsHubAPI.Domain.csproj", "{740D3514-8BB9-4A47-92BD-46E8124220DB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaradsHubAPI.Infrastructure", "DaradsHubAPI.Infrastructure\DaradsHubAPI.Infrastructure.csproj", "{D9EA740A-33C4-47B7-B3BD-412BD63682E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaradsHubAPI.Shared", "DaradsHubAPI.Shared\DaradsHubAPI.Shared.csproj", "{A8AC6927-813E-45D8-BE00-0639C8AFED19}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaradsHubAPI.WebAPI", "DaradsHubAPI.WebAPI\DaradsHubAPI.WebAPI.csproj", "{9C3A7EBA-C597-4D40-BB30-A8B17EDAAB4D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{04E23297-9C13-4DBD-92CB-20BA3730C696}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04E23297-9C13-4DBD-92CB-20BA3730C696}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04E23297-9C13-4DBD-92CB-20BA3730C696}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04E23297-9C13-4DBD-92CB-20BA3730C696}.Release|Any CPU.Build.0 = Release|Any CPU
+		{740D3514-8BB9-4A47-92BD-46E8124220DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{740D3514-8BB9-4A47-92BD-46E8124220DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{740D3514-8BB9-4A47-92BD-46E8124220DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{740D3514-8BB9-4A47-92BD-46E8124220DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9EA740A-33C4-47B7-B3BD-412BD63682E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9EA740A-33C4-47B7-B3BD-412BD63682E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9EA740A-33C4-47B7-B3BD-412BD63682E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9EA740A-33C4-47B7-B3BD-412BD63682E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8AC6927-813E-45D8-BE00-0639C8AFED19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8AC6927-813E-45D8-BE00-0639C8AFED19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8AC6927-813E-45D8-BE00-0639C8AFED19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8AC6927-813E-45D8-BE00-0639C8AFED19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C3A7EBA-C597-4D40-BB30-A8B17EDAAB4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C3A7EBA-C597-4D40-BB30-A8B17EDAAB4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C3A7EBA-C597-4D40-BB30-A8B17EDAAB4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C3A7EBA-C597-4D40-BB30-A8B17EDAAB4D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AB5B75D5-530E-42C1-A4B9-35FA932C51D4}
 	EndGlobalSection
 EndGlobal
