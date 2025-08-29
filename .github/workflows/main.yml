@@ -20,7 +20,7 @@ jobs:
           dotnet-version: '8.0.x'
           
       - name: Restore
-        run: dotnet restore  ./DaradsHubAPI
+        run: dotnet restore  ./DaradsHubAPI.sln
         
       - name: Build
         run: dotnet build  ./DaradsHubAPI --configuration Release --no-restore
