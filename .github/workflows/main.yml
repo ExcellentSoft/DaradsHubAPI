@@ -26,7 +26,7 @@ jobs:
         run: dotnet build  ./DaradsHubAPI.sln --configuration Release --no-restore
 
       - name: Publish
-        run:  dotnet publish ./DaradsHubAPI/DaradsHubAPI.WebAPI/DaradsHubAPI.WebAPI.csproj --configuration Release --no-restore 
+        run:  dotnet publish ./DaradsHubAPI.sln --configuration Release --no-restore 
         
       - name: Deployment
         uses: azure/webapps-deploy@v2
