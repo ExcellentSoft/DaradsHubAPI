@@ -15,7 +15,7 @@ using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
 
-namespace DaradsWebMobAPIs.WebAPI.Extensions;
+namespace DaradsHubAPI.WebAPI.Extensions;
 
 public static class CollectionServices
 {

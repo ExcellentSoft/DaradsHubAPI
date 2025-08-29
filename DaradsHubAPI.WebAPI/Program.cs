@@ -1,13 +1,26 @@
 using DaradsHubAPI.Core;
 using DaradsHubAPI.Infrastructure;
 using DaradsHubAPI.Shared;
-using DaradsWebMobAPIs.WebAPI.Extensions;
-using DaradsWebMobAPIs.WebAPI.Middleware;
+using DaradsHubAPI.WebAPI.Extensions;
+using DaradsHubAPI.WebAPI.Middleware;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddCors(options =>
+{
+
+    options.AddDefaultPolicy(
+
+           builder => builder.WithOrigins("http://localhost:3000")
+                 .AllowAnyHeader()
+                 .AllowAnyOrigin()
+                 .AllowAnyHeader()
+                 .AllowAnyMethod()
+                 );
+});
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("mycon")!));
 
@@ -18,6 +31,13 @@ SharedBootstrapper.InitServices(builder.Services);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddApiVersioning(Options =>
+{
+
+    Options.DefaultApiVersion = ApiVersion.Default;
+    Options.ReportApiVersions = true;
+
+});
 
 var app = builder.Build();
 
@@ -29,6 +49,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseMiddleware<ExceptionMiddleware>();
+app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
 app.UseAuthentication();
 app.UseStatusCodePages();
 app.UseAuthorization();

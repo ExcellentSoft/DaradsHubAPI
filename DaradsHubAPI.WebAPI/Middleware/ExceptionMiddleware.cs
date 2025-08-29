@@ -2,7 +2,7 @@
 using DaradsHubAPI.Domain.Entities;
 using System.Net;
 
-namespace DaradsWebMobAPIs.WebAPI.Middleware;
+namespace DaradsHubAPI.WebAPI.Middleware;
 
 public class ExceptionMiddleware(RequestDelegate _next)
 {
@@ -49,6 +49,6 @@ public class ExceptionMiddleware(RequestDelegate _next)
             status = HttpStatusCode.InternalServerError;
         }
         context.Response.StatusCode = (int)status;
-        await context.Response.WriteAsJsonAsync(new BaseResponse<List<string>>(false, error.Message, error.ErrorItems!.ToList()));
+        await context.Response.WriteAsJsonAsync(new ApiResponse<List<string>> { Status = false, Message = error.Message, Data = error.ErrorItems!.ToList() });
     }
 }
