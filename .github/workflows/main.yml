@@ -5,7 +5,7 @@ on:
       - master
 env:
   AZURE_WEBAPP_NAME: DaradsHub
-  AZURE_WEBAPP_PACKAGE_PATH: "/home/runner/work/DaradsHubAPI/DaradsHubAPI.WebAPI/bin/Release/net8.0/publish/"
+  AZURE_WEBAPP_PACKAGE_PATH: "/home/runner/work/DaradsHubAPI/DaradsHubAPI/DaradsHubAPI.WebAPI/bin/Release/net8.0/publish/"
 
 jobs:
   publish:
