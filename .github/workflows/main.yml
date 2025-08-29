@@ -23,7 +23,7 @@ jobs:
         run: dotnet restore  ./DaradsHubAPI.sln
         
       - name: Build
-        run: dotnet build  ./DaradsHubAPI --configuration Release --no-restore
+        run: dotnet build  ./DaradsHubAPI.sln --configuration Release --no-restore
 
       - name: Publish
         run:  dotnet publish ./DaradsHubAPI/DaradsHubAPI.WebAPI/DaradsHubAPI.WebAPI.csproj --configuration Release --no-restore 
