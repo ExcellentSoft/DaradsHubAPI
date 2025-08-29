@@ -14,6 +14,7 @@ public class User : IdentityUser
     public int Is_ApiClient_Customer { get; set; } = 0;
     public int? Is_ApiClient { get; set; } = 0;
     public string Customer_Api_ClientId { get; set; }
+    public string customerName { get; set; }
     //UserType=:R, D
     public string SignUpType { get; set; } = string.Empty;
     public int Gwallet { get; set; }
@@ -45,6 +46,9 @@ public sealed record CustomerLoginResponse
     public string Token { get; set; }
     public long Expires { get; set; }
     public DateTimeOffset ExpiresTime { get; set; }
+    public int? IsCustomer { get; set; }
+    public int? IsAgent { get; set; }
+    public int? IsAdmin { get; set; }
 }
 
 public sealed record VendorDetails

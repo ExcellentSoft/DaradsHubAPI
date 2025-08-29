@@ -361,4 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+<<<<<<< HEAD
+/DaradsHubAPI.WebAPI/appsettings.json
+=======
 
+>>>>>>> 296ed28affbfbb02273ff1217d0858c718a688a2
