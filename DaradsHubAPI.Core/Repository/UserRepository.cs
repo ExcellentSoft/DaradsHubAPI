@@ -9,15 +9,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using static DaradsHubAPI.Domain.Enums.Enum;
-using static System.Net.WebRequestMethods;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DaradsHubAPI.Core.Repository;
 public class UserRepository(AppDbContext _context, UserManager<User> _userManager, SignInManager<User> _signInManager, IServiceProvider _serviceProvider, IOptionsSnapshot<AppSettings> optionsSnapshot) : GenericRepository<userstb>(_context), IUserRepository
@@ -229,6 +226,227 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         };
 
         return new(true, "Registration was successful.", response);
+    }
+    public async Task<(bool status, string message, string? userId)> ForgetPassword(ForgetPasswordRequest request)
+    {
+        if (!request.Email.IsValidEmail())
+            return new(false, "Invalid email address.", null);
+
+        var user = await _userManager.Users.FirstOrDefaultAsync(e => e.Email == request.Email);
+        if (user == null)
+            return new(false, $"User record not found, check and try again later.", null);
+
+        var otp = CustomizeCodes.GenerateOTP(6);
+        await SendOTPCodeAsync(new SendOtpRequest
+        {
+            Code = otp,
+            UserId = user.Id,
+            UserEmail = user.Email,
+            Purpose = OtpVerificationPurposeEnum.ForgetPassword
+        });
+
+        var customer = await _context.userstb.FirstOrDefaultAsync(vd => vd.userid == user.Id);
+        var scope = _serviceProvider.GetRequiredService<IEmailService>();
+        string message = $"Hello {customer!.username}, kindly utilize the code {otp} to reset your password." +
+            "<br/><br/>If you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.";
+
+        scope.SendMail(user.Email!, "Forget password code Verification", message, "Darads");
+
+        return new(true, $"Success! Kindly check your email and use the provided code to finalize your reset password.", user.Id);
+    }
+    public async Task<(bool status, string message)> ResetPassword(ResetPasswordRequest request)
+    {
+        if (!request.NewPassword.Equals(request.ConfirmPassword))
+            return new(false, "Passwords do not match.");
+
+        if (string.IsNullOrEmpty(request.Code))
+            return new(false, "Code is required.");
+
+        var optValidationLog = await _context.OtpVerificationLogs.FirstOrDefaultAsync(g => g.Code == request.Code);
+
+        if (optValidationLog is null)
+            return new(false, "Reset password code does not exist, check and try again later.");
+
+        var validateCodeResponse = await ValidateOTPCodeAsync(new ValidateOtpRequest
+        {
+            Code = optValidationLog.Code,
+            UserId = optValidationLog.UserId,
+            Purpose = optValidationLog.Purpose
+        });
+
+        if (!validateCodeResponse.status)
+            return new(validateCodeResponse.status, validateCodeResponse.msg);
+
+        var user = await _userManager.FindByIdAsync(optValidationLog.UserId);
+        if (user is null)
+            return new(false, "Unable to find user. Please try again later.");
+
+        user.PasswordHash = new PasswordHasher<User>().HashPassword(user, request.NewPassword);
+        user.SecurityStamp = Guid.NewGuid().ToString();
+        var result = await _userManager.UpdateAsync(user);
+
+        if (result.Succeeded)
+            return new(true, "Password updated successfully.");
+        else
+        {
+            var errorMessage = result.Errors.Select(c => c.Description).FirstOrDefault();
+            return new(false, errorMessage ?? "");
+        }
+    }
+    public async Task<(bool status, string message)> ResendResetPasswordCode(string email)
+    {
+        var model = await (from customer in _context.userstb.Where(vc => vc.email == email)
+                           select new { customer }).FirstOrDefaultAsync();
+        if (model == null)
+            return new(false, "Customer record not found, check and try again later.");
+
+        var otp = CustomizeCodes.GenerateOTP(6);
+        await SendOTPCodeAsync(new SendOtpRequest
+        {
+            Code = otp,
+            UserId = model.customer.userid,
+            UserEmail = model.customer.email,
+            Purpose = OtpVerificationPurposeEnum.ForgetPassword
+        });
+
+        var scope = _serviceProvider.GetRequiredService<IEmailService>();
+        string message = $"Hello {model.customer.username}, kindly utilize the code {otp} to finalize your reset password." +
+            "<br/><br/>If you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.<br/><br/>";
+        scope.SendMail(model.customer.email, "Email Verification", message, $"Darads", useTemplate: true);
+
+        return new(true, "Success! Kindly check your email and use the provided code to finalize your reset password.");
+    }
+    public async Task<(bool status, string message, CustomerProfileResponse? res)> GetProfile(string email)
+    {
+        var customerUser = await _context.userstb.FirstOrDefaultAsync(us => us.email == email);
+        if (customerUser is null)
+            return new(false, "Customer record not found.", null);
+
+        var boldd = await _context.CustomerVirtualAccounts.Where(c => c.UserId == customerUser.id).FirstOrDefaultAsync();
+
+        decimal walletBalance = await _context.wallettb.Where(cw => cw.UserId == email).Select(bl => bl.Balance).FirstOrDefaultAsync() ?? 0m;
+
+        var virtualAccts = new List<VirtualAccountDetails>();
+        if (string.IsNullOrEmpty(customerUser.VpayAccountName) && boldd is null)
+        {
+            virtualAccts = [];
+        }
+        else
+        {
+            var vboldd = new VirtualAccountDetails();
+            var vpay = new VirtualAccountDetails();
+            if (boldd is not null)
+            {
+                vboldd = new VirtualAccountDetails
+                {
+                    AccountName = boldd.AcctountName,
+                    AccountNumber = boldd.AcctountNumber,
+                    BankName = boldd.BankName
+                };
+                virtualAccts.Add(vboldd);
+            }
+            if (!string.IsNullOrEmpty(customerUser.VpayAccountName))
+            {
+                vpay = new VirtualAccountDetails
+                {
+                    AccountName = customerUser.VpayAccountName,
+                    AccountNumber = customerUser.VpayAccountNumber,
+                    BankName = customerUser.VpayBankName
+                };
+                virtualAccts.Add(vpay);
+            }
+        }
+
+        var response = new CustomerProfileResponse
+        {
+            Email = email,
+            UserName = customerUser.username,
+            PhoneNumber = customerUser.phone,
+            Photo = customerUser.Photo,
+            VirtualAccountDetails = virtualAccts,
+            WalletBalance = walletBalance,
+            UserIdInt = customerUser.id,
+            UserId = customerUser.userid,
+            Address = _context.ShippingAddresses.Where(d => d.CustomerId == customerUser.id).Select(d => d.Address).FirstOrDefault()
+        };
+
+        return new(true, "Customer profile fetched successfully.", response);
+    }
+    public async Task<(bool status, string message)> UpdateProfile(CustomerProfileRequest request, string email, string imagePath)
+    {
+        var customerUser = await _context.userstb.Where(us => us.email == email).FirstOrDefaultAsync();
+        customerUser!.Photo = imagePath;
+
+        if (_context.userstb.Any(us => us.phone == request.PhoneNumber && us.email != email))
+        {
+            return new(false, $"Phone number  {request.PhoneNumber} already registered, check and try again later.");
+        }
+
+        var user = await _userManager.Users.FirstOrDefaultAsync(e => e.Email == email);
+        user!.PhoneNumber = request.PhoneNumber;
+        var result = await _userManager.UpdateAsync(user);
+
+        if (!result.Succeeded)
+        {
+
+            return new(false, result.Errors.Select(c => c.Description).FirstOrDefault() ?? "");
+        }
+
+        var iCustomerUser = await _context.userstb.Where(us => us.email == email).ExecuteUpdateAsync(setter => setter
+                           .SetProperty(s => s.phone, request.PhoneNumber)
+                           .SetProperty(s => s.fullname, request.FullName)
+                           .SetProperty(s => s.Photo, string.IsNullOrEmpty(imagePath) ? customerUser.Photo : imagePath)
+                           .SetProperty(s => s.ModifiedDate, DateTime.Now));
+        var address = await _context.ShippingAddresses.FirstOrDefaultAsync(d => d.CustomerId == customerUser.id);
+
+        if (address is null)
+        {
+            address = new ShippingAddress
+            {
+                Address = request.Address,
+                CustomerId = customerUser.id,
+                Email = customerUser.email,
+                City = string.Empty,
+                Country = string.Empty,
+                PhoneNumber = customerUser.phone,
+                State = string.Empty
+            };
+
+            _context.ShippingAddresses.Add(address);
+
+        }
+        else
+        {
+            address.Address = request.Address;
+        }
+
+        await _context.SaveChangesAsync();
+        return new(true, "Profile updated successfully.");
+
+    }
+    public async Task<(bool status, string message)> ChangePassword(ChangePasswordRequest request, string email)
+    {
+        var user = await _userManager.Users.FirstOrDefaultAsync(e => e.Email == email);
+        if (user is null)
+            return new(false, "Unable to find user. Please try again later.");
+
+        if (string.IsNullOrEmpty(request.CurrentPassword))
+            return new(false, "Please enter current password.");
+
+        if (request.NewPassword.ToLower() != request.ConfirmPassword.ToLower())
+            return new(false, "Password not the same as confirm password. Please try again later.");
+
+        user.PasswordHash = new PasswordHasher<User>().HashPassword(user, request.NewPassword);
+        user.SecurityStamp = Guid.NewGuid().ToString();
+        var result = await _userManager.UpdateAsync(user);
+
+        if (result.Succeeded)
+            return new(true, "Password updated successfully.");
+        else
+        {
+            var errorMessage = result.Errors.Select(c => c.Description).FirstOrDefault();
+            return new(false, errorMessage ?? "");
+        }
     }
 
 
