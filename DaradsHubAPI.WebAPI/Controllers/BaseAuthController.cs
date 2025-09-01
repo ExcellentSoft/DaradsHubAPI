@@ -36,4 +36,28 @@ public class BaseAuthController(IAuthService _authService) : ApiBaseController
         var response = await _authService.ResendEmailVerificationCode(userId);
         return ResponseCode(response);
     }
+
+    [HttpPost("forget-password")]
+    [ProducesResponseType(typeof(ApiResponse<string>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> ForgetPassword([FromBody] ForgetPasswordRequest request)
+    {
+        var response = await _authService.ForgetPassword(request);
+        return ResponseCode(response);
+    }
+
+    [HttpPost("reset-password")]
+    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        var response = await _authService.ResetPassword(request);
+        return ResponseCode(response);
+    }
+
+    [HttpPost("resend-forget-passwordCode/{email}")]
+    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> ResendResetPasswordCode([FromRoute] string email)
+    {
+        var response = await _authService.ResendResetPasswordCode(email);
+        return ResponseCode(response);
+    }
 }

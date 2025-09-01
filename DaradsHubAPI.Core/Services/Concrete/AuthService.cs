@@ -59,7 +59,6 @@ public class AuthService(IUnitOfWork _unitOfWork) : IAuthService
         }
         return new ApiResponse<CustomerLoginResponse> { Message = loginResponse.message, StatusCode = StatusEnum.Success, Status = true, Data = loginResponse.cresponse ?? new CustomerLoginResponse { } };
     }
-
     public async Task<ApiResponse> ResendEmailVerificationCode(string userId)
     {
         var resendResponse = await _unitOfWork.Users.ResendEmailVerificationCode(userId);
@@ -70,7 +69,6 @@ public class AuthService(IUnitOfWork _unitOfWork) : IAuthService
         }
         return new ApiResponse(resendResponse.message, StatusEnum.Success, resendResponse.status);
     }
-
     public async Task<ApiResponse<CustomerLoginResponse>> LoginUser(LoginRequest request)
     {
         var loginResponse = await _unitOfWork.Users.LoginUser(request);
@@ -80,6 +78,34 @@ public class AuthService(IUnitOfWork _unitOfWork) : IAuthService
             return new ApiResponse<CustomerLoginResponse> { Message = loginResponse.message, StatusCode = StatusEnum.Validation, Status = false };
         }
         return new ApiResponse<CustomerLoginResponse> { Message = loginResponse.message, StatusCode = StatusEnum.Success, Status = true, Data = loginResponse.cresponse ?? new CustomerLoginResponse { } };
+    }
+    public async Task<ApiResponse<string>> ForgetPassword(ForgetPasswordRequest request)
+    {
+        var forgetResponse = await _unitOfWork.Users.ForgetPassword(request);
+        if (!forgetResponse.status)
+        {
+
+            return new ApiResponse<string> { Status = forgetResponse.status, Message = forgetResponse.message, StatusCode = StatusEnum.Validation };
+        }
+        return new ApiResponse<string> { Status = forgetResponse.status, Message = forgetResponse.message, StatusCode = StatusEnum.Success, Data = forgetResponse.userId ?? "" };
+    }
+    public async Task<ApiResponse> ResetPassword(ResetPasswordRequest request)
+    {
+        var resetResponse = await _unitOfWork.Users.ResetPassword(request);
+        if (!resetResponse.status)
+        {
+            return new ApiResponse(resetResponse.message, StatusEnum.Validation, resetResponse.status);
+        }
+        return new ApiResponse(resetResponse.message, StatusEnum.Success, resetResponse.status);
+    }
+    public async Task<ApiResponse> ResendResetPasswordCode(string email)
+    {
+        var resetCodeResponse = await _unitOfWork.Users.ResendResetPasswordCode(email);
+        if (!resetCodeResponse.status)
+        {
+            return new ApiResponse(resetCodeResponse.message, StatusEnum.Validation, resetCodeResponse.status);
+        }
+        return new ApiResponse(resetCodeResponse.message, StatusEnum.Success, resetCodeResponse.status);
     }
 
     static ApiResponse ValidateCustomerRequest(CreateCustomerRequest request)

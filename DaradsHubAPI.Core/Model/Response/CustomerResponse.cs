@@ -66,6 +66,7 @@ public record CustomerProfileResponse
     public string UserId { get; set; } = default!;
     public int UserIdInt { get; set; }
     public decimal WalletBalance { get; set; }
+    public string? Address { get; set; }
     public IEnumerable<VirtualAccountDetails> VirtualAccountDetails { get; set; } = default!;
 }
 
@@ -76,10 +77,16 @@ public sealed record VirtualAccountDetails
     public string? AccountNumber { get; set; }
 }
 
-
 public record CustomerProfileRequest
 {
     public string PhoneNumber { get; set; } = default!;
-    public string UserName { get; set; } = default!;
+    public string FullName { get; set; } = default!;
+    public string Address { get; set; } = default!;
     public IFormFile? Photo { get; set; }
+}
+public record ChangePasswordRequest
+{
+    public string CurrentPassword { get; set; } = default!;
+    public string NewPassword { get; set; } = default!;
+    public string ConfirmPassword { get; set; } = default!;
 }
