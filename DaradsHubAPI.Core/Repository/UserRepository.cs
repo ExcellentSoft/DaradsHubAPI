@@ -96,7 +96,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         if (user.Is_customer.GetValueOrDefault() != 1 && user.Is_admin.GetValueOrDefault() != 1)
         {
             //is a agent
-            if (!customer!.IsAgent)
+            if (!customer!.IsAgent.GetValueOrDefault())
             {
                 return new(false, "Your onboarding registration is still pending. Kindly contact admin.", null);
             }

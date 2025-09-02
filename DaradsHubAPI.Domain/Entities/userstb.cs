@@ -49,7 +49,7 @@ public class userstb
     public string BusinessEmail { get; set; }
     public bool? IsVPayCreated { get; set; }
     public DateTime? VpayCreatedDate { get; set; }
-    public bool IsAgent { get; set; }
+    public bool? IsAgent { get; set; }
 }
 
 public class UserBankDetails
