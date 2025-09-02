@@ -50,6 +50,41 @@ public class AuthService(IUnitOfWork _unitOfWork) : IAuthService
         return new ApiResponse<string> { Status = createResponse.status, Message = createResponse.message, StatusCode = StatusEnum.Success, Data = createResponse.userId ?? "" };
     }
 
+    public async Task<ApiResponse<string>> CreateAgent(CreateAgentRequest request)
+    {
+        var validateResult = ValidateAgentRequest(request);
+        if (!validateResult.Status.GetValueOrDefault())
+            return new ApiResponse<string> { Status = validateResult.Status, Message = validateResult.Message, StatusCode = StatusEnum.Validation };
+
+        request.Email = request.Email.Trim().ToLower();
+
+        var customer = await _unitOfWork.Users.GetSingleWhereAsync(u => u.email == request.Email);
+
+        if (await _unitOfWork.Users.AnyAsync(us => us.email == request.Email && us.phone == request.PhoneNumber))
+        {
+            return new ApiResponse<string> { Status = false, Message = $"Agent with {request.FullName} already exists. Please verify and try again.", StatusCode = StatusEnum.Validation };
+        }
+
+        if (_unitOfWork.Users.Any(us => us.email == request.Email))
+        {
+            return new ApiResponse<string> { Status = false, Message = $"Email  address  {request.Email} already registered, check and try again later.", StatusCode = StatusEnum.Validation };
+        }
+
+        if (_unitOfWork.Users.Any(us => us.phone == request.PhoneNumber))
+        {
+
+            return new ApiResponse<string> { Status = false, Message = $"Phone number  {request.PhoneNumber} already registered, check and try again later.", StatusCode = StatusEnum.Validation };
+        }
+
+        var createResponse = await _unitOfWork.Users.CreateAgent(request);
+        if (!createResponse.status)
+        {
+            return new ApiResponse<string> { Status = createResponse.status, Message = createResponse.message, StatusCode = StatusEnum.Validation };
+        }
+
+        return new ApiResponse<string> { Status = createResponse.status, Message = createResponse.message, StatusCode = StatusEnum.Success, Data = createResponse.userId ?? "" };
+    }
+
     public async Task<ApiResponse<CustomerLoginResponse>> VerifyUserAccount(string code)
     {
         var loginResponse = await _unitOfWork.Users.VerifyUserAccount(code);
@@ -109,6 +144,25 @@ public class AuthService(IUnitOfWork _unitOfWork) : IAuthService
     }
 
     static ApiResponse ValidateCustomerRequest(CreateCustomerRequest request)
+    {
+        if (string.IsNullOrEmpty(request.FullName))
+            return new ApiResponse("First name is required.", StatusEnum.Validation, false);
+
+        else if (string.IsNullOrEmpty(request.Email))
+            return new ApiResponse("Email is required.", StatusEnum.Validation, false);
+
+        else if (!request.Email.IsValidEmail())
+            return new ApiResponse("Invalid email address.", StatusEnum.Validation, false);
+
+        else if (!request.PhoneNumber.IsValidPhoneNumber())
+            return new ApiResponse("Invalid phone number.", StatusEnum.Validation, false);
+
+        else if (!request.Password.Equals(request.ConfirmPassword))
+            return new ApiResponse("Passwords do not match.", StatusEnum.Validation, false);
+        else
+            return new ApiResponse("Validation passed.", StatusEnum.Success, true);
+    }
+    static ApiResponse ValidateAgentRequest(CreateAgentRequest request)
     {
         if (string.IsNullOrEmpty(request.FullName))
             return new ApiResponse("First name is required.", StatusEnum.Validation, false);

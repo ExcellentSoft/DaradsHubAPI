@@ -45,8 +45,11 @@ public class userstb
     public string VpayAccountId { get; set; }
     public string VpayAccountNumber { get; set; }
     public string VpayBankName { get; set; }
+    public string BusinessName { get; set; }
+    public string BusinessEmail { get; set; }
     public bool? IsVPayCreated { get; set; }
     public DateTime? VpayCreatedDate { get; set; }
+    public bool IsAgent { get; set; }
 }
 
 public class UserBankDetails
