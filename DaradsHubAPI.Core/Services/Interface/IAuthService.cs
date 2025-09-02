@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 namespace DaradsHubAPI.Core.Services.Interface;
 public interface IAuthService
 {
+    Task<ApiResponse<string>> CreateAgent(CreateAgentRequest request);
     Task<ApiResponse<string>> CreateCustomer(CreateCustomerRequest request);
     Task<ApiResponse<string>> ForgetPassword(ForgetPasswordRequest request);
     Task<ApiResponse<CustomerLoginResponse>> LoginUser(LoginRequest request);

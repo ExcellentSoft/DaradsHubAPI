@@ -91,6 +91,17 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
 
         if (user.Status == EntityStatusEnum.InActive || user.Status == EntityStatusEnum.Delete)
             return new(false, "Your has been deactivated. Kindly contact admin.", null);
+
+        var customer = await _context.userstb.AsNoTracking().Where(us => us.userid == user.Id).FirstOrDefaultAsync();
+        if (user.Is_customer.GetValueOrDefault() != 1 && user.Is_admin.GetValueOrDefault() != 1)
+        {
+            //is a agent
+            if (!customer!.IsAgent)
+            {
+                return new(false, "Your onboarding registration is still pending. Kindly contact admin.", null);
+            }
+        }
+
         try
         {
             var signInResult = await _signInManager.PasswordSignInAsync(user, request.Password, false, true);
@@ -119,7 +130,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
                 }
             }
 
-            var customer = await _context.userstb.AsNoTracking().Where(us => us.userid == user.Id).FirstOrDefaultAsync();
+
             user.LockoutEnabled = false;
             user.LockoutEnd = null;
             user.AccessFailedCount = 0;
@@ -138,7 +149,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
                 Email = user.Email,
                 Expires = expires.ToUnixTimeSeconds(),
                 ExpiresTime = expires,
-                Name = customer.username,
+                Name = customer.fullname,
                 Token = token,
                 Photo = "",
                 Is2FA = user.TwoFactorEnabled,
@@ -220,7 +231,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
             PhoneNumber = customer.phone,
             Expires = expires.ToUnixTimeSeconds(),
             ExpiresTime = expires,
-            Name = customer.username,
+            Name = customer.fullname,
             Token = token,
             Photo = string.Empty
         };
@@ -372,6 +383,70 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
 
         return new(true, "Customer profile fetched successfully.", response);
     }
+    public async Task<(bool status, string message, AgentProfileResponse? res)> GetAgentProfile(string email)
+    {
+        var customerUser = await _context.userstb.FirstOrDefaultAsync(us => us.email == email);
+        if (customerUser is null)
+            return new(false, "Agent record not found.", null);
+
+        var boldd = await _context.CustomerVirtualAccounts.Where(c => c.UserId == customerUser.id).FirstOrDefaultAsync();
+
+        decimal walletBalance = await _context.wallettb.Where(cw => cw.UserId == email).Select(bl => bl.Balance).FirstOrDefaultAsync() ?? 0m;
+
+        var virtualAccts = new List<VirtualAccountDetails>();
+        if (string.IsNullOrEmpty(customerUser.VpayAccountName) && boldd is null)
+        {
+            virtualAccts = [];
+        }
+        else
+        {
+            var vboldd = new VirtualAccountDetails();
+            var vpay = new VirtualAccountDetails();
+            if (boldd is not null)
+            {
+                vboldd = new VirtualAccountDetails
+                {
+                    AccountName = boldd.AcctountName,
+                    AccountNumber = boldd.AcctountNumber,
+                    BankName = boldd.BankName
+                };
+                virtualAccts.Add(vboldd);
+            }
+            if (!string.IsNullOrEmpty(customerUser.VpayAccountName))
+            {
+                vpay = new VirtualAccountDetails
+                {
+                    AccountName = customerUser.VpayAccountName,
+                    AccountNumber = customerUser.VpayAccountNumber,
+                    BankName = customerUser.VpayBankName
+                };
+                virtualAccts.Add(vpay);
+            }
+        }
+
+        var response = new AgentProfileResponse
+        {
+            Email = email,
+            UserName = customerUser.username,
+            PhoneNumber = customerUser.phone,
+            Photo = customerUser.Photo,
+            BusinessEmail = customerUser.BusinessEmail,
+            BusinessName = customerUser.BusinessName,
+            VirtualAccountDetails = virtualAccts,
+            WalletBalance = walletBalance,
+            UserIdInt = customerUser.id,
+            UserId = customerUser.userid,
+            Address = _context.ShippingAddresses.Where(d => d.CustomerId == customerUser.id).Select(d => new AgentAddress
+            {
+                Address = d.Address,
+                Country = d.Country,
+                State = d.State,
+                City = d.City,
+            }).FirstOrDefault()
+        };
+
+        return new(true, "Agent profile fetched successfully.", response);
+    }
     public async Task<(bool status, string message)> UpdateProfile(CustomerProfileRequest request, string email, string imagePath)
     {
         var customerUser = await _context.userstb.Where(us => us.email == email).FirstOrDefaultAsync();
@@ -448,7 +523,106 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
             return new(false, errorMessage ?? "");
         }
     }
+    public async Task<(bool status, string message, string? userId)> CreateAgent(CreateAgentRequest request)
+    {
+        try
+        {
+            var uCustomer = request.ToUser();
+            var createUser = await _userManager.CreateAsync(uCustomer, request.Password);
+            if (!createUser.Succeeded)
+            {
+                var errors = createUser.Errors.Select(x => x.Description);
+                return new(false, $"Unable to register at this time. {string.Join(" ", errors)}", null);
+            }
 
+            var customer = request.ToAgent(uCustomer.Id);
+            await _context.userstb.AddAsync(customer);
+
+            var walletCode = $"Wal-{CustomizeCodes.GetCode()}";
+            var customerWallet = request.ToCustomerWallet(walletCode);
+            await _context.wallettb.AddAsync(customerWallet);
+
+            await _context.SaveChangesAsync();
+
+
+            var otp = CustomizeCodes.GenerateOTP(6);
+            await SendOTPCodeAsync(new SendOtpRequest
+            {
+                Code = otp,
+                FirstName = request.FullName,
+                UserId = uCustomer.Id,
+                SenderName = "Darads",
+                SendingMode = "Email",
+                UserEmail = uCustomer.Email,
+                Purpose = OtpVerificationPurposeEnum.EmailVerification
+            });
+
+            var scope = _serviceProvider.GetRequiredService<IEmailService>();
+            string message = $"Hello {request.FullName}, kindly utilize the code {otp} to finalize the registration process. We're excited to welcome you onboard!<br/><br/>";
+            scope.SendMail(request.Email, "Email Verification", message, "Darads", useTemplate: true);
+
+            return new(true, message = $"Success! Kindly check your email and use the provided code to finalize your registration.", uCustomer.Id);
+        }
+        catch (Exception)
+        {
+            return new(false, "Unable to register, please try again later.", null);
+        }
+    }
+
+    public async Task<(bool status, string message)> UpdateAgentProfile(AgentProfileRequest request, string email, string imagePath)
+    {
+        var agentUser = await _context.userstb.Where(us => us.email == email).FirstOrDefaultAsync();
+        agentUser!.Photo = imagePath;
+
+        if (_context.userstb.Any(us => us.phone == request.PhoneNumber && us.email != email))
+        {
+            return new(false, $"Phone number  {request.PhoneNumber} already registered, check and try again later.");
+        }
+
+        var user = await _userManager.Users.FirstOrDefaultAsync(e => e.Email == email);
+        user!.PhoneNumber = request.PhoneNumber;
+        var result = await _userManager.UpdateAsync(user);
+
+        if (!result.Succeeded)
+        {
+
+            return new(false, result.Errors.Select(c => c.Description).FirstOrDefault() ?? "");
+        }
+
+        var iAgentUser = await _context.userstb.Where(us => us.email == email).ExecuteUpdateAsync(setter => setter
+                           .SetProperty(s => s.phone, request.PhoneNumber)
+                           .SetProperty(s => s.fullname, request.FullName)
+                           .SetProperty(s => s.BusinessName, request.BusinessName)
+                           .SetProperty(s => s.BusinessEmail, request.BusinessEmail)
+                           .SetProperty(s => s.Photo, string.IsNullOrEmpty(imagePath) ? agentUser.Photo : imagePath)
+                           .SetProperty(s => s.ModifiedDate, DateTime.Now));
+        var address = await _context.ShippingAddresses.FirstOrDefaultAsync(d => d.CustomerId == agentUser.id);
+
+        if (address is null)
+        {
+            address = new ShippingAddress
+            {
+                Address = request.Address,
+                CustomerId = agentUser.id,
+                Email = agentUser.email,
+                City = request.City,
+                Country = string.Empty,
+                PhoneNumber = agentUser.phone,
+                State = request.State
+            };
+
+            _context.ShippingAddresses.Add(address);
+
+        }
+        else
+        {
+            address.Address = request.Address;
+        }
+
+        await _context.SaveChangesAsync();
+        return new(true, "Profile updated successfully.");
+
+    }
 
     public async Task<MessageAudiences> GetAudiences(string audienceType)
     {
