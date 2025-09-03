@@ -6,7 +6,6 @@ namespace DaradsHubAPI.Core.Model.Request
     {
         public string Name { get; set; } = default!;
         public string? Description { get; set; }
-        public int VendorId { get; set; }
         public IFormFile? Icon { get; set; }
     }
 

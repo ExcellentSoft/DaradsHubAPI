@@ -8,4 +8,6 @@ namespace DaradsHubAPI.Core.IRepository;
 public interface IUnitOfWork
 {
     IUserRepository Users { get; }
+    ICategoryRepository Categories { get; }
+    IProductRepository Products { get; }
 }
