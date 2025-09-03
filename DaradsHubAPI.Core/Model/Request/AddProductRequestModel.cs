@@ -46,3 +46,20 @@ public class UpdateAgentHubProductRequest : AddAgentHubProductRequest
 {
     public long Id { get; set; }
 }
+
+public class AddDigitalHubProductRequest
+{
+    public string Title { get; set; } = default!;
+    public long CatalogueId { get; set; }
+    public decimal Price { get; set; }
+    public decimal DiscountPrice { get; set; }
+    public string? Description { get; set; }
+    public IEnumerable<IFormFile> Images { get; set; } = default!;
+}
+
+public class UpdateDigitalHubProductRequest : AddDigitalHubProductRequest
+{
+    public long Id { get; set; }
+}
+
+

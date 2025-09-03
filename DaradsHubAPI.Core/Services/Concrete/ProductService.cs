@@ -137,18 +137,20 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         return new(true, "Product image saved successfully.", photoPath);
     }
 
-    public async Task<ApiResponse> AddReview(AddReviewRequestModel model)
+    public async Task<ApiResponse> AddReview(AddReviewRequestModel model, int userId, bool isDigital)
     {
         var product = await _unitOfWork.Products.GetSingleWhereAsync(x => x.Id == model.productId);
         if (product == null)
             return new ApiResponse($"Product record not found", StatusEnum.NoRecordFound, false);
 
-        var review = new Review
+        var review = new HubReview
         {
             Content = model.Content,
             Rating = model.Rating,
             ReviewDate = DateTime.Now,
-            ProductId = product.Id
+            ProductId = product.Id,
+            ReviewById = userId,
+            IsDigital = isDigital
         };
 
         await _unitOfWork.Products.AddReview(review);
@@ -157,11 +159,11 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         return new ApiResponse("Review added to product", StatusEnum.Success, true);
     }
 
-    public async Task<ApiResponse<IEnumerable<LandingProductProductResponse>>> GetLandPageProducts()
+    public async Task<ApiResponse<IEnumerable<LandingProductResponse>>> GetLandPageProducts()
     {
         var responses = await _unitOfWork.Products.GetLandPageProducts().Take(30).ToListAsync();
 
-        return new ApiResponse<IEnumerable<LandingProductProductResponse>> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
+        return new ApiResponse<IEnumerable<LandingProductResponse>> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
     }
 
     public async Task<ApiResponse<AgentProductProfileResponse>> GetAgentProductProfile(int agentId)
@@ -170,7 +172,6 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
 
         return new ApiResponse<AgentProductProfileResponse> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
     }
-
     public async Task<ApiResponse<IEnumerable<ProductDetailsResponse>>> GetAgentProducts(AgentProductListRequest request)
     {
         var query = _unitOfWork.Products.GetAgentProducts(request.CategoryId, request.AgentId);

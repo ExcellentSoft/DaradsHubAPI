@@ -8,5 +8,14 @@ public class ProductImages
     public int Id { get; set; }
     public long ProductId { get; set; }
     public string ImageUrl { get; set; } = default!;
-    public bool Status { get; set; } = true;   
+    public bool Status { get; set; } = true;
+}
+
+public class DigitalProductImages
+{
+    [Key]
+    public long Id { get; set; }
+    public long ProductId { get; set; }
+    public string ImageUrl { get; set; } = default!;
+    public bool Status { get; set; } = true;
 }
