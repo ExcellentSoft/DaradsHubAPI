@@ -11,11 +11,11 @@ namespace DaradsHubAPI.Core.Services.Interface;
 public interface IProductService
 {
     Task<ApiResponse> AddProduct(AddAgentHubProductRequest model, string email);
-    Task<ApiResponse> AddReview(AddReviewRequestModel model);
     Task<ApiResponse<ProductDetailResponse>> GetAgentProduct(int productId);
     Task<ApiResponse<AgentProductProfileResponse>> GetAgentProductProfile(int agentId);
     Task<ApiResponse<IEnumerable<ProductDetailsResponse>>> GetAgentProducts(AgentProductListRequest request);
     Task<ApiResponse<IEnumerable<IdNameRecord>>> GetHubProducts(string? searchText);
-    Task<ApiResponse<IEnumerable<LandingProductProductResponse>>> GetLandPageProducts();
+    Task<ApiResponse<IEnumerable<LandingProductResponse>>> GetLandPageProducts();
     Task<ApiResponse> UpdateProduct(UpdateAgentHubProductRequest model, string email);
+    Task<ApiResponse> AddReview(AddReviewRequestModel model, int userId, bool isDigital);
 }

@@ -2,6 +2,7 @@
 using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Interface;
+using DaradsHubAPI.WebAPI.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -11,7 +12,7 @@ namespace DaradsHubAPI.WebAPI.Areas.Customer.Controllers;
 public class ProductController(IProductService _productService) : ApiBaseController
 {
     [HttpGet("landing-page-products")]
-    [ProducesResponseType(typeof(ApiResponse<IEnumerable<LandingProductProductResponse>>), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<LandingProductResponse>>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetLandPageProducts()
     {
         var response = await _productService.GetLandPageProducts();
@@ -22,11 +23,12 @@ public class ProductController(IProductService _productService) : ApiBaseControl
     /// </summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    [HttpPost("add-review-to-product")]
+    [HttpPost("review-physical-product")]
     [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> AddReview(AddReviewRequestModel model)
     {
-        var response = await _productService.AddReview(model);
+        var userId = int.Parse(User.Identity?.GetUserId() ?? "");
+        var response = await _productService.AddReview(model, userId, false);
         return ResponseCode(response);
     }
 

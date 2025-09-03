@@ -11,6 +11,17 @@
         public int MaxRating { get; set; }
         public int ReviewCount { get; set; }
     }
+    public class DigitalProductDetailsResponse
+    {
+        public long ProductId { get; set; }
+        public string? Name { get; set; }
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+        public decimal Price { get; set; }
+        public string? ImageUrl { get; set; }
+        public int MaxRating { get; set; }
+        public int ReviewCount { get; set; }
+    }
     public class ProductDetailResponse
     {
         public long ProductId { get; set; }
@@ -24,12 +35,32 @@
         public int ReviewCount { get; set; }
     }
 
-    public class LandingProductProductResponse
+    public class DigitalProductDetailResponse
+    {
+        public long ProductId { get; set; }
+        public string? Name { get; set; }
+        public string? AgentName { get; set; }
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+        public decimal Price { get; set; }
+        public List<string> ImageUrl { get; set; } = default!;
+        public int MaxRating { get; set; }
+        public int ReviewCount { get; set; }
+    }
+
+    public class LandingProductResponse
     {
         public long Id { get; set; }
         public long AgentId { get; set; }
         public string? Description { get; set; }
         public string? Caption { get; set; }
+        public string? ImageUrl { get; set; }
+    }
+    public class LandingPageDigitalProductResponse
+    {
+        public long Id { get; set; }
+        public long AgentId { get; set; }
+        public string? Description { get; set; }
         public string? ImageUrl { get; set; }
     }
 
@@ -47,5 +78,6 @@
         public int ReviewCount { get; set; }
         public bool IsVerify { get; set; }
         public bool IsOnline { get; set; }
+        public string? Photo { get; set; }
     }
 }

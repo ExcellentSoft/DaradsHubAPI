@@ -49,6 +49,6 @@ public class ExceptionMiddleware(RequestDelegate _next)
             status = HttpStatusCode.InternalServerError;
         }
         context.Response.StatusCode = (int)status;
-        await context.Response.WriteAsJsonAsync(new ApiResponse<List<string>> { Status = false, Message = error.Message, Data = error.ErrorItems!.ToList() });
+        await context.Response.WriteAsJsonAsync(new ApiResponse<List<string>> { Status = false, Message = error.Detail, Data = error.ErrorItems is not null ? error.ErrorItems.ToList() : [] });
     }
 }

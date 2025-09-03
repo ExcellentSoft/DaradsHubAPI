@@ -1,41 +1,35 @@
 ﻿using DaradsHubAPI.Core.IRepository;
-using DaradsHubAPI.Core.Model;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
-using Newtonsoft.Json;
-using System.Threading.Tasks;
 
 namespace DaradsHubAPI.Core.Repository;
 public class ProductRepository(AppDbContext _context) : GenericRepository<HubAgentProduct>(_context), IProductRepository
 {
+    #region Physical Product    
     public IQueryable<HubProduct> GetHubProducts(string? searchText)
     {
         searchText = searchText?.Trim().ToLower();
         var hubProducts = _context.HubProducts.Where(s => searchText == null || s.Name.ToLower().Contains(searchText));
         return hubProducts;
     }
-
     public async Task AddHubProductImages(ProductImages productImages)
     {
         _context.ProductImages.Add(productImages);
         await Task.CompletedTask;
     }
-
-    public async Task AddReview(Review review)
+    public async Task AddReview(HubReview review)
     {
-        _context.Reviews.Add(review);
+        _context.HubReviews.Add(review);
         await Task.CompletedTask;
     }
-
-    public IQueryable<LandingProductProductResponse> GetLandPageProducts()
+    public IQueryable<LandingProductResponse> GetLandPageProducts()
     {
         var query = (from ph in _context.HubAgentProducts
                      join img in _context.ProductImages on ph.Id equals img.ProductId
                      orderby ph.DateCreated descending
-                     select new { ph, img }).GroupBy(d => d.img.ProductId).Select(f => new LandingProductProductResponse
+                     select new { ph, img }).GroupBy(d => d.img.ProductId).Select(f => new LandingProductResponse
                      {
                          Id = f.Key,
                          Caption = f.Select(e => e.ph.Caption).FirstOrDefault(),
@@ -45,7 +39,6 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                      });
         return query;
     }
-
     public async Task<AgentProductProfileResponse> GetAgentProductProfile(int agentId)
     {
 
@@ -58,14 +51,20 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
             response.IsOnline = true;
             response.IsVerify = true;
             response.AgentId = user.id;
+            response.Photo = user.Photo;
 
             var query = from hp in _context.HubAgentProducts.Where(s => s.AgentId == agentId)
-                        join r in _context.Reviews on hp.Id equals r.ProductId
                         join p in _context.HubProducts on hp.ProductId equals p.Id
-                        select new { hp, r, p };
+                        select new { hp, p };
+
+            var rQuery = from hp in _context.HubDigitalProducts.Where(s => s.AgentId == agentId)
+                         join r in _context.HubReviews on hp.Id equals r.ProductId
+                         where r.IsDigital == false
+                         select new { r };
+
             response.SellingProducts = await query.Select(d => d.p.Name).Distinct().Take(10).ToListAsync();
-            response.ReviewCount = query.Select(r => r.r.ProductId).Count();
-            response.MaxRating = query.Sum(r => r.r.Rating) / 100;
+            response.ReviewCount = rQuery.Select(r => r.r.ProductId).Count();
+            response.MaxRating = rQuery.Sum(r => r.r.Rating) / 100;
 
             var address = await _context.ShippingAddresses.Where(r => r.CustomerId == agentId).FirstOrDefaultAsync();
             if (address is not null)
@@ -89,11 +88,10 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
     {
         var query = (from ph in _context.HubAgentProducts.Where(d => d.AgentId == agentId)
                      join img in _context.ProductImages on ph.Id equals img.ProductId
-                     join r in _context.Reviews on ph.Id equals r.ProductId
                      join p in _context.HubProducts on ph.ProductId equals p.Id
                      where ph.CategoryId == categoryId || categoryId == 0
                      orderby ph.DateCreated descending
-                     select new { ph, img, r, p }).GroupBy(d => d.img.ProductId).Select(f => new ProductDetailsResponse
+                     select new { ph, img, p }).GroupBy(d => d.img.ProductId).Select(f => new ProductDetailsResponse
                      {
                          ProductId = f.Key,
                          Caption = f.Select(e => e.ph.Caption).FirstOrDefault(),
@@ -101,8 +99,8 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                          Price = f.Select(e => e.ph.Price).FirstOrDefault(),
                          Description = f.Select(e => e.ph.Description).FirstOrDefault(),
                          ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault(),
-                         ReviewCount = f.Select(r => r.r.ProductId).Count(),
-                         MaxRating = f.Sum(r => r.r.Rating) / 100
+                         ReviewCount = _context.HubReviews.Where(d => d.IsDigital == false && d.ProductId == f.Key).Count(),
+                         MaxRating = _context.HubReviews.Where(d => d.IsDigital == false && d.ProductId == f.Key).Sum(d => d.Rating) / 100
                      });
         return query;
     }
@@ -111,9 +109,8 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         var query = await (from ph in _context.HubAgentProducts.Where(d => d.Id == productId)
                            join user in _context.userstb on ph.AgentId equals user.id
                            join img in _context.ProductImages on ph.Id equals img.ProductId
-                           join r in _context.Reviews on ph.Id equals r.ProductId
                            join p in _context.HubProducts on ph.ProductId equals p.Id
-                           select new { ph, img, r, p, user }).GroupBy(d => d.img.ProductId).Select(f => new ProductDetailResponse
+                           select new { ph, img, p, user }).GroupBy(d => d.img.ProductId).Select(f => new ProductDetailResponse
                            {
                                ProductId = f.Key,
                                Caption = f.Select(e => e.ph.Caption).FirstOrDefault(),
@@ -122,10 +119,10 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                                Price = f.Select(e => e.ph.Price).FirstOrDefault(),
                                Description = f.Select(e => e.ph.Description).FirstOrDefault(),
                                ImageUrl = f.Select(e => e.img.ImageUrl).ToList(),
-                               ReviewCount = f.Select(r => r.r.ProductId).Count(),
-                               MaxRating = f.Sum(r => r.r.Rating) / 100
+                               ReviewCount = _context.HubReviews.Where(d => d.IsDigital == false && d.ProductId == f.Key).Count(),
+                               MaxRating = _context.HubReviews.Where(d => d.IsDigital == false && d.ProductId == f.Key).Sum(d => d.Rating) / 100
                            }).FirstOrDefaultAsync();
         return query ?? new ProductDetailResponse { };
     }
-
+    #endregion
 }

@@ -10,6 +10,7 @@ public class UnitOfWork(AppDbContext _context, UserManager<User> _userManager, S
     public IUserRepository Users => new UserRepository(_context, _userManager, _signInManager, _serviceProvider, _optionsSnapshot);
     public ICategoryRepository Categories => new CategoryRepository(_context);
     public IProductRepository Products => new ProductRepository(_context);
+    public IDigitalProductRepository DigitalProducts => new DigitalProductRepository(_context);
 
     public void Dispose()
     {
