@@ -25,3 +25,24 @@ public record AddProductImageRequest
     public long ProductId { get; set; }
     public IFormFile Image { get; set; } = default!;
 }
+
+public class AddAgentHubProductRequest
+{
+    public string? Caption { get; set; }
+    public int ProductId { get; set; }
+    public int CategoryId { get; set; }
+    public long SubCategoryId { get; set; }
+    public string? Description { get; set; }
+    public string? SKU { get; set; }
+    public decimal Price { get; set; }
+    public decimal DeliveryPrice { get; set; }
+    public decimal DiscountPrice { get; set; }
+    public bool IsFreeShipping { get; set; }
+    public string? EstimateDeliveryTime { get; set; }
+    public IEnumerable<IFormFile> Images { get; set; } = default!;
+}
+
+public class UpdateAgentHubProductRequest : AddAgentHubProductRequest
+{
+    public long Id { get; set; }
+}

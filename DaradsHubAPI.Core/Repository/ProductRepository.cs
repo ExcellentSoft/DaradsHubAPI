@@ -1,0 +1,131 @@
+﻿using DaradsHubAPI.Core.IRepository;
+using DaradsHubAPI.Core.Model;
+using DaradsHubAPI.Core.Model.Response;
+using DaradsHubAPI.Domain.Entities;
+using DaradsHubAPI.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
+using Newtonsoft.Json;
+using System.Threading.Tasks;
+
+namespace DaradsHubAPI.Core.Repository;
+public class ProductRepository(AppDbContext _context) : GenericRepository<HubAgentProduct>(_context), IProductRepository
+{
+    public IQueryable<HubProduct> GetHubProducts(string? searchText)
+    {
+        searchText = searchText?.Trim().ToLower();
+        var hubProducts = _context.HubProducts.Where(s => searchText == null || s.Name.ToLower().Contains(searchText));
+        return hubProducts;
+    }
+
+    public async Task AddHubProductImages(ProductImages productImages)
+    {
+        _context.ProductImages.Add(productImages);
+        await Task.CompletedTask;
+    }
+
+    public async Task AddReview(Review review)
+    {
+        _context.Reviews.Add(review);
+        await Task.CompletedTask;
+    }
+
+    public IQueryable<LandingProductProductResponse> GetLandPageProducts()
+    {
+        var query = (from ph in _context.HubAgentProducts
+                     join img in _context.ProductImages on ph.Id equals img.ProductId
+                     orderby ph.DateCreated descending
+                     select new { ph, img }).GroupBy(d => d.img.ProductId).Select(f => new LandingProductProductResponse
+                     {
+                         Id = f.Key,
+                         Caption = f.Select(e => e.ph.Caption).FirstOrDefault(),
+                         AgentId = f.Select(e => e.ph.AgentId).FirstOrDefault(),
+                         Description = f.Select(e => e.ph.Description).FirstOrDefault(),
+                         ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault()
+                     });
+        return query;
+    }
+
+    public async Task<AgentProductProfileResponse> GetAgentProductProfile(int agentId)
+    {
+
+        var response = new AgentProductProfileResponse();
+        var user = await _context.userstb.FirstOrDefaultAsync(d => d.id == agentId && d.IsAgent == true);
+        if (user != null)
+        {
+            response.BusinessName = user.BusinessName;
+            response.FullName = user.fullname;
+            response.IsOnline = true;
+            response.IsVerify = true;
+            response.AgentId = user.id;
+
+            var query = from hp in _context.HubAgentProducts.Where(s => s.AgentId == agentId)
+                        join r in _context.Reviews on hp.Id equals r.ProductId
+                        join p in _context.HubProducts on hp.ProductId equals p.Id
+                        select new { hp, r, p };
+            response.SellingProducts = await query.Select(d => d.p.Name).Distinct().Take(10).ToListAsync();
+            response.ReviewCount = query.Select(r => r.r.ProductId).Count();
+            response.MaxRating = query.Sum(r => r.r.Rating) / 100;
+
+            var address = await _context.ShippingAddresses.Where(r => r.CustomerId == agentId).FirstOrDefaultAsync();
+            if (address is not null)
+            {
+                response.State = address.State;
+                response.City = address.City;
+                response.Address = address.Address;
+            }
+            var profile = await _context.HubAgentProfiles.Where(r => r.UserId == agentId).FirstOrDefaultAsync();
+            if (profile is not null)
+            {
+                response.Experience = profile.Experience;
+            }
+
+            return response;
+        }
+        return response;
+    }
+
+    public IQueryable<ProductDetailsResponse> GetAgentProducts(int categoryId, int agentId)
+    {
+        var query = (from ph in _context.HubAgentProducts.Where(d => d.AgentId == agentId)
+                     join img in _context.ProductImages on ph.Id equals img.ProductId
+                     join r in _context.Reviews on ph.Id equals r.ProductId
+                     join p in _context.HubProducts on ph.ProductId equals p.Id
+                     where ph.CategoryId == categoryId || categoryId == 0
+                     orderby ph.DateCreated descending
+                     select new { ph, img, r, p }).GroupBy(d => d.img.ProductId).Select(f => new ProductDetailsResponse
+                     {
+                         ProductId = f.Key,
+                         Caption = f.Select(e => e.ph.Caption).FirstOrDefault(),
+                         Name = f.Select(e => e.p.Name).FirstOrDefault(),
+                         Price = f.Select(e => e.ph.Price).FirstOrDefault(),
+                         Description = f.Select(e => e.ph.Description).FirstOrDefault(),
+                         ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault(),
+                         ReviewCount = f.Select(r => r.r.ProductId).Count(),
+                         MaxRating = f.Sum(r => r.r.Rating) / 100
+                     });
+        return query;
+    }
+    public async Task<ProductDetailResponse> GetAgentProduct(long productId)
+    {
+        var query = await (from ph in _context.HubAgentProducts.Where(d => d.Id == productId)
+                           join user in _context.userstb on ph.AgentId equals user.id
+                           join img in _context.ProductImages on ph.Id equals img.ProductId
+                           join r in _context.Reviews on ph.Id equals r.ProductId
+                           join p in _context.HubProducts on ph.ProductId equals p.Id
+                           select new { ph, img, r, p, user }).GroupBy(d => d.img.ProductId).Select(f => new ProductDetailResponse
+                           {
+                               ProductId = f.Key,
+                               Caption = f.Select(e => e.ph.Caption).FirstOrDefault(),
+                               Name = f.Select(e => e.p.Name).FirstOrDefault(),
+                               AgentName = f.Select(e => e.user.BusinessName).FirstOrDefault(),
+                               Price = f.Select(e => e.ph.Price).FirstOrDefault(),
+                               Description = f.Select(e => e.ph.Description).FirstOrDefault(),
+                               ImageUrl = f.Select(e => e.img.ImageUrl).ToList(),
+                               ReviewCount = f.Select(r => r.r.ProductId).Count(),
+                               MaxRating = f.Sum(r => r.r.Rating) / 100
+                           }).FirstOrDefaultAsync();
+        return query ?? new ProductDetailResponse { };
+    }
+
+}

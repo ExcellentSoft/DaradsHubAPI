@@ -10,7 +10,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public virtual DbSet<agenttb> agenttbs { get; set; }
     public virtual DbSet<customertb> customertbs { get; set; }
     public virtual DbSet<feedbacktb> feedbacktbs { get; set; }
-
+    public virtual DbSet<category> categories { get; set; }
     public virtual DbSet<GwalletTran> GwalletTrans { get; set; }
     public virtual DbSet<locationtb> locationtbs { get; set; }
     public virtual DbSet<Paymenttb> Paymenttb { get; set; }
@@ -77,5 +77,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public virtual DbSet<ShippingAddress> ShippingAddresses { get; set; }
     public virtual DbSet<Review> Reviews { get; set; }
     public virtual DbSet<VpayApiLogin> VpayApiLogins { get; set; }
+    public virtual DbSet<SubCategory> SubCategories { get; set; }
+    public virtual DbSet<HubProduct> HubProducts { get; set; }
+    public virtual DbSet<HubAgentProduct> HubAgentProducts { get; set; }
+    public virtual DbSet<ProductImages> ProductImages { get; set; }
+    public virtual DbSet<HubAgentProfile> HubAgentProfiles { get; set; }
 
 }

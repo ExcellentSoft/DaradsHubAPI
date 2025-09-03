@@ -86,3 +86,19 @@ public record ListRequest
     public int PageNumber { get; set; } = 1;
     public string? SearchText { get; set; }
 }
+
+public record ProductListRequest
+{
+    public int PageSize { get; set; } = 10;
+    public int PageNumber { get; set; } = 1;
+    public string? SearchText { get; set; }
+}
+
+public class AgentProductListRequest
+{
+    public string? SearchText { get; set; }
+    public int PageSize { get; set; } = 10;
+    public int PageNumber { get; set; } = 1;
+    public int AgentId { get; set; }
+    public int CategoryId { get; set; }
+}
