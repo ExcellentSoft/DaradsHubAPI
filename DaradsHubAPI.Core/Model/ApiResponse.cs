@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DaradsHubAPI.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -101,6 +102,14 @@ public class AgentProductListRequest
     public int PageNumber { get; set; } = 1;
     public int AgentId { get; set; }
     public int CategoryId { get; set; }
+}
+
+public class TransactionListRequest
+{
+    public string? SearchText { get; set; }
+    public int PageSize { get; set; } = 10;
+    public int PageNumber { get; set; } = 1;
+
 }
 
 public class AgentDigitalProductListRequest

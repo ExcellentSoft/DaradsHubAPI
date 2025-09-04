@@ -1,6 +1,7 @@
 ﻿using DaradsHubAPI.Core.Model;
 using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
+using DaradsHubAPI.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,4 +19,5 @@ public interface IProductService
     Task<ApiResponse<IEnumerable<LandingProductResponse>>> GetLandPageProducts();
     Task<ApiResponse> UpdateProduct(UpdateAgentHubProductRequest model, string email);
     Task<ApiResponse> AddReview(AddReviewRequestModel model, int userId, bool isDigital);
+    Task<ApiResponse<IEnumerable<AgentsProfileResponse>>> GetPhysicalAgent(AgentsProfileListRequest request);
 }

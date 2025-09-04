@@ -80,4 +80,25 @@
         public bool IsOnline { get; set; }
         public string? Photo { get; set; }
     }
+    public class AgentsProfileResponse
+    {
+        public int AgentId { get; set; }
+        public IEnumerable<string> SellingProducts { get; set; } = default!;
+        public string? BusinessName { get; set; }
+        public string? FullName { get; set; }
+        public string? Experience { get; set; }
+        public AgentsAddress? AgentsAddress { get; set; }
+        public double MaxRating { get; set; }
+        public int ReviewCount { get; set; }
+        public bool IsVerify { get; set; }
+        public bool IsOnline { get; set; }
+        public string? Photo { get; set; }
+    }
+
+    public class AgentsAddress
+    {
+        public string? Address { get; set; }
+        public string? State { get; set; }
+        public string? City { get; set; }
+    }
 }

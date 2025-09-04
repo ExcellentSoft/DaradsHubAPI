@@ -3,6 +3,7 @@ using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Concrete;
 using DaradsHubAPI.Core.Services.Interface;
+using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.WebAPI.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -63,6 +64,14 @@ public class DigitalProductController(IDigitalProductService _digitalProductServ
     public async Task<IActionResult> GetAgentProduct([FromQuery] int productId)
     {
         var response = await _digitalProductService.GetAgentProduct(productId);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("digital-agents")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<AgentsProfileResponse>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetDigitalAgents([FromQuery] AgentsProfileListRequest request)
+    {
+        var response = await _digitalProductService.GetDigitalAgents(request);
         return ResponseCode(response);
     }
 }
