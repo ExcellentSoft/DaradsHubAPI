@@ -2,6 +2,7 @@
 using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Interface;
+using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.WebAPI.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -53,6 +54,14 @@ public class ProductController(IProductService _productService) : ApiBaseControl
     public async Task<IActionResult> GetAgentProduct([FromQuery] int productId)
     {
         var response = await _productService.GetAgentProduct(productId);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("physical-agents")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<AgentsProfileResponse>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetPhysicalAgent([FromQuery] AgentsProfileListRequest request)
+    {
+        var response = await _productService.GetPhysicalAgent(request);
         return ResponseCode(response);
     }
 }

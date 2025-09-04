@@ -107,6 +107,19 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
 
         return new ApiResponse<AgentProductProfileResponse> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
     }
+
+    public async Task<ApiResponse<IEnumerable<AgentsProfileResponse>>> GetDigitalAgents(AgentsProfileListRequest request)
+    {
+        var query = _unitOfWork.DigitalProducts.GetDigitalAgents(request);
+
+        var totalProducts = query.Count();
+        var paginatedAgents = await query
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize).ToListAsync();
+
+        return new ApiResponse<IEnumerable<AgentsProfileResponse>> { Message = "Successful", Status = true, Data = paginatedAgents, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
+    }
+
     public async Task<ApiResponse<IEnumerable<DigitalProductDetailsResponse>>> GetAgentProducts(AgentDigitalProductListRequest request)
     {
         var query = _unitOfWork.DigitalProducts.GetAgentDigitalProducts(request.CatalogueId, request.AgentId);

@@ -11,6 +11,8 @@ public class UnitOfWork(AppDbContext _context, UserManager<User> _userManager, S
     public ICategoryRepository Categories => new CategoryRepository(_context);
     public IProductRepository Products => new ProductRepository(_context);
     public IDigitalProductRepository DigitalProducts => new DigitalProductRepository(_context);
+    public IWalletTransactionRepository WalletTransactions => new WalletTransactionRepository(_context);
+    public IOrderRepository Orders => new OrderRepository(_context);
 
     public void Dispose()
     {

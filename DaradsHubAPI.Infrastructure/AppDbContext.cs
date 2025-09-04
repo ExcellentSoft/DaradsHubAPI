@@ -87,5 +87,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public virtual DbSet<HubDigitalProduct> HubDigitalProducts { get; set; }
     public virtual DbSet<DigitalProductImages> DigitalProductImages { get; set; }
     public virtual DbSet<HubReview> HubReviews { get; set; }
+    public virtual DbSet<HubOrder> HubOrders { get; set; }
+    public virtual DbSet<HubOrderItem> HubOrderItems { get; set; }
+    public virtual DbSet<HubOrderTracking> HubOrderTracking { get; set; }
 
 }

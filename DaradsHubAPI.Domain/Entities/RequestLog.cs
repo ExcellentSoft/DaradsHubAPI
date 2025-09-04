@@ -105,6 +105,37 @@ public record LogRequest
     public int PageNumber { get; set; } = 1;
     public string SearchText { get; set; }
 }
+
+public record OrderListRequest : LogRequest
+{
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+}
+
+public record AgentsProfileListRequest
+{
+    public int PageSize { get; set; } = 10;
+    public int PageNumber { get; set; } = 1;
+    public bool? IsOnline { get; set; }
+    public string ProductName { get; set; }
+    public string Location { get; set; }
+}
+public record OrderListResponse
+{
+    public string Code { get; set; }
+    public ProductData ProductData { get; set; }
+    public DateTime OrderDate { get; set; }
+    public decimal TotalPrice { get; set; }
+    public OrderStatus OrderStatus { get; set; }
+    public string AgentName { get; set; }
+    public string ProductType { get; set; }
+}
+public record ProductData
+{
+    public string ProductName { get; set; }
+    public string ProductImage { get; set; }
+}
+
 public record WalletFundRequest
 {
     public int PageSize { get; set; } = 10;
@@ -297,11 +328,13 @@ public record FundWalletTransactionRecords
 }
 public record WalletTransactionRecords
 {
-    public string ProductName { get; set; }
-    public decimal DebitAmount { get; set; }
-    public decimal WalletBalance { get; set; }
-    public DateTime? TransactionDate { get; set; }
-    public string ProductImage { get; set; }
+    public string ReferenceNumber { get; set; }
+    public string Type { get; set; }
+    public string Description { get; set; }
+    public string Status { get; set; }
+    public decimal Amount { get; set; }
+    public DateTime TransactionDate { get; set; }
+    public int Id { get; set; }
 }
 public record TransactionsResponse
 {

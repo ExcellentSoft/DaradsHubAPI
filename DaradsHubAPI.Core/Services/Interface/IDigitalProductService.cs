@@ -1,6 +1,7 @@
 ﻿using DaradsHubAPI.Core.Model;
 using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
+using DaradsHubAPI.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ public interface IDigitalProductService
     Task<ApiResponse<AgentProductProfileResponse>> GetAgentDigitalProductProfile(int agentId);
     Task<ApiResponse<DigitalProductDetailResponse>> GetAgentProduct(int productId);
     Task<ApiResponse<IEnumerable<DigitalProductDetailsResponse>>> GetAgentProducts(AgentDigitalProductListRequest request);
+    Task<ApiResponse<IEnumerable<AgentsProfileResponse>>> GetDigitalAgents(AgentsProfileListRequest request);
     Task<ApiResponse<IEnumerable<IdNameRecord>>> GetDigitalProducts(string? searchText, int agentId);
     Task<ApiResponse<IEnumerable<LandingPageDigitalProductResponse>>> GetLandPageProducts();
     Task<ApiResponse> UpdateDigitalProduct(UpdateDigitalHubProductRequest model, string email);

@@ -88,6 +88,52 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         return response;
     }
 
+    public IQueryable<AgentsProfileResponse> GetDigitalAgents(AgentsProfileListRequest request)
+    {
+        var uquery = from user in _context.userstb.Where(d => d.IsAgent == true)
+                     select new AgentsProfileResponse
+                     {
+                         BusinessName = user.BusinessName,
+                         FullName = user.fullname,
+                         IsOnline = true,
+                         IsVerify = true,
+                         AgentId = user.id,
+                         Photo = user.Photo,
+                         SellingProducts = (from hp in _context.HubDigitalProducts.Where(s => s.AgentId == user.id)
+                                            join p in _context.Catalogues on hp.CatalogueId equals p.Id
+                                            select p).Select(d => d.Name).Distinct().Take(10).ToList(),
+                         ReviewCount = (from hp in _context.HubDigitalProducts.Where(s => s.AgentId == user.id)
+                                        join r in _context.HubReviews on hp.Id equals r.ProductId
+                                        where r.IsDigital == true
+                                        select r).Select(r => r.ProductId).Count(),
+                         MaxRating = (from hp in _context.HubDigitalProducts.Where(s => s.AgentId == user.id)
+                                      join r in _context.HubReviews on hp.Id equals r.ProductId
+                                      where r.IsDigital == true
+                                      select r).Sum(r => r.Rating) / 100,
+                         Experience = _context.HubAgentProfiles.Where(r => r.UserId == user.id).Select(e => e.Experience).FirstOrDefault(),
+                         AgentsAddress = _context.ShippingAddresses.Where(r => r.CustomerId == user.id).Select(n => new AgentsAddress
+                         {
+                             Address = n.Address,
+                             City = n.City,
+                             State = n.State
+                         }).FirstOrDefault()
+                     };
+
+        if (request.IsOnline is not null)
+        {
+            uquery = uquery.Where(e => e.IsOnline == request.IsOnline);
+        }
+        if (!string.IsNullOrWhiteSpace(request.ProductName))
+        {
+            uquery = uquery.Where(e => e.SellingProducts.Contains(request.ProductName));
+        }
+        if (!string.IsNullOrWhiteSpace(request.Location))
+        {
+            uquery = uquery.Where(e => e.AgentsAddress != null && e.AgentsAddress.Address != null && e.AgentsAddress.Address.Contains(request.Location) || (e.AgentsAddress!.City != null && e.AgentsAddress.City.Contains(request.Location)) || (e.AgentsAddress!.State != null && e.AgentsAddress.State.Contains(request.Location)));
+        }
+        return uquery;
+    }
+
     public IQueryable<DigitalProductDetailsResponse> GetAgentDigitalProducts(int catalogueId, int agentId)
     {
         var query = (from ph in _context.HubDigitalProducts.Where(d => d.AgentId == agentId)
