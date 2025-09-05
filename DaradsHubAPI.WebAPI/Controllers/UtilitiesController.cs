@@ -13,6 +13,14 @@ namespace DaradsHubAPI.WebAPI.Controllers;
 public class UtilitiesController(ICategoryService _categoryService, IProductService _productService) : ApiBaseController
 {
 
+    [HttpGet("agents-dropdown")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<IdNameRecord>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAgentsLookUp([FromQuery] string? searchText)
+    {
+        var response = await _categoryService.GetAgentsLookUp(searchText);
+        return ResponseCode(response);
+    }
+
     [HttpGet("products-dropdown")]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<CategoryResponse>>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetHubProducts([FromQuery] string? searchText)

@@ -19,6 +19,12 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         _context.ProductImages.Add(productImages);
         await Task.CompletedTask;
     }
+
+    public async Task CreateHubProductRequest(HubProductRequest request)
+    {
+        _context.HubProductRequests.Add(request);
+        await _context.SaveChangesAsync();
+    }
     public async Task AddReview(HubReview review)
     {
         _context.HubReviews.Add(review);

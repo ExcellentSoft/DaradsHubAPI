@@ -20,4 +20,5 @@ public interface IProductService
     Task<ApiResponse> UpdateProduct(UpdateAgentHubProductRequest model, string email);
     Task<ApiResponse> AddReview(AddReviewRequestModel model, int userId, bool isDigital);
     Task<ApiResponse<IEnumerable<AgentsProfileResponse>>> GetPhysicalAgent(AgentsProfileListRequest request);
+    Task<ApiResponse> CreateProductRequest(CreateHubProductRequest model, string email);
 }

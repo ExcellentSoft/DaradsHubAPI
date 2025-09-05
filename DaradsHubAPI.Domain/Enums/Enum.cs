@@ -96,4 +96,10 @@ public class Enum
         DeliveryConfirmed,
         Returned
     }
+    public enum ProductRequestTypeEnum
+    {
+        Digital = 1,
+        Physical
+    }
+
 }

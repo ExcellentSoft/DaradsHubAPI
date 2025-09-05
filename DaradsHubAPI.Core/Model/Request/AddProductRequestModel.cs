@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Model.Request;
 
@@ -40,6 +41,20 @@ public class AddAgentHubProductRequest
     public bool IsFreeShipping { get; set; }
     public string? EstimateDeliveryTime { get; set; }
     public IEnumerable<IFormFile> Images { get; set; } = default!;
+}
+
+public class CreateHubProductRequest
+{
+    public int AgentId { get; set; }
+    public int Quantity { get; set; }
+    public string CustomerNeed { get; set; } = default!;
+    public string? Description { get; set; }
+    public DateTime PreferredDate { get; set; }
+    public decimal Budget { get; set; }
+    public string Location { get; set; } = default!;
+    public bool IsUrgent { get; set; }
+    public ProductRequestTypeEnum ProductRequestTypeEnum { get; set; }
+    public IFormFile? ReferenceFile { get; set; }
 }
 
 public class UpdateAgentHubProductRequest : AddAgentHubProductRequest
