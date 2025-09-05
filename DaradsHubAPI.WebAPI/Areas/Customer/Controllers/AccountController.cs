@@ -9,6 +9,15 @@ namespace DaradsHubAPI.WebAPI.Areas.Customer.Controllers;
 [Tags("Customer")]
 public class AccountController(IAccountService _accountService) : ApiBaseController
 {
+    [HttpGet("dashboard-metrics")]
+    [ProducesResponseType(typeof(ApiResponse<DashboardMetricsResponse>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> DashboardMetrics()
+    {
+        var email = User.Identity?.GetUserEmail() ?? "";
+        var response = await _accountService.DashboardMetrics(email);
+        return ResponseCode(response);
+    }
+
     [HttpGet("profile")]
     [ProducesResponseType(typeof(ApiResponse<CustomerProfileResponse>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetProfile()
