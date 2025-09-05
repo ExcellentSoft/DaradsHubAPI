@@ -29,6 +29,48 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         return new ApiResponse<IEnumerable<IdNameRecord>> { Data = iCategories, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
     }
 
+    public async Task<ApiResponse<IEnumerable<IdNameRecord>>> GetAgent(string? searchText)
+    {
+        var products = _unitOfWork.Products.GetHubProducts(searchText);
+        var iCategories = await products.Select(c => new IdNameRecord
+        {
+            Id = c.Id,
+            Name = c.Name
+        }).ToListAsync();
+        return new ApiResponse<IEnumerable<IdNameRecord>> { Data = iCategories, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
+    }
+
+    public async Task<ApiResponse> CreateProductRequest(CreateHubProductRequest model, string email)
+    {
+        var user = await _unitOfWork.Users.GetSingleWhereAsync(d => d.email == email);
+        var request = new HubProductRequest
+        {
+            AgentId = model.AgentId,
+            Budget = model.Budget,
+            DateCreated = DateTime.Now,
+            Description = model.Description,
+            CustomerNeed = model.CustomerNeed,
+            Location = model.Location,
+            IsUrgent = model.IsUrgent,
+            ProductRequestTypeEnum = model.ProductRequestTypeEnum,
+            PreferredDate = model.PreferredDate,
+            Quantity = model.Quantity,
+            CustomerId = user!.id
+        };
+
+        if (model.ReferenceFile is not null)
+        {
+            var (status, msg, path) = await SaveProductImage(model.ReferenceFile);
+            if (status)
+            {
+                request.ReferenceFileUrl = path;
+            }
+        }
+        await _unitOfWork.Products.CreateHubProductRequest(request);
+
+        return new ApiResponse("Product request created successfully.", StatusEnum.Success, true);
+    }
+
     public async Task<ApiResponse> AddProduct(AddAgentHubProductRequest model, string email)
     {
         var user = await _unitOfWork.Users.GetSingleWhereAsync(d => d.email == email);

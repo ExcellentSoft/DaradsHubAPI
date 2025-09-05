@@ -32,13 +32,15 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
     {
         var query = (from ph in _context.HubDigitalProducts
                      join img in _context.DigitalProductImages on ph.Id equals img.ProductId
+                     join c in _context.Catalogues on ph.CatalogueId equals c.Id
                      orderby ph.DateCreated descending
-                     select new { ph, img }).GroupBy(d => d.img.ProductId).Select(f => new LandingPageDigitalProductResponse
+                     select new { ph, img, c }).GroupBy(d => d.img.ProductId).Select(f => new LandingPageDigitalProductResponse
                      {
                          Id = f.Key,
                          AgentId = f.Select(e => e.ph.AgentId).FirstOrDefault(),
                          Description = f.Select(e => e.ph.Description).FirstOrDefault(),
-                         ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault()
+                         ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault(),
+                         Title = f.Select(e => e.c.Name).FirstOrDefault(),
                      });
         return query;
     }

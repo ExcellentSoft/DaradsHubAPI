@@ -64,4 +64,13 @@ public class ProductController(IProductService _productService) : ApiBaseControl
         var response = await _productService.GetPhysicalAgent(request);
         return ResponseCode(response);
     }
+
+    [HttpPost("create-product-request")]
+    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> CreateProductRequest([FromForm] CreateHubProductRequest request)
+    {
+        var email = User.Identity?.GetUserEmail() ?? "";
+        var response = await _productService.CreateProductRequest(request, email);
+        return ResponseCode(response);
+    }
 }

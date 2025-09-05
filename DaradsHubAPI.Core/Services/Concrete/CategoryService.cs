@@ -89,6 +89,27 @@ public class CategoryService(IUnitOfWork _unitOfWork, IFileService _fileService)
         return new ApiResponse<IEnumerable<IdNameRecord>> { Data = iCategories, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
     }
 
+    public async Task<ApiResponse<IEnumerable<IdNameRecord>>> GetAgentsLookUp(string? searchText)
+    {
+        searchText = searchText?.Trim().ToLower();
+
+        var agent = _unitOfWork.Users.GetWhere(f => f.IsAgent == true);
+
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            agent = agent.Where(s => s.fullname.ToLower().Contains(searchText));
+        }
+
+        var iAgent = agent.Select(c => new IdNameRecord
+        {
+            Id = c.id,
+            Name = c.fullname
+
+        }).ToList();
+
+        return await Task.FromResult(new ApiResponse<IEnumerable<IdNameRecord>> { Data = iAgent, Message = "Successful", Status = true, StatusCode = StatusEnum.Success });
+    }
+
     public async Task<ApiResponse> UpdateCategory(UpdateCategoryRequestModel model)
     {
         string icon = "";
