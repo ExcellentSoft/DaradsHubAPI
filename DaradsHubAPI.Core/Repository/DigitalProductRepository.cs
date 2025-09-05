@@ -113,7 +113,7 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
                                       where r.IsDigital == true
                                       select r).Sum(r => r.Rating) / 100,
                          Experience = _context.HubAgentProfiles.Where(r => r.UserId == user.id).Select(e => e.Experience).FirstOrDefault(),
-                         AgentsAddress = _context.ShippingAddresses.Where(r => r.CustomerId == user.id).Select(n => new AgentsAddress
+                         AgentsAddress = _context.ShippingAddresses.Where(r => r.CustomerId == user.id && (request.Location == null || r.State.Contains(request.Location))).Select(n => new AgentsAddress
                          {
                              Address = n.Address,
                              City = n.City,
@@ -129,10 +129,10 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         {
             uquery = uquery.Where(e => e.SellingProducts.Contains(request.ProductName));
         }
-        if (!string.IsNullOrWhiteSpace(request.Location))
-        {
-            uquery = uquery.Where(e => e.AgentsAddress != null && e.AgentsAddress.Address != null && e.AgentsAddress.Address.Contains(request.Location) || (e.AgentsAddress!.City != null && e.AgentsAddress.City.Contains(request.Location)) || (e.AgentsAddress!.State != null && e.AgentsAddress.State.Contains(request.Location)));
-        }
+        //if (!string.IsNullOrWhiteSpace(request.Location))
+        //{
+        //    uquery = uquery.Where(e => e.AgentsAddress.State != null && e.AgentsAddress.State.Contains(request.Location));
+        //}
         return uquery;
     }
 
