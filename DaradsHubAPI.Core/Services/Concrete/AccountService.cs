@@ -11,6 +11,13 @@ using static DaradsHubAPI.Domain.Enums.Enum;
 namespace DaradsHubAPI.Core.Services.Concrete;
 public class AccountService(IUnitOfWork _unitOfWork, IFileService _fileService) : IAccountService
 {
+    public async Task<ApiResponse<DashboardMetricsResponse>> DashboardMetrics(string email)
+    {
+        var response = await _unitOfWork.Users.DashboardMetrics(email);
+
+        return new ApiResponse<DashboardMetricsResponse> { Status = true, Message = "Successful.", StatusCode = StatusEnum.Success, Data = response };
+    }
+
     public async Task<ApiResponse<CustomerProfileResponse>> GetCustomerProfile(string email)
     {
         var profileResponse = await _unitOfWork.Users.GetProfile(email);

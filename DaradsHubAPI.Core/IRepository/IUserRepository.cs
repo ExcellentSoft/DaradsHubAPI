@@ -8,6 +8,7 @@ public interface IUserRepository : IGenericRepository<userstb>
     Task<int> CountCustomers(string audienceType);
     Task<(bool status, string message, string? userId)> CreateAgent(CreateAgentRequest request);
     Task<(bool status, string message, string? userId)> CreateCustomer(CreateCustomerRequest request);
+    Task<DashboardMetricsResponse> DashboardMetrics(string email);
     Task<(bool status, string message, string? userId)> ForgetPassword(ForgetPasswordRequest request);
     Task<(bool status, string message, AgentProfileResponse? res)> GetAgentProfile(string email);
     Task<List<MessagesSent>> GetAllSentMessages();

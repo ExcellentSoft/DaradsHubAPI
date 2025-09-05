@@ -149,6 +149,11 @@ public record AgentAddress
     public string? State { get; internal set; }
     public string? City { get; internal set; }
 }
+public record DashboardMetricsResponse
+{
+    public decimal? WalletBalance { get; set; }
+    public int ActiveOrderCount { get; set; }
+}
 
 public sealed record VirtualAccountDetails
 {

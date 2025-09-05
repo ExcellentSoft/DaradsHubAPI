@@ -523,6 +523,16 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
             return new(false, errorMessage ?? "");
         }
     }
+    public async Task<DashboardMetricsResponse> DashboardMetrics(string email)
+    {
+        var response = new DashboardMetricsResponse
+        {
+            ActiveOrderCount = await _context.HubOrders.Where(r => r.UserEmail == email).CountAsync(),
+            WalletBalance = await _context.wallettb.Where(e => e.UserId == email).Select(r => r.Balance).FirstOrDefaultAsync()
+        };
+
+        return response;
+    }
     public async Task<(bool status, string message, string? userId)> CreateAgent(CreateAgentRequest request)
     {
         try
