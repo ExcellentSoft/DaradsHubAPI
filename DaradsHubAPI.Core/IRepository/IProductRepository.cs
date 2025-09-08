@@ -5,6 +5,7 @@ namespace DaradsHubAPI.Core.IRepository;
 public interface IProductRepository : IGenericRepository<HubAgentProduct>
 {
     Task AddHubProductImages(ProductImages productImages);
+    Task AddHubProductRequestImages(ProductRequestImages productImages);
     Task AddReview(HubReview review);
     Task CreateHubProductRequest(HubProductRequest request);
     Task<ProductDetailResponse> GetAgentProduct(long productId);

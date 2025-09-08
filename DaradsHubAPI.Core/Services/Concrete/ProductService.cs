@@ -57,16 +57,26 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
             Quantity = model.Quantity,
             CustomerId = user!.id
         };
-
-        if (model.ReferenceFile is not null)
-        {
-            var (status, msg, path) = await SaveProductImage(model.ReferenceFile);
-            if (status)
-            {
-                request.ReferenceFileUrl = path;
-            }
-        }
         await _unitOfWork.Products.CreateHubProductRequest(request);
+
+        if (model.ReferenceFiles is not null)
+        {
+            foreach (var image in model.ReferenceFiles)
+            {
+                var (status, msg, path) = await SaveProductImage(image);
+                if (status)
+                {
+                    var productImage = new ProductRequestImages
+                    {
+                        ImageUrl = path ?? "",
+                        RequestId = request.Id
+                    };
+                    await _unitOfWork.Products.AddHubProductRequestImages(productImage);
+                }
+            }
+            await _unitOfWork.Products.SaveAsync();
+        }
+
 
         return new ApiResponse("Product request created successfully.", StatusEnum.Success, true);
     }
