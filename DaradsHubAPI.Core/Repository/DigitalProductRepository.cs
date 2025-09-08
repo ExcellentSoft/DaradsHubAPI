@@ -129,10 +129,6 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         {
             uquery = uquery.Where(e => e.SellingProducts.Contains(request.ProductName));
         }
-        //if (!string.IsNullOrWhiteSpace(request.Location))
-        //{
-        //    uquery = uquery.Where(e => e.AgentsAddress.State != null && e.AgentsAddress.State.Contains(request.Location));
-        //}
         return uquery;
     }
 
@@ -140,14 +136,15 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
     {
         var query = (from ph in _context.HubDigitalProducts.Where(d => d.AgentId == agentId)
                      join img in _context.DigitalProductImages on ph.Id equals img.ProductId
-                     join p in _context.Catalogues on ph.CatalogueId equals p.Id
+                     join c in _context.Catalogues on ph.CatalogueId equals c.Id
                      where ph.CatalogueId == catalogueId || catalogueId == 0
                      orderby ph.DateCreated descending
-                     select new { ph, img, p }).GroupBy(d => d.img.ProductId).Select(f => new DigitalProductDetailsResponse
+                     select new { ph, img, c }).GroupBy(d => d.img.ProductId).Select(f => new DigitalProductDetailsResponse
                      {
                          ProductId = f.Key,
                          Title = f.Select(e => e.ph.Title).FirstOrDefault(),
-                         Name = f.Select(e => e.p.Name).FirstOrDefault(),
+                         Name = f.Select(e => e.c.Name).FirstOrDefault(),
+                         CatalogueId = f.Select(e => e.c.Id).FirstOrDefault(),
                          Price = f.Select(e => e.ph.Price).FirstOrDefault(),
                          Description = f.Select(e => e.ph.Description).FirstOrDefault(),
                          ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault(),

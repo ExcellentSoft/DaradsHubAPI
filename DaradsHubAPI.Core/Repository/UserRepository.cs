@@ -371,7 +371,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         var response = new CustomerProfileResponse
         {
             Email = email,
-            UserName = customerUser.username,
+            FullName = customerUser.fullname,
             PhoneNumber = customerUser.phone,
             Photo = customerUser.Photo,
             VirtualAccountDetails = virtualAccts,
