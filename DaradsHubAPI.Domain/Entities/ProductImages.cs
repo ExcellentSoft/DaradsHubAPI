@@ -19,3 +19,12 @@ public class DigitalProductImages
     public string ImageUrl { get; set; } = default!;
     public bool Status { get; set; } = true;
 }
+
+
+public class ProductRequestImages
+{
+    [Key]
+    public long Id { get; set; }
+    public long RequestId { get; set; }
+    public string ImageUrl { get; set; } = default!;
+}

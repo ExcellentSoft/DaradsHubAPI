@@ -54,7 +54,7 @@ public class CreateHubProductRequest
     public string Location { get; set; } = default!;
     public bool IsUrgent { get; set; }
     public ProductRequestTypeEnum ProductRequestTypeEnum { get; set; }
-    public IFormFile? ReferenceFile { get; set; }
+    public IEnumerable<IFormFile>? ReferenceFiles { get; set; }
 }
 
 public class UpdateAgentHubProductRequest : AddAgentHubProductRequest
