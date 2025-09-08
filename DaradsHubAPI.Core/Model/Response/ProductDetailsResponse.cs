@@ -21,6 +21,7 @@
         public string? ImageUrl { get; set; }
         public int MaxRating { get; set; }
         public int ReviewCount { get; set; }
+        public long CatalogueId { get; internal set; }
     }
     public class ProductDetailResponse
     {
