@@ -20,6 +20,12 @@ namespace DaradsHubAPI.Core.Model.Request
         public IEnumerable<ProductDetails> ProductDetails { get; set; } = default!;
     }
 
+    public record CheckoutDigitalRequest
+    {
+        public decimal Price { get; set; }
+        public long ProductId { get; set; }
+    }
+
     public record ProductDetails
     {
         public int ProductId { get; set; }

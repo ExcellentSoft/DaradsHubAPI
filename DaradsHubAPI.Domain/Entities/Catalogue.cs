@@ -32,6 +32,8 @@ public partial class HubDigitalProduct
     public decimal Price { get; set; }
     public decimal DiscountPrice { get; set; }
     public string? Description { get; set; }
+    public string? Value { get; set; }
+    public bool IsSold { get; set; }
     public DateTime DateCreated { get; set; }
     public DateTime DateUpdated { get; set; }
 }

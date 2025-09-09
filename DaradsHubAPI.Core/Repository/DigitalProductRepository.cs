@@ -3,6 +3,7 @@ using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace DaradsHubAPI.Core.Repository;
 public class DigitalProductRepository(AppDbContext _context) : GenericRepository<HubDigitalProduct>(_context), IDigitalProductRepository
@@ -22,6 +23,13 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         }
         return query;
     }
+    public async Task<Catalogue> GetCatalogue(long catalogueId)
+    {
+        var catalogue = await _context.Catalogues.Where(r => r.Id == catalogueId).FirstOrDefaultAsync();
+
+        return catalogue ?? new Catalogue();
+    }
+
     public async Task AddHubDigitalProductImages(DigitalProductImages productImages)
     {
         _context.DigitalProductImages.Add(productImages);
