@@ -93,6 +93,7 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
             DateCreated = DateTime.Now,
             Description = model.Description,
             ProductId = model.ProductId,
+            Stock = model.Stock,
             Price = model.Price,
             DeliveryPrice = model.DeliveryPrice,
             DiscountPrice = model.DiscountPrice,
@@ -143,6 +144,7 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         product.DeliveryPrice = model.DeliveryPrice;
         product.DiscountPrice = model.DiscountPrice;
         product.SKU = model.SKU;
+        product.Stock = model.Stock;
         product.IsFreeShipping = model.IsFreeShipping;
         product.DateUpdated = DateTime.Now;
         product.Caption = model.Caption;

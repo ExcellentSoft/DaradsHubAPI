@@ -150,14 +150,15 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
                 totalCost += productInfo.Price * product.Quantity;
                 var newOrderItem = new HubOrder
                 {
-                    ShippingAddressId = Convert.ToInt32(request.ShippingAddressId),
+                    ShippingAddressId = request.ShippingAddressId,
                     UserEmail = email,
                     OrderDate = GetLocalDateTime.CurrentDateTime(),
                     TotalCost = totalCost,
                     Code = orderCode,
                     Status = OrderStatus.Order,
                     AgentId = productInfo.AgentId,
-                    ProductType = "Physical"
+                    ProductType = "Physical",
+                    DeliveryMethodType = request.DeliveryMethodType
                 };
 
                 await _unitOfWork.Orders.Insert(newOrderItem);

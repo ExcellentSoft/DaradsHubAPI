@@ -41,6 +41,7 @@ public class AddAgentHubProductRequest
     public bool IsFreeShipping { get; set; }
     public string? EstimateDeliveryTime { get; set; }
     public IEnumerable<IFormFile> Images { get; set; } = default!;
+    public int Stock { get; set; }
 }
 
 public class CreateHubProductRequest

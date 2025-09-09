@@ -17,6 +17,8 @@ public partial class HubOrder
     public OrderStatus Status { get; set; }
     public DateTime OrderDate { get; set; }
     public int ShippingAddressId { get; set; }
+    public DeliveryMethodType DeliveryMethodType { get; set; }
+
 }
 
 public partial class HubOrderItem
