@@ -1,12 +1,8 @@
 ﻿using DaradsHubAPI.Core.IRepository;
-using DaradsHubAPI.Core.Model;
-using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Repository
 {
@@ -48,10 +44,9 @@ namespace DaradsHubAPI.Core.Repository
                                                         select new ProductData
                                                         {
                                                             ProductName = product.Caption,
-                                                            ProductImage = _context.DigitalProductImages.Where(d => d.ProductId == item.ProductId).Select(d => d.ImageUrl).FirstOrDefault()
-                                                        }).FirstOrDefault(),
-
-                    AgentName = _context.userstb.Where(d => d.id == order.AgentId && d.IsAgent.GetValueOrDefault() == true).Select(e => e.fullname).FirstOrDefault()
+                                                            ProductImage = _context.DigitalProductImages.Where(d => d.ProductId == item.ProductId).Select(d => d.ImageUrl).FirstOrDefault(),
+                                                            AgentName = _context.userstb.Where(d => d.id == item.AgentId).Select(d => d.fullname).FirstOrDefault()
+                                                        }).FirstOrDefault()
                 });
 
                 return query;
@@ -121,6 +116,10 @@ namespace DaradsHubAPI.Core.Repository
         {
             _context.shopCats.Add(model);
             await _context.SaveChangesAsync();
+        }
+        public void AddOrderItem(HubOrderItem model)
+        {
+            _context.HubOrderItems.Add(model);
         }
 
         public async Task AddHubOrderTracking(HubOrderTracking model)

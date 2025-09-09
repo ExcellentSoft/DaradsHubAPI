@@ -127,13 +127,14 @@ public record OrderListResponse
     public DateTime OrderDate { get; set; }
     public decimal TotalPrice { get; set; }
     public OrderStatus OrderStatus { get; set; }
-    public string AgentName { get; set; }
     public string ProductType { get; set; }
 }
+
 public record ProductData
 {
     public string ProductName { get; set; }
     public string ProductImage { get; set; }
+    public string AgentName { get; set; }
 }
 
 public record WalletFundRequest

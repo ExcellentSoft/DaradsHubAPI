@@ -7,6 +7,7 @@ using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Shared.Customs;
 using DaradsHubAPI.Shared.Static;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
@@ -146,51 +147,62 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
             var productInfo = await _unitOfWork.Products.GetSingleWhereAsync(x => x.Id == product.ProductId);
             if (productInfo is not null)
             {
-
                 totalCost += productInfo.Price * product.Quantity;
-                var newOrderItem = new HubOrder
+                var newOrderItem = new HubOrderItem
                 {
-                    ShippingAddressId = request.ShippingAddressId,
-                    UserEmail = email,
-                    OrderDate = GetLocalDateTime.CurrentDateTime(),
-                    TotalCost = totalCost,
-                    Code = orderCode,
-                    Status = OrderStatus.Order,
-                    AgentId = productInfo.AgentId,
-                    ProductType = "Physical",
-                    DeliveryMethodType = request.DeliveryMethodType
+                    OrderCode = orderCode,
+                    ProductId = product.ProductId,
+                    Quantity = product.Quantity,
+                    CreatedDate = GetLocalDateTime.CurrentDateTime(),
+                    Price = productInfo.Price,
+                    AgentId = productInfo.AgentId
                 };
-
-                await _unitOfWork.Orders.Insert(newOrderItem);
+                _unitOfWork.Orders.AddOrderItem(newOrderItem);
                 productInfo.Stock -= product.Quantity;
 
-                customerWallet.Balance -= totalCost;
-                customerWallet.UpdateDate = GetLocalDateTime.CurrentDateTime();
-                await _unitOfWork.Orders.SaveAsync();
                 if (!string.IsNullOrEmpty(productInfo.Caption))
                     productNames.Add(productInfo.Caption);
-
-                var refNo = string.Concat("wallet-debit", "-", CustomizeCodes.ReferenceCode().AsSpan(0, 5));
-                var walletTransaction = new GwalletTran
-                {
-                    DR = totalCost,
-                    orderid = Convert.ToInt32(newOrderItem.Id),
-                    walletBal = customerWallet.Balance.GetValueOrDefault(),
-                    amt = totalCost,
-                    userName = email,
-                    refNo = refNo,
-                    transMedium = "Wallet",
-                    transdate = GetLocalDateTime.CurrentDateTime(),
-                    transStatus = "D",
-                    transType = "DebitWallet",
-                    Status = "Complete",
-                    areaCode = newOrderItem.Id.ToString(),
-                    orderItem = $"{productInfo.Caption}"
-                };
-                await _unitOfWork.WalletTransactions.Insert(walletTransaction);
             }
         }
 
+        customerWallet.Balance -= totalCost;
+        customerWallet.UpdateDate = GetLocalDateTime.CurrentDateTime();
+        await _unitOfWork.Orders.SaveAsync();
+
+        var newOrder = new HubOrder
+        {
+            ShippingAddressId = request.ShippingAddressId,
+            UserEmail = email,
+            OrderDate = GetLocalDateTime.CurrentDateTime(),
+            TotalCost = totalCost,
+            Code = orderCode,
+            Status = OrderStatus.Order,
+            ProductType = "Physical",
+            DeliveryMethodType = request.DeliveryMethodType
+        };
+        await _unitOfWork.Orders.Insert(newOrder);
+        await _unitOfWork.Orders.SaveAsync();
+
+        var products = string.Join(',', productNames);
+        var refNo = string.Concat("wallet-debit", "-", CustomizeCodes.ReferenceCode().AsSpan(0, 5));
+        var walletTransaction = new GwalletTran
+        {
+            DR = totalCost,
+            orderid = Convert.ToInt32(newOrder.Id),
+            walletBal = customerWallet.Balance.GetValueOrDefault(),
+            amt = totalCost,
+            userName = email,
+            refNo = refNo,
+            transMedium = "Wallet",
+            transdate = GetLocalDateTime.CurrentDateTime(),
+            transStatus = "D",
+            transType = "DebitWallet",
+            Status = "Complete",
+            areaCode = newOrder.Id.ToString(),
+            orderItem = products
+        };
+
+        await _unitOfWork.WalletTransactions.Insert(walletTransaction);
         var track = new HubOrderTracking
         {
             DateCreated = GetLocalDateTime.CurrentDateTime(),
@@ -200,7 +212,7 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
         };
 
         await _unitOfWork.Orders.AddHubOrderTracking(track);
-        var products = string.Join(',', productNames);
+
 
         var scope = _serviceProvider.GetRequiredService<IEmailService>();
         string smessage = $"Hello {email}! Thank you for purchasing {products} from Darads. Your order {orderCode} has been confirmed. We will provide a tracking link once your order has shipped.";
