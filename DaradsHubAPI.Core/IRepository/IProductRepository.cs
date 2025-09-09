@@ -14,4 +14,5 @@ public interface IProductRepository : IGenericRepository<HubAgentProduct>
     IQueryable<HubProduct> GetHubProducts(string? searchText);
     IQueryable<LandingProductResponse> GetLandPageProducts();
     IQueryable<AgentsProfileResponse> GetPhysicalAgents(AgentsProfileListRequest request);
+    Task<HubAgentProduct?> GetProduct(long productId);
 }

@@ -163,6 +163,11 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                      });
         return query;
     }
+
+    public async Task<HubAgentProduct?> GetProduct(long productId)
+    {
+        return await _context.HubAgentProducts.FirstOrDefaultAsync(e => e.Id == productId);
+    }
     public async Task<ProductDetailResponse> GetAgentProduct(long productId)
     {
         var query = await (from ph in _context.HubAgentProducts.Where(d => d.Id == productId)

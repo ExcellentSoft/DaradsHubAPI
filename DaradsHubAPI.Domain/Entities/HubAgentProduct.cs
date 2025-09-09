@@ -23,6 +23,7 @@ public partial class HubAgentProduct
     public string? Description { get; set; }
     public string? SKU { get; set; }
     public int AgentId { get; set; }
+    public int Stock { get; set; }
     public long ProductId { get; set; }
     public decimal Price { get; set; }
     public decimal DeliveryPrice { get; set; }
@@ -59,4 +60,5 @@ public partial class HubProductRequest
     public bool IsUrgent { get; set; }
     public ProductRequestTypeEnum ProductRequestTypeEnum { get; set; }
     public DateTime DateCreated { get; set; }
+    public int CategoryId { get; set; }
 }

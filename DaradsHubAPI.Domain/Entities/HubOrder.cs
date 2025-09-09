@@ -16,7 +16,7 @@ public partial class HubOrder
     public string ProductType { get; set; } = default!;
     public OrderStatus Status { get; set; }
     public DateTime OrderDate { get; set; }
-
+    public int ShippingAddressId { get; set; }
 }
 
 public partial class HubOrderItem
