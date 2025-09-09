@@ -35,7 +35,8 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
             Price = model.Price,
             DiscountPrice = model.DiscountPrice,
             DateUpdated = DateTime.Now,
-            AgentId = user!.id
+            AgentId = user!.id,
+            Value = model.Value
         };
         await _unitOfWork.DigitalProducts.Insert(prod);
 
@@ -73,6 +74,7 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
         product.Description = model.Description;
         product.Price = model.Price;
         product.DiscountPrice = model.DiscountPrice;
+        product.Value = model.Value;
         product.DateUpdated = DateTime.Now;
 
         if (model.Images.Any())

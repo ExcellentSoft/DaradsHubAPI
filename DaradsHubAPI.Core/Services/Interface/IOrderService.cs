@@ -14,6 +14,7 @@ public interface IOrderService
     Task<ApiResponse> AddItemsToCart(AddItemToCartRequestModel request, int userId);
     Task<ApiResponse> AddShippingAddress(ShippingAddressRequest request, int userId);
     Task<ApiResponse<string>> CheckOut(CheckoutRequest request, string email, int userId);
+    Task<ApiResponse<DigitalCheckoutResponse>> CheckOutDigital(CheckoutDigitalRequest request, string email);
     Task<ApiResponse<IEnumerable<CartResponse>>> GetCart(int userId);
     Task<ApiResponse<IEnumerable<OrderListResponse>>> GetOrders(string email, OrderListRequest request);
     Task<ApiResponse<IEnumerable<ShippingAddressResponse>>> GetShippingAddress(int userId);

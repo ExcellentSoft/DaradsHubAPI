@@ -199,6 +199,11 @@ public class CustomerMessageResponse
     public string Message { get; set; }
     public DateTime CreatedAt { get; set; }
 }
+public class DigitalCheckoutResponse
+{
+    public string Value { get; set; }
+    public string OrderCode { get; set; }
+}
 
 public record CustomerBankResponse
 {

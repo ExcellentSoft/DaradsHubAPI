@@ -72,6 +72,7 @@ public class AddDigitalHubProductRequest
     public decimal DiscountPrice { get; set; }
     public string? Description { get; set; }
     public IEnumerable<IFormFile> Images { get; set; } = default!;
+    public string? Value { get; set; }
 }
 
 public class UpdateDigitalHubProductRequest : AddDigitalHubProductRequest

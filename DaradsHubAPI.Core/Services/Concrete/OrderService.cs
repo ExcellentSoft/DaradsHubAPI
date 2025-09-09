@@ -9,6 +9,7 @@ using DaradsHubAPI.Shared.Static;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using SendGrid.Helpers.Mail;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Services.Concrete;
@@ -223,6 +224,89 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
             await _unitOfWork.Orders.DeleteCart(userId, prod.ProductId);
         }
         return new ApiResponse<string> { Status = true, Message = $"Product(s) has been purchased successfully.", StatusCode = StatusEnum.Success, Data = orderCode };
+    }
+
+    public async Task<ApiResponse<DigitalCheckoutResponse>> CheckOutDigital(CheckoutDigitalRequest request, string email)
+    {
+        var product = await _unitOfWork.DigitalProducts.GetSingleWhereAsync(r => r.IsSold == false && r.Id == request.ProductId);
+        if (product is null)
+        {
+            return new ApiResponse<DigitalCheckoutResponse> { Status = false, Message = "Selected product is not available, please try again later.", StatusCode = StatusEnum.NoRecordFound };
+        }
+        var catalogue = await _unitOfWork.DigitalProducts.GetCatalogue(product.CatalogueId);
+        if (catalogue is null)
+        {
+            return new ApiResponse<DigitalCheckoutResponse> { Status = false, Message = "Invalid catalogue", StatusCode = StatusEnum.NoRecordFound };
+        }
+
+        var customerWallet = await _unitOfWork.Wallets.GetSingleWhereAsync(cw => cw.UserId == email);
+        if (customerWallet is null)
+            return new ApiResponse<DigitalCheckoutResponse> { Status = false, Message = "Customer wallet record not found.", StatusCode = StatusEnum.NoRecordFound };
+
+        if (customerWallet.Balance < request.Price)
+            return new ApiResponse<DigitalCheckoutResponse> { Status = false, Message = "Your wallet balance is insufficient. Please attempt to fund your wallet.", StatusCode = StatusEnum.Validation };
+
+        decimal chargeFees = 0;
+        decimal totalCost = product.Price + chargeFees;
+        var orderCode = string.Concat($"{CustomizeCodes.GenerateRandomCode(2)}-{CustomizeCodes.GetUniqueId().AsSpan(0, 5)}");
+
+        var newOrderItem = new HubOrderItem
+        {
+            OrderCode = orderCode,
+            ProductId = product.Id,
+            Quantity = 1,
+            CreatedDate = GetLocalDateTime.CurrentDateTime(),
+            Price = product.Price,
+            AgentId = product.AgentId
+        };
+        _unitOfWork.Orders.AddOrderItem(newOrderItem);
+
+        customerWallet.Balance -= totalCost;
+        customerWallet.UpdateDate = GetLocalDateTime.CurrentDateTime();
+        await _unitOfWork.Orders.SaveAsync();
+
+        var newOrder = new HubOrder
+        {
+            ShippingAddressId = 0,
+            UserEmail = email,
+            OrderDate = GetLocalDateTime.CurrentDateTime(),
+            TotalCost = totalCost,
+            Code = orderCode,
+            Status = OrderStatus.Order,
+            ProductType = "Digital",
+            DeliveryMethodType = DeliveryMethodType.Standard
+        };
+        await _unitOfWork.Orders.Insert(newOrder);
+        await _unitOfWork.Orders.SaveAsync();
+
+        var products = catalogue.Name;
+        var refNo = string.Concat("wallet-debit", "-", CustomizeCodes.ReferenceCode().AsSpan(0, 5));
+        var walletTransaction = new GwalletTran
+        {
+            DR = totalCost,
+            orderid = Convert.ToInt32(newOrder.Id),
+            walletBal = customerWallet.Balance.GetValueOrDefault(),
+            amt = totalCost,
+            userName = email,
+            refNo = refNo,
+            transMedium = "Wallet",
+            transdate = GetLocalDateTime.CurrentDateTime(),
+            transStatus = "D",
+            transType = "DebitWallet",
+            Status = "Complete",
+            areaCode = newOrder.Id.ToString(),
+            orderItem = products
+        };
+
+        product.IsSold = true;
+        await _unitOfWork.WalletTransactions.Insert(walletTransaction);
+
+        var response = new DigitalCheckoutResponse
+        {
+            Value = product.Value,
+            OrderCode = orderCode,
+        };
+        return new ApiResponse<DigitalCheckoutResponse> { Status = true, Message = $"Product(s) has been purchased successfully.", StatusCode = StatusEnum.Success, Data = response };
     }
 
     private async Task<(bool status, string message)> ValidateProducts(CheckoutRequest request)

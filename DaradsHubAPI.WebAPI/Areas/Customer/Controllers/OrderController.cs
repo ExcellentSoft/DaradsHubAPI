@@ -87,4 +87,14 @@ public class OrderController(IOrderService _orderService) : ApiBaseController
 
         return ResponseCode(response);
     }
+
+    [HttpPost("checkout-digital-product")]
+    [ProducesResponseType(typeof(ApiResponse<DigitalCheckoutResponse>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> CheckoutDigital([FromBody] CheckoutDigitalRequest request)
+    {
+        var email = User.Identity?.GetUserEmail() ?? "";
+        var response = await _orderService.CheckOutDigital(request, email);
+
+        return ResponseCode(response);
+    }
 }

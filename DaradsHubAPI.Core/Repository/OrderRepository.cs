@@ -37,7 +37,8 @@ namespace DaradsHubAPI.Core.Repository
                                                                     select new ProductData
                                                                     {
                                                                         ProductName = cat.Name,
-                                                                        ProductImage = _context.DigitalProductImages.Where(d => d.ProductId == item.ProductId).Select(d => d.ImageUrl).FirstOrDefault()
+                                                                        ProductImage = _context.DigitalProductImages.Where(d => d.ProductId == item.ProductId).Select(d => d.ImageUrl).FirstOrDefault(),
+                                                                        AgentName = _context.userstb.Where(d => d.id == item.AgentId).Select(d => d.fullname).FirstOrDefault()
                                                                     }).FirstOrDefault() :
                                                        (from item in _context.HubOrderItems.Where(d => d.OrderCode == order.Code)
                                                         join product in _context.HubAgentProducts on item.ProductId equals product.Id
@@ -53,7 +54,6 @@ namespace DaradsHubAPI.Core.Repository
             }
             return Enumerable.Empty<OrderListResponse>().AsQueryable();
         }
-
 
         public IQueryable<CartResponse> GetCartsListByUserId(int userId)
         {

@@ -8,6 +8,7 @@ public interface IDigitalProductRepository : IGenericRepository<HubDigitalProduc
     Task<DigitalProductDetailResponse> GetAgentDigitalProduct(long productId);
     Task<AgentProductProfileResponse> GetAgentDigitalProductProfile(int agentId);
     IQueryable<DigitalProductDetailsResponse> GetAgentDigitalProducts(int catalogueId, int agentId);
+    Task<Catalogue> GetCatalogue(long catalogueId);
     IQueryable<AgentsProfileResponse> GetDigitalAgents(AgentsProfileListRequest request);
     IQueryable<Catalogue> GetDigitalProducts(string? searchText, int agentId);
     IQueryable<LandingPageDigitalProductResponse> GetLandPageProducts();
