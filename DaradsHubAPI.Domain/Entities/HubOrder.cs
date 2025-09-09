@@ -6,7 +6,6 @@ public partial class HubOrder
 {
     [Key]
     public long Id { get; set; }
-    public int AgentId { get; set; }
     [MaxLength(50)]
     public string UserEmail { get; set; } = default!;
     [MaxLength(30)]
@@ -17,6 +16,8 @@ public partial class HubOrder
     public OrderStatus Status { get; set; }
     public DateTime OrderDate { get; set; }
     public int ShippingAddressId { get; set; }
+    public DeliveryMethodType DeliveryMethodType { get; set; }
+
 }
 
 public partial class HubOrderItem
@@ -29,6 +30,7 @@ public partial class HubOrderItem
     public int Quantity { get; set; }
     public decimal Price { get; set; }
     public DateTime CreatedDate { get; set; }
+    public int AgentId { get; set; }
 }
 
 public partial class HubOrderTracking

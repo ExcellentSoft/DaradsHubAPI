@@ -101,5 +101,9 @@ public class Enum
         Digital = 1,
         Physical
     }
-
+    public enum DeliveryMethodType
+    {
+        Standard = 1,
+        Express
+    }
 }

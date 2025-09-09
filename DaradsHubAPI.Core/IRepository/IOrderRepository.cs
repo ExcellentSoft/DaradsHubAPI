@@ -8,6 +8,7 @@ public interface IOrderRepository : IGenericRepository<HubOrder>
 {
     Task AddCart(shopCat model);
     Task AddHubOrderTracking(HubOrderTracking model);
+    void AddOrderItem(HubOrderItem model);
     Task AddShippingAddress(ShippingAddress model);
     Task DeleteCart(int userId, long productId);
     Task DeleteShippingAddress(int userId, long addressId);
