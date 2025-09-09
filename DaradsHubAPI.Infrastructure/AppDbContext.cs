@@ -32,6 +32,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public virtual DbSet<Influencertb> Influencertb { get; set; }
     public virtual DbSet<ApiClients> ApiClients { get; set; }
     public virtual DbSet<AuditTrail> AuditTrail { get; set; }
+    public virtual DbSet<shopCat> shopCats { get; set; }
     public virtual DbSet<ClientCustomers> ClientCustomers { get; set; }
     public virtual DbSet<AllLogs> AllLogs { get; set; }
     public virtual DbSet<LogTypes> LogTypes { get; set; }

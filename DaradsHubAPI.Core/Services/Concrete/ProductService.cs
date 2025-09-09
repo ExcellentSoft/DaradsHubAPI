@@ -55,7 +55,9 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
             ProductRequestTypeEnum = model.ProductRequestTypeEnum,
             PreferredDate = model.PreferredDate,
             Quantity = model.Quantity,
-            CustomerId = user!.id
+            CategoryId = model.CategoryId,
+            CustomerId = user!.id,
+
         };
         await _unitOfWork.Products.CreateHubProductRequest(request);
 

@@ -13,4 +13,5 @@ public interface IUnitOfWork
     IDigitalProductRepository DigitalProducts { get; }
     IWalletTransactionRepository WalletTransactions { get; }
     IOrderRepository Orders { get; }
+    IWalletRepository Wallets { get; }
 }

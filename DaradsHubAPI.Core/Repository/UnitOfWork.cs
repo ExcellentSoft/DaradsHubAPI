@@ -13,6 +13,7 @@ public class UnitOfWork(AppDbContext _context, UserManager<User> _userManager, S
     public IDigitalProductRepository DigitalProducts => new DigitalProductRepository(_context);
     public IWalletTransactionRepository WalletTransactions => new WalletTransactionRepository(_context);
     public IOrderRepository Orders => new OrderRepository(_context);
+    public IWalletRepository Wallets => new WalletRepository(_context);
 
     public void Dispose()
     {
