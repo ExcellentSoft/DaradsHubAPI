@@ -7,9 +7,7 @@ using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Shared.Customs;
 using DaradsHubAPI.Shared.Static;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using SendGrid.Helpers.Mail;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Services.Concrete;
@@ -223,6 +221,14 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
         {
             await _unitOfWork.Orders.DeleteCart(userId, prod.ProductId);
         }
+        await _unitOfWork.Notifications.SaveNotification(new HubNotification
+        {
+            TimeCreated = GetLocalDateTime.CurrentDateTime(),
+            Title = "New Order",
+            NoteToEmail = email,
+            Message = $"Your new order with code {orderCode} was successfully placed.",
+            NotificationType = NotificationType.NewOrder
+        });
         return new ApiResponse<string> { Status = true, Message = $"Product(s) has been purchased successfully.", StatusCode = StatusEnum.Success, Data = orderCode };
     }
 
@@ -306,6 +312,14 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
             Value = product.Value,
             OrderCode = orderCode,
         };
+        await _unitOfWork.Notifications.SaveNotification(new HubNotification
+        {
+            TimeCreated = GetLocalDateTime.CurrentDateTime(),
+            Title = "New Order",
+            NoteToEmail = email,
+            Message = $"Your new order with code {orderCode} was successfully placed.",
+            NotificationType = NotificationType.NewOrder
+        });
         return new ApiResponse<DigitalCheckoutResponse> { Status = true, Message = $"Product(s) has been purchased successfully.", StatusCode = StatusEnum.Success, Data = response };
     }
 

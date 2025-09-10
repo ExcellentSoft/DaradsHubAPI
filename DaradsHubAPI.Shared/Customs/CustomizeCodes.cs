@@ -74,7 +74,52 @@ public class CustomizeCodes
 
         return passwordBuilder.ToString();
     }
+
+    public static string GetPeriodDifference(DateTime? date1, DateTime? date2)
+    {
+        if (date1 == null || date2 == null)
+        {
+            return "";
+        }
+        var period = date2 - date1;
+        var days = period.Value.TotalDays;
+        string response = "";
+        var remainingDays = days;
+        if (remainingDays > 365)
+        {
+            response = ((int)Math.Round(remainingDays / 366)).ToString() + " year(s) ago";
+            remainingDays = remainingDays % 366;
+        }
+        if (remainingDays > 30)
+        {
+            response = response + ((int)Math.Round(remainingDays / 30)).ToString() + " month(s) ago";
+            remainingDays = remainingDays % 30;
+        }
+        if (remainingDays >= 1)
+        {
+            response = response + ((int)remainingDays).ToString() + " day(s) ago";
+        }
+        else
+        {
+            if (response == "")
+            {
+                var hours = period.Value.TotalHours;
+                if (hours >= 1)
+                {
+                    response = response + ((int)hours).ToString() + " hour(s) ago";
+                }
+                else
+                {
+                    var minutes = period.Value.TotalMinutes;
+                    response = response + ((int)minutes).ToString() + " minute(s) ago";
+                }
+            }
+        }
+
+        return response;
+    }
 }
+
 public static class GetLocalDateTime
 {
     public static DateTime CurrentDateTime()

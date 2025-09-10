@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Model.Request
 {
@@ -29,6 +30,7 @@ namespace DaradsHubAPI.Core.Model.Request
         public string? Content { get; set; }
         public int Rating { get; set; }
         public DateTime ReviewDate { get; set; }
+        public string? ReviewerPhoto { get; set; }
     }
 
     public class ProductReviewResponse
@@ -46,5 +48,30 @@ namespace DaradsHubAPI.Core.Model.Request
         public int Rating { get; set; }
         public bool IsDigital { get; set; }
         public DateTime ReviewDate { get; set; }
+        public string? ReviewerPhoto { get; set; }
+    }
+
+    public class NotificationRequest
+    {
+        public string Message { get; set; } = default!;
+        public long Id { get; set; }
+        public string? Title { get; set; }
+        public DateTime NotificationDate { get; set; }
+        public string Duration { get; internal set; }
+    }
+    public class NotificationResponse
+    {
+        public long Id { get; set; }
+        public string Message { get; set; } = default!;
+        public string? Title { get; set; }
+        public string? Duration { get; set; }
+        public NotificationType NotificationType { get; set; }
+    }
+
+    public record NotificationListRequest
+    {
+        public int PageSize { get; set; } = 10;
+        public int PageNumber { get; set; } = 1;
+        public NotificationType? NotificationType { get; set; }
     }
 }
