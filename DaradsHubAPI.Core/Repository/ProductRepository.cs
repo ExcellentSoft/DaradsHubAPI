@@ -1,4 +1,5 @@
 ﻿using DaradsHubAPI.Core.IRepository;
+using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
@@ -95,6 +96,53 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         return response;
     }
 
+    public async Task<AgentReviewResponse> GetReviewByAgentId(int agentId)
+    {
+        var query = from r in _context.HubAgentReviews
+                    where r.AgentId == agentId
+                    join u in _context.userstb on r.ReviewById equals u.id
+                    select new { r, u };
+
+        var response = new AgentReviewResponse
+        {
+            Reviews = await query.Select(r => new AgentReview
+            {
+                Content = r.r.Content,
+                Rating = r.r.Rating,
+                ReviewBy = r.u.fullname,
+                ReviewDate = r.r.ReviewDate
+            }).ToListAsync(),
+            TotalReviewCount = await query.CountAsync(),
+            RatingAverage = query.Select(r => r.r.Rating).Average()
+        };
+
+        return response;
+    }
+
+    public async Task<ProductReviewResponse> GetReviewByProductId(int productId)
+    {
+        var query = from r in _context.HubReviews
+                    where r.ProductId == productId
+                    join u in _context.userstb on r.ReviewById equals u.id
+                    select new { r, u };
+
+        var response = new ProductReviewResponse
+        {
+            Reviews = await query.Select(r => new ProductReview
+            {
+                Content = r.r.Content,
+                Rating = r.r.Rating,
+                ReviewBy = r.u.fullname,
+                ReviewDate = r.r.ReviewDate,
+                IsDigital = r.r.IsDigital
+            }).ToListAsync(),
+            TotalReviewCount = await query.CountAsync(),
+            RatingAverage = query.Select(r => r.r.Rating).Average()
+        };
+
+        return response;
+    }
+
     public IQueryable<AgentsProfileResponse> GetPhysicalAgents(AgentsProfileListRequest request)
     {
         var uquery = from user in _context.userstb.Where(d => d.IsAgent == true)
@@ -117,7 +165,7 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                          MaxRating = (from hp in _context.HubAgentProducts.Where(s => s.AgentId == user.id)
                                       join r in _context.HubReviews on hp.Id equals r.ProductId
                                       where r.IsDigital == false
-                                      select r).Sum(r => r.Rating) / 100,
+                                      select r.Rating).OrderByDescending(r => r).FirstOrDefault(),
                          Experience = _context.HubAgentProfiles.Where(r => r.UserId == user.id).Select(e => e.Experience).FirstOrDefault(),
                          AgentsAddress = _context.ShippingAddresses.Where(r => r.CustomerId == user.id).Select(n => new AgentsAddress
                          {

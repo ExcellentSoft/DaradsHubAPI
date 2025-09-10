@@ -36,10 +36,10 @@ public class DigitalProductController(IDigitalProductService _digitalProductServ
     /// <returns></returns>
     [HttpPost("review-digital-product")]
     [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
-    public async Task<IActionResult> AddReview(AddReviewRequestModel model)
+    public async Task<IActionResult> AddDigitalReview(AddReviewRequestModel model)
     {
         var userId = int.Parse(User.Identity?.GetUserId() ?? "");
-        var response = await _productService.AddReview(model, userId, true);
+        var response = await _productService.AddDigitalReview(model, userId);
         return ResponseCode(response);
     }
 

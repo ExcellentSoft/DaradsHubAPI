@@ -29,7 +29,37 @@ public class ProductController(IProductService _productService) : ApiBaseControl
     public async Task<IActionResult> AddReview(AddReviewRequestModel model)
     {
         var userId = int.Parse(User.Identity?.GetUserId() ?? "");
-        var response = await _productService.AddReview(model, userId, false);
+        var response = await _productService.AddPhysicalReview(model, userId);
+        return ResponseCode(response);
+    }
+
+    /// <summary>
+    ///  Rating range is between 1-5
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
+    [HttpPost("review-agent")]
+    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> AddAgentReview([FromBody] AddAgentReviewRequest model)
+    {
+        var userId = int.Parse(User.Identity?.GetUserId() ?? "");
+        var response = await _productService.AddAgentReview(model, userId);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("agent-reviews")]
+    [ProducesResponseType(typeof(ApiResponse<AgentReviewResponse>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAgentReviews([FromQuery] int agentId)
+    {
+        var response = await _productService.GetAgentReviews(agentId);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("product-reviews")]
+    [ProducesResponseType(typeof(ApiResponse<ProductReviewResponse>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetProductReviews([FromQuery] int productId)
+    {
+        var response = await _productService.GetProductReviews(productId);
         return ResponseCode(response);
     }
 

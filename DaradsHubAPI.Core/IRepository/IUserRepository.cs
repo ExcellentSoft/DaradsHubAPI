@@ -4,6 +4,7 @@ using DaradsHubAPI.Domain.Entities;
 namespace DaradsHubAPI.Core.IRepository;
 public interface IUserRepository : IGenericRepository<userstb>
 {
+    Task AddAgentReview(HubAgentReview model);
     Task<(bool status, string message)> ChangePassword(ChangePasswordRequest request, string email);
     Task<int> CountCustomers(string audienceType);
     Task<(bool status, string message, string? userId)> CreateAgent(CreateAgentRequest request);

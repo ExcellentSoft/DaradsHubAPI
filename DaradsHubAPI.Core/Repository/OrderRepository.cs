@@ -1,4 +1,5 @@
 ﻿using DaradsHubAPI.Core.IRepository;
+using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
@@ -77,7 +78,6 @@ namespace DaradsHubAPI.Core.Repository
                         };
             return carts;
         }
-
 
         public async Task<shopCat?> GetCart(int userId, long productId)
         {

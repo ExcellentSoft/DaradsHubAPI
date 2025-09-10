@@ -1,4 +1,5 @@
-﻿using DaradsHubAPI.Core.Model.Response;
+﻿using DaradsHubAPI.Core.Model.Request;
+using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Domain.Entities;
 
 namespace DaradsHubAPI.Core.IRepository;
@@ -15,4 +16,6 @@ public interface IProductRepository : IGenericRepository<HubAgentProduct>
     IQueryable<LandingProductResponse> GetLandPageProducts();
     IQueryable<AgentsProfileResponse> GetPhysicalAgents(AgentsProfileListRequest request);
     Task<HubAgentProduct?> GetProduct(long productId);
+    Task<AgentReviewResponse> GetReviewByAgentId(int agentId);
+    Task<ProductReviewResponse> GetReviewByProductId(int productId);
 }

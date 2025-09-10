@@ -119,7 +119,7 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
                          MaxRating = (from hp in _context.HubDigitalProducts.Where(s => s.AgentId == user.id)
                                       join r in _context.HubReviews on hp.Id equals r.ProductId
                                       where r.IsDigital == true
-                                      select r).Sum(r => r.Rating) / 100,
+                                      select r.Rating).OrderByDescending(r => r).FirstOrDefault(),
                          Experience = _context.HubAgentProfiles.Where(r => r.UserId == user.id).Select(e => e.Experience).FirstOrDefault(),
                          AgentsAddress = _context.ShippingAddresses.Where(r => r.CustomerId == user.id && (request.Location == null || r.State.Contains(request.Location))).Select(n => new AgentsAddress
                          {
