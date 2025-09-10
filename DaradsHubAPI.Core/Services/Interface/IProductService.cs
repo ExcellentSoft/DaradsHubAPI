@@ -18,7 +18,11 @@ public interface IProductService
     Task<ApiResponse<IEnumerable<IdNameRecord>>> GetHubProducts(string? searchText);
     Task<ApiResponse<IEnumerable<LandingProductResponse>>> GetLandPageProducts();
     Task<ApiResponse> UpdateProduct(UpdateAgentHubProductRequest model, string email);
-    Task<ApiResponse> AddReview(AddReviewRequestModel model, int userId, bool isDigital);
+    Task<ApiResponse> AddPhysicalReview(AddReviewRequestModel model, int userId);
     Task<ApiResponse<IEnumerable<AgentsProfileResponse>>> GetPhysicalAgent(AgentsProfileListRequest request);
     Task<ApiResponse> CreateProductRequest(CreateHubProductRequest model, string email);
+    Task<ApiResponse> AddAgentReview(AddAgentReviewRequest model, int userId);
+    Task<ApiResponse> AddDigitalReview(AddReviewRequestModel model, int userId);
+    Task<ApiResponse<AgentReviewResponse>> GetAgentReviews(int agentId);
+    Task<ApiResponse<ProductReviewResponse>> GetProductReviews(int productId);
 }

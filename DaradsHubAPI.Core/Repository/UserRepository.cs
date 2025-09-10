@@ -533,6 +533,12 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
 
         return response;
     }
+    public async Task AddAgentReview(HubAgentReview model)
+    {
+        _context.HubAgentReviews.Add(model);
+        await _context.SaveChangesAsync();
+    }
+
     public async Task<(bool status, string message, string? userId)> CreateAgent(CreateAgentRequest request)
     {
         try

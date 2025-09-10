@@ -42,6 +42,22 @@ namespace DaradsHubAPI.Domain.Entities
         [Range(1, 5)]
         public int Rating { get; set; }
         public bool IsDigital { get; set; }
-        public DateTime ReviewDate { get; set; } = DateTime.Now;
+        public DateTime ReviewDate { get; set; }
+    }
+
+    public class HubAgentReview
+    {
+        [Key]
+        public long Id { get; set; }
+        [Required]
+        public int AgentId { get; set; }
+        public int ReviewById { get; set; }
+        [Required]
+        [StringLength(1000)]
+        public string Content { get; set; } = default!;
+        [Required]
+        [Range(1, 5)]
+        public int Rating { get; set; }
+        public DateTime ReviewDate { get; set; }
     }
 }

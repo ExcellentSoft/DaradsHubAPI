@@ -4,6 +4,7 @@ using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.Domain.Entities;
+using DaradsHubAPI.Shared.Customs;
 using DaradsHubAPI.Shared.Interface;
 using DaradsHubAPI.Shared.Static;
 using Microsoft.AspNetCore.Http;
@@ -193,7 +194,7 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         return new(true, "Product image saved successfully.", photoPath);
     }
 
-    public async Task<ApiResponse> AddReview(AddReviewRequestModel model, int userId, bool isDigital)
+    public async Task<ApiResponse> AddPhysicalReview(AddReviewRequestModel model, int userId)
     {
         var product = await _unitOfWork.Products.GetSingleWhereAsync(x => x.Id == model.productId);
         if (product == null)
@@ -203,16 +204,70 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         {
             Content = model.Content,
             Rating = model.Rating,
-            ReviewDate = DateTime.Now,
+            ReviewDate = GetLocalDateTime.CurrentDateTime(),
             ProductId = product.Id,
             ReviewById = userId,
-            IsDigital = isDigital
+            IsDigital = false
         };
 
         await _unitOfWork.Products.AddReview(review);
         await _unitOfWork.Products.SaveAsync();
 
         return new ApiResponse("Review added to product", StatusEnum.Success, true);
+    }
+
+    public async Task<ApiResponse> AddDigitalReview(AddReviewRequestModel model, int userId)
+    {
+        var product = await _unitOfWork.DigitalProducts.GetSingleWhereAsync(x => x.Id == model.productId);
+        if (product == null)
+            return new ApiResponse($"Product record not found", StatusEnum.NoRecordFound, false);
+
+        var review = new HubReview
+        {
+            Content = model.Content,
+            Rating = model.Rating,
+            ReviewDate = GetLocalDateTime.CurrentDateTime(),
+            ProductId = product.Id,
+            ReviewById = userId,
+            IsDigital = true
+        };
+        await _unitOfWork.Products.AddReview(review);
+        await _unitOfWork.Products.SaveAsync();
+        return new ApiResponse("Review added to product", StatusEnum.Success, true);
+    }
+
+    public async Task<ApiResponse> AddAgentReview(AddAgentReviewRequest model, int userId)
+    {
+        var agent = await _unitOfWork.Users.GetSingleWhereAsync(x => x.id == model.AgentId);
+        if (agent == null)
+            return new ApiResponse($"Agent record not found", StatusEnum.NoRecordFound, false);
+
+        var review = new HubAgentReview
+        {
+            Content = model.Content,
+            Rating = model.Rating,
+            ReviewDate = GetLocalDateTime.CurrentDateTime(),
+            AgentId = agent.id,
+            ReviewById = userId,
+        };
+
+        await _unitOfWork.Users.AddAgentReview(review);
+
+        return new ApiResponse("Review added to an agent", StatusEnum.Success, true);
+    }
+
+    public async Task<ApiResponse<AgentReviewResponse>> GetAgentReviews(int agentId)
+    {
+        var review = await _unitOfWork.Products.GetReviewByAgentId(agentId);
+
+        return new ApiResponse<AgentReviewResponse> { Data = review, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
+    }
+
+    public async Task<ApiResponse<ProductReviewResponse>> GetProductReviews(int productId)
+    {
+        var review = await _unitOfWork.Products.GetReviewByProductId(productId);
+
+        return new ApiResponse<ProductReviewResponse> { Data = review, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
     }
 
     public async Task<ApiResponse<IEnumerable<LandingProductResponse>>> GetLandPageProducts()
