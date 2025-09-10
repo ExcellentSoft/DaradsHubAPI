@@ -14,4 +14,5 @@ public interface IUnitOfWork
     IWalletTransactionRepository WalletTransactions { get; }
     IOrderRepository Orders { get; }
     IWalletRepository Wallets { get; }
+    INotificationRepository Notifications { get; }
 }

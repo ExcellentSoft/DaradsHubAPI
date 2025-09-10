@@ -106,4 +106,13 @@ public class Enum
         Standard = 1,
         Express
     }
+
+    public enum NotificationType
+    {
+        NewOrder = 1,
+        OrderSent,
+        OrderDelivered,
+        Login,
+        ForgetPassword
+    }
 }

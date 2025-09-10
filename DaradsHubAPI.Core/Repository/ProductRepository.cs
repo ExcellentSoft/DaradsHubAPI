@@ -110,6 +110,7 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                 Content = r.r.Content,
                 Rating = r.r.Rating,
                 ReviewBy = r.u.fullname,
+                ReviewerPhoto = r.u.Photo,
                 ReviewDate = r.r.ReviewDate
             }).ToListAsync(),
             TotalReviewCount = await query.CountAsync(),
@@ -133,6 +134,7 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                 Content = r.r.Content,
                 Rating = r.r.Rating,
                 ReviewBy = r.u.fullname,
+                ReviewerPhoto = r.u.Photo,
                 ReviewDate = r.r.ReviewDate,
                 IsDigital = r.r.IsDigital
             }).ToListAsync(),

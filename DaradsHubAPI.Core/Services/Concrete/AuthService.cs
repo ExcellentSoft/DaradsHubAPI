@@ -3,12 +3,8 @@ using DaradsHubAPI.Core.Model;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.Domain.Entities;
+using DaradsHubAPI.Shared.Customs;
 using DaradsHubAPI.Shared.Extentions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Services.Concrete;
@@ -112,6 +108,16 @@ public class AuthService(IUnitOfWork _unitOfWork) : IAuthService
         {
             return new ApiResponse<CustomerLoginResponse> { Message = loginResponse.message, StatusCode = StatusEnum.Validation, Status = false };
         }
+        var today = GetLocalDateTime.CurrentDateTime();
+        await _unitOfWork.Notifications.SaveNotification(new HubNotification
+        {
+            TimeCreated = GetLocalDateTime.CurrentDateTime(),
+            Title = "Login Successful",
+            NoteToEmail = request.Email,
+            Message = $"You are successfully logged in at  {today:yyy-MM-dd HH:mm:ss}",
+            NotificationType = NotificationType.Login
+        });
+
         return new ApiResponse<CustomerLoginResponse> { Message = loginResponse.message, StatusCode = StatusEnum.Success, Status = true, Data = loginResponse.cresponse ?? new CustomerLoginResponse { } };
     }
     public async Task<ApiResponse<string>> ForgetPassword(ForgetPasswordRequest request)
@@ -122,6 +128,15 @@ public class AuthService(IUnitOfWork _unitOfWork) : IAuthService
 
             return new ApiResponse<string> { Status = forgetResponse.status, Message = forgetResponse.message, StatusCode = StatusEnum.Validation };
         }
+        var today = GetLocalDateTime.CurrentDateTime();
+        await _unitOfWork.Notifications.SaveNotification(new HubNotification
+        {
+            TimeCreated = GetLocalDateTime.CurrentDateTime(),
+            Title = "Forget Password Request",
+            NoteToEmail = request.Email,
+            Message = $"You requested for reset password at {today:yyy-MM-dd HH:mm:ss}",
+            NotificationType = NotificationType.ForgetPassword
+        });
         return new ApiResponse<string> { Status = forgetResponse.status, Message = forgetResponse.message, StatusCode = StatusEnum.Success, Data = forgetResponse.userId ?? "" };
     }
     public async Task<ApiResponse> ResetPassword(ResetPasswordRequest request)
@@ -131,6 +146,7 @@ public class AuthService(IUnitOfWork _unitOfWork) : IAuthService
         {
             return new ApiResponse(resetResponse.message, StatusEnum.Validation, resetResponse.status);
         }
+
         return new ApiResponse(resetResponse.message, StatusEnum.Success, resetResponse.status);
     }
     public async Task<ApiResponse> ResendResetPasswordCode(string email)
