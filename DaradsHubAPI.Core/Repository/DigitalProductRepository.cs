@@ -47,7 +47,7 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
                          Id = f.Key,
                          AgentId = f.Select(e => e.ph.AgentId).FirstOrDefault(),
                          Description = f.Select(e => e.ph.Description).FirstOrDefault(),
-                         ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault(),
+                         ImageUrls = f.Select(e => e.img.ImageUrl).ToList(),
                          Title = f.Select(e => e.c.Name).FirstOrDefault(),
                      });
         return query;
