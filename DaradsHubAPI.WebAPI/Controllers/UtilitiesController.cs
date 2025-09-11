@@ -1,5 +1,6 @@
 ﻿using DaradsHubAPI.Core.Model;
 using DaradsHubAPI.Core.Model.Request;
+using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -42,6 +43,14 @@ public class UtilitiesController(ICategoryService _categoryService, IProductServ
     public async Task<IActionResult> GetSubCategories([FromQuery] string? searchText, [FromQuery] int categoryId)
     {
         var response = await _categoryService.GetSubCategories(searchText, categoryId);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("faq")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<HubFAQResponse>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetFAQs([FromQuery] string? searchText)
+    {
+        var response = await _productService.GetFAQs(searchText);
         return ResponseCode(response);
     }
 }

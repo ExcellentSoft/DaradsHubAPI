@@ -158,8 +158,14 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                          AgentId = user.id,
                          Photo = user.Photo,
                          SellingProducts = (from hp in _context.HubAgentProducts.Where(s => s.AgentId == user.id)
+                                            join i in _context.ProductImages on hp.Id equals i.ProductId
                                             join p in _context.HubProducts on hp.ProductId equals p.Id
-                                            select p).Select(d => d.Name).Distinct().Take(10).ToList(),
+                                            select new { p, hp, i }).GroupBy(z => z.p.Name)
+                                            .Select(d => new SellingProduct
+                                            {
+                                                Name = d.Key,
+                                                Image = d.Select(e => e.i.ImageUrl).FirstOrDefault()
+                                            }).Take(10).ToList(),
                          ReviewCount = (from hp in _context.HubAgentProducts.Where(s => s.AgentId == user.id)
                                         join r in _context.HubReviews on hp.Id equals r.ProductId
                                         where r.IsDigital == false
@@ -183,7 +189,7 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         }
         if (!string.IsNullOrWhiteSpace(request.ProductName))
         {
-            uquery = uquery.Where(e => e.SellingProducts.Contains(request.ProductName));
+            uquery = uquery.Where(e => e.SellingProducts.Any(r => r.Name!.Contains(request.ProductName)));
         }
         if (!string.IsNullOrWhiteSpace(request.Location))
         {
@@ -211,6 +217,15 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                          ReviewCount = _context.HubReviews.Where(d => d.IsDigital == false && d.ProductId == f.Key).Count(),
                          MaxRating = _context.HubReviews.Where(d => d.IsDigital == false && d.ProductId == f.Key).Sum(d => d.Rating) / 100
                      });
+        return query;
+    }
+    public IQueryable<HubFAQResponse> GetFAQs()
+    {
+        var query = _context.HubFAQs.Select(r => new HubFAQResponse
+        {
+            Answer = r.Answer,
+            Question = r.Question
+        });
         return query;
     }
 

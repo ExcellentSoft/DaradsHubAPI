@@ -60,4 +60,16 @@ namespace DaradsHubAPI.Domain.Entities
         public int Rating { get; set; }
         public DateTime ReviewDate { get; set; }
     }
+
+    public class HubFAQ
+    {
+        [Key]
+        public long Id { get; set; }
+        [MaxLength(500)]
+        public string Question { get; set; } = default!;
+        public string Answer { get; set; } = default!;
+        public bool IsActive { get; set; }
+        public DateTime DateCreated { get; set; }
+    }
+
 }

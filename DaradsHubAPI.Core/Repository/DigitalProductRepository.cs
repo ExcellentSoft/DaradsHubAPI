@@ -111,7 +111,13 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
                          Photo = user.Photo,
                          SellingProducts = (from hp in _context.HubDigitalProducts.Where(s => s.AgentId == user.id)
                                             join p in _context.Catalogues on hp.CatalogueId equals p.Id
-                                            select p).Select(d => d.Name).Distinct().Take(10).ToList(),
+                                            join i in _context.DigitalProductImages on hp.Id equals i.ProductId
+                                            select new { p, hp, i }).GroupBy(z => z.p.Name)
+                                            .Select(d => new SellingProduct
+                                            {
+                                                Name = d.Key,
+                                                Image = d.Select(e => e.i.ImageUrl).FirstOrDefault()
+                                            }).Take(10).ToList(),
                          ReviewCount = (from hp in _context.HubDigitalProducts.Where(s => s.AgentId == user.id)
                                         join r in _context.HubReviews on hp.Id equals r.ProductId
                                         where r.IsDigital == true
@@ -135,7 +141,7 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         }
         if (!string.IsNullOrWhiteSpace(request.ProductName))
         {
-            uquery = uquery.Where(e => e.SellingProducts.Contains(request.ProductName));
+            uquery = uquery.Where(e => e.SellingProducts.Any(r => r.Name!.Contains(request.ProductName)));
         }
         return uquery;
     }

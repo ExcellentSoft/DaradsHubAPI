@@ -25,4 +25,5 @@ public interface IProductService
     Task<ApiResponse> AddDigitalReview(AddReviewRequestModel model, int userId);
     Task<ApiResponse<AgentReviewResponse>> GetAgentReviews(int agentId);
     Task<ApiResponse<ProductReviewResponse>> GetProductReviews(int productId);
+    Task<ApiResponse<IEnumerable<HubFAQResponse>>> GetFAQs(string? searchText);
 }

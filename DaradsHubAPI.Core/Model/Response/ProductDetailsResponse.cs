@@ -1,4 +1,6 @@
-﻿namespace DaradsHubAPI.Core.Model.Response
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace DaradsHubAPI.Core.Model.Response
 {
     public class ProductDetailsResponse
     {
@@ -85,7 +87,7 @@
     public class AgentsProfileResponse
     {
         public int AgentId { get; set; }
-        public IEnumerable<string> SellingProducts { get; set; } = default!;
+        public IEnumerable<SellingProduct> SellingProducts { get; set; } = default!;
         public string? BusinessName { get; set; }
         public string? FullName { get; set; }
         public string? Experience { get; set; }
@@ -102,5 +104,17 @@
         public string? Address { get; set; }
         public string? State { get; set; }
         public string? City { get; set; }
+    }
+
+    public class SellingProduct
+    {
+        public string? Name { get; set; }
+        public string? Image { get; set; }
+    }
+
+    public class HubFAQResponse
+    {
+        public string Question { get; set; } = default!;
+        public string Answer { get; set; } = default!;
     }
 }
