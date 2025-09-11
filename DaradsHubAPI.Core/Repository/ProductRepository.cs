@@ -47,7 +47,7 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                          Caption = f.Select(e => e.ph.Caption).FirstOrDefault(),
                          AgentId = f.Select(e => e.ph.AgentId).FirstOrDefault(),
                          Description = f.Select(e => e.ph.Description).FirstOrDefault(),
-                         ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault()
+                         ImageUrls = f.Select(e => e.img.ImageUrl).ToList()
                      });
         return query;
     }
