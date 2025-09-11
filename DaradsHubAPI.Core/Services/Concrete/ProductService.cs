@@ -301,6 +301,20 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         return new ApiResponse<IEnumerable<ProductDetailsResponse>> { Message = "Successful", Status = true, Data = paginatedProducts, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
     }
 
+    public async Task<ApiResponse<IEnumerable<HubFAQResponse>>> GetFAQs(string? searchText)
+    {
+        var query = _unitOfWork.Products.GetFAQs();
+
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            query = query
+                .Where(s => s.Question.ToLower().Contains(searchText.ToLower()) || s.Answer.ToLower().Contains(searchText.ToLower()));
+        }
+        var faq = await query.ToListAsync();
+
+        return new ApiResponse<IEnumerable<HubFAQResponse>> { Message = "Successful", Status = true, Data = faq, StatusCode = StatusEnum.Success };
+    }
+
     public async Task<ApiResponse<IEnumerable<AgentsProfileResponse>>> GetPhysicalAgent(AgentsProfileListRequest request)
     {
         var query = _unitOfWork.Products.GetPhysicalAgents(request);
