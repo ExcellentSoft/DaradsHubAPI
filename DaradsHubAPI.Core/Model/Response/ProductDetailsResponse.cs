@@ -55,7 +55,7 @@
         public long AgentId { get; set; }
         public string? Description { get; set; }
         public string? Caption { get; set; }
-        public string? ImageUrl { get; set; }
+        public IEnumerable<string> ImageUrls { get; set; } = default!;
     }
     public class LandingPageDigitalProductResponse
     {
