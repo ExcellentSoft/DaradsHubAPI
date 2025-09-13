@@ -151,7 +151,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
                 ExpiresTime = expires,
                 Name = customer.fullname,
                 Token = token,
-                Photo = "",
+                Photo = customer.Photo,
                 Is2FA = user.TwoFactorEnabled,
                 IsVerify = customer.status == 1,
                 PhoneNumber = customer.phone
