@@ -231,7 +231,6 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
         });
         return new ApiResponse<string> { Status = true, Message = $"Product(s) has been purchased successfully.", StatusCode = StatusEnum.Success, Data = orderCode };
     }
-
     public async Task<ApiResponse<DigitalCheckoutResponse>> CheckOutDigital(CheckoutDigitalRequest request, string email)
     {
         var product = await _unitOfWork.DigitalProducts.GetSingleWhereAsync(r => r.IsSold == false && r.Id == request.ProductId);
@@ -323,6 +322,9 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
         return new ApiResponse<DigitalCheckoutResponse> { Status = true, Message = $"Product(s) has been purchased successfully.", StatusCode = StatusEnum.Success, Data = response };
     }
 
+    #region Agent
+
+    #endregion
     private async Task<(bool status, string message)> ValidateProducts(CheckoutRequest request)
     {
         var response = (false, "Invalid request.");

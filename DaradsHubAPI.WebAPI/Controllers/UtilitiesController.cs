@@ -46,6 +46,7 @@ public class UtilitiesController(ICategoryService _categoryService, IProductServ
         return ResponseCode(response);
     }
 
+    [AllowAnonymous]
     [HttpGet("faq")]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<HubFAQResponse>>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetFAQs([FromQuery] string? searchText)

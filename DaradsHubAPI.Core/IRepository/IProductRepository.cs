@@ -16,7 +16,11 @@ public interface IProductRepository : IGenericRepository<HubAgentProduct>
     IQueryable<HubProduct> GetHubProducts(string? searchText);
     IQueryable<LandingProductResponse> GetLandPageProducts();
     IQueryable<AgentsProfileResponse> GetPhysicalAgents(AgentsProfileListRequest request);
+    IQueryable<AgentsProfileResponse> GetPhysicalPublicAgents(AgentsProfileListRequest request);
     Task<HubAgentProduct?> GetProduct(long productId);
+    IQueryable<ProductDetailsResponse> GetPublicAgentProducts(int categoryId, int agentId);
+    IQueryable<LandingProductResponse> GetPublicLandPageProducts();
     Task<AgentReviewResponse> GetReviewByAgentId(int agentId);
     Task<ProductReviewResponse> GetReviewByProductId(int productId);
+    Task<AgentReviewResponse> GetReviewByPubicAgentId(int agentId);
 }

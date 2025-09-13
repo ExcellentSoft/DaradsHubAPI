@@ -26,4 +26,8 @@ public interface IProductService
     Task<ApiResponse<AgentReviewResponse>> GetAgentReviews(int agentId);
     Task<ApiResponse<ProductReviewResponse>> GetProductReviews(int productId);
     Task<ApiResponse<IEnumerable<HubFAQResponse>>> GetFAQs(string? searchText);
+    Task<ApiResponse<IEnumerable<LandingProductResponse>>> GetPublicLandPageProducts();
+    Task<ApiResponse<AgentReviewResponse>> GetPublicAgentReviews(int agentId);
+    Task<ApiResponse<IEnumerable<AgentsProfileResponse>>> GetPhysicalPublicAgent(AgentsProfileListRequest request);
+    Task<ApiResponse<IEnumerable<ProductDetailsResponse>>> GetPublicAgentProducts(AgentProductListRequest request);
 }

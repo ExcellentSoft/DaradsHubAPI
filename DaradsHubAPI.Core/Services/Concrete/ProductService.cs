@@ -263,6 +263,13 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         return new ApiResponse<AgentReviewResponse> { Data = review, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
     }
 
+    public async Task<ApiResponse<AgentReviewResponse>> GetPublicAgentReviews(int agentId)
+    {
+        var review = await _unitOfWork.Products.GetReviewByPubicAgentId(agentId);
+
+        return new ApiResponse<AgentReviewResponse> { Data = review, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
+    }
+
     public async Task<ApiResponse<ProductReviewResponse>> GetProductReviews(int productId)
     {
         var review = await _unitOfWork.Products.GetReviewByProductId(productId);
@@ -277,6 +284,13 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         return new ApiResponse<IEnumerable<LandingProductResponse>> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
     }
 
+    public async Task<ApiResponse<IEnumerable<LandingProductResponse>>> GetPublicLandPageProducts()
+    {
+        var responses = await _unitOfWork.Products.GetPublicLandPageProducts().Take(30).ToListAsync();
+
+        return new ApiResponse<IEnumerable<LandingProductResponse>> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
+    }
+
     public async Task<ApiResponse<AgentProductProfileResponse>> GetAgentProductProfile(int agentId)
     {
         var responses = await _unitOfWork.Products.GetAgentProductProfile(agentId);
@@ -286,6 +300,24 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
     public async Task<ApiResponse<IEnumerable<ProductDetailsResponse>>> GetAgentProducts(AgentProductListRequest request)
     {
         var query = _unitOfWork.Products.GetAgentProducts(request.CategoryId, request.AgentId);
+
+        if (!string.IsNullOrWhiteSpace(request.SearchText))
+        {
+            query = query
+                .Where(s => s.Caption != null && s.Caption.ToLower().Contains(request.SearchText.ToLower()) || s.Name != null && s.Name.ToLower().Contains(request.SearchText.ToLower()));
+        }
+        var totalProducts = query.Count();
+        var paginatedProducts = await query
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize).ToListAsync();
+
+
+        return new ApiResponse<IEnumerable<ProductDetailsResponse>> { Message = "Successful", Status = true, Data = paginatedProducts, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
+    }
+
+    public async Task<ApiResponse<IEnumerable<ProductDetailsResponse>>> GetPublicAgentProducts(AgentProductListRequest request)
+    {
+        var query = _unitOfWork.Products.GetPublicAgentProducts(request.CategoryId, request.AgentId);
 
         if (!string.IsNullOrWhiteSpace(request.SearchText))
         {
@@ -318,6 +350,18 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
     public async Task<ApiResponse<IEnumerable<AgentsProfileResponse>>> GetPhysicalAgent(AgentsProfileListRequest request)
     {
         var query = _unitOfWork.Products.GetPhysicalAgents(request);
+
+        var totalProducts = query.Count();
+        var paginatedAgents = await query
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize).ToListAsync();
+
+        return new ApiResponse<IEnumerable<AgentsProfileResponse>> { Message = "Successful", Status = true, Data = paginatedAgents, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
+    }
+
+    public async Task<ApiResponse<IEnumerable<AgentsProfileResponse>>> GetPhysicalPublicAgent(AgentsProfileListRequest request)
+    {
+        var query = _unitOfWork.Products.GetPhysicalPublicAgents(request);
 
         var totalProducts = query.Count();
         var paginatedAgents = await query
