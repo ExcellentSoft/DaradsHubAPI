@@ -103,9 +103,24 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
 
         return new ApiResponse<IEnumerable<LandingPageDigitalProductResponse>> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
     }
+
+    public async Task<ApiResponse<IEnumerable<LandingPageDigitalProductResponse>>> GetPublicLandPageProducts()
+    {
+        var responses = await _unitOfWork.DigitalProducts.GetPublicLandPageProducts().Take(30).ToListAsync();
+
+        return new ApiResponse<IEnumerable<LandingPageDigitalProductResponse>> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
+    }
+
     public async Task<ApiResponse<AgentProductProfileResponse>> GetAgentDigitalProductProfile(int agentId)
     {
         var responses = await _unitOfWork.DigitalProducts.GetAgentDigitalProductProfile(agentId);
+
+        return new ApiResponse<AgentProductProfileResponse> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
+    }
+
+    public async Task<ApiResponse<AgentProductProfileResponse>> GetPublicAgentDigitalProductProfile(int agentId)
+    {
+        var responses = await _unitOfWork.DigitalProducts.GetPublicAgentDigitalProductProfile(agentId);
 
         return new ApiResponse<AgentProductProfileResponse> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
     }
@@ -122,9 +137,39 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
         return new ApiResponse<IEnumerable<AgentsProfileResponse>> { Message = "Successful", Status = true, Data = paginatedAgents, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
     }
 
+    public async Task<ApiResponse<IEnumerable<AgentsProfileResponse>>> GetDigitalPublicAgents(AgentsProfileListRequest request)
+    {
+        var query = _unitOfWork.DigitalProducts.GetDigitalPublicAgents(request);
+
+        var totalProducts = query.Count();
+        var paginatedAgents = await query
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize).ToListAsync();
+
+        return new ApiResponse<IEnumerable<AgentsProfileResponse>> { Message = "Successful", Status = true, Data = paginatedAgents, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
+    }
+
     public async Task<ApiResponse<IEnumerable<DigitalProductDetailsResponse>>> GetAgentProducts(AgentDigitalProductListRequest request)
     {
         var query = _unitOfWork.DigitalProducts.GetAgentDigitalProducts(request.CatalogueId, request.AgentId);
+
+        if (!string.IsNullOrWhiteSpace(request.SearchText))
+        {
+            query = query
+                .Where(s => s.Title != null && s.Title.ToLower().Contains(request.SearchText.ToLower()) || s.Name != null && s.Name.ToLower().Contains(request.SearchText.ToLower()));
+        }
+        var totalProducts = query.Count();
+        var paginatedProducts = await query
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize).ToListAsync();
+
+
+        return new ApiResponse<IEnumerable<DigitalProductDetailsResponse>> { Message = "Successful", Status = true, Data = paginatedProducts, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
+    }
+
+    public async Task<ApiResponse<IEnumerable<DigitalProductDetailsResponse>>> GetPublicAgentProducts(AgentDigitalProductListRequest request)
+    {
+        var query = _unitOfWork.DigitalProducts.GetPublicAgentDigitalProducts(request.CatalogueId, request.AgentId);
 
         if (!string.IsNullOrWhiteSpace(request.SearchText))
         {

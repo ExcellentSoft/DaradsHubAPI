@@ -51,6 +51,24 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                      });
         return query;
     }
+
+    public IQueryable<LandingProductResponse> GetPublicLandPageProducts()
+    {
+        var query = (from user in _context.userstb
+                     where user.IsAgent == true && user.IsPublicAgent == true
+                     join ph in _context.HubAgentProducts on user.id equals ph.AgentId
+                     join img in _context.ProductImages on ph.Id equals img.ProductId
+                     orderby ph.DateCreated descending
+                     select new { ph, img }).GroupBy(d => d.img.ProductId).Select(f => new LandingProductResponse
+                     {
+                         Id = f.Key,
+                         Caption = f.Select(e => e.ph.Caption).FirstOrDefault(),
+                         AgentId = f.Select(e => e.ph.AgentId).FirstOrDefault(),
+                         Description = f.Select(e => e.ph.Description).FirstOrDefault(),
+                         ImageUrls = f.Select(e => e.img.ImageUrl).ToList()
+                     });
+        return query;
+    }
     public async Task<AgentProductProfileResponse> GetAgentProductProfile(int agentId)
     {
 
@@ -98,24 +116,58 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
 
     public async Task<AgentReviewResponse> GetReviewByAgentId(int agentId)
     {
-        var query = from r in _context.HubAgentReviews
-                    where r.AgentId == agentId
+        var query = from user in _context.userstb
+                    where user.IsAgent == true && user.id == agentId
+                    join r in _context.HubAgentReviews on user.id equals r.AgentId
                     join u in _context.userstb on r.ReviewById equals u.id
                     select new { r, u };
-
-        var response = new AgentReviewResponse
+        var response = new AgentReviewResponse();
+        if (query.Any())
         {
-            Reviews = await query.Select(r => new AgentReview
+            response = new AgentReviewResponse
             {
-                Content = r.r.Content,
-                Rating = r.r.Rating,
-                ReviewBy = r.u.fullname,
-                ReviewerPhoto = r.u.Photo,
-                ReviewDate = r.r.ReviewDate
-            }).ToListAsync(),
-            TotalReviewCount = await query.CountAsync(),
-            RatingAverage = query.Select(r => r.r.Rating).Average()
-        };
+                Reviews = await query.Select(r => new AgentReview
+                {
+                    Content = r.r.Content,
+                    Rating = r.r.Rating,
+                    ReviewBy = r.u.fullname,
+                    ReviewerPhoto = r.u.Photo,
+                    ReviewDate = r.r.ReviewDate
+                }).ToListAsync(),
+                TotalReviewCount = await query.CountAsync(),
+                RatingAverage = query.Select(r => r.r.Rating).Average()
+            };
+
+        }
+
+        return response;
+    }
+
+    public async Task<AgentReviewResponse> GetReviewByPubicAgentId(int agentId)
+    {
+        var query = from user in _context.userstb
+                    where user.IsAgent == true && user.IsPublicAgent == true && user.id == agentId
+                    join r in _context.HubAgentReviews on user.id equals r.AgentId
+                    join u in _context.userstb on r.ReviewById equals u.id
+                    select new { r, u };
+        var response = new AgentReviewResponse();
+        if (query.Any())
+        {
+            response = new AgentReviewResponse
+            {
+                Reviews = await query.Select(r => new AgentReview
+                {
+                    Content = r.r.Content,
+                    Rating = r.r.Rating,
+                    ReviewBy = r.u.fullname,
+                    ReviewerPhoto = r.u.Photo,
+                    ReviewDate = r.r.ReviewDate
+                }).ToListAsync(),
+                TotalReviewCount = await query.CountAsync(),
+                RatingAverage = query.Select(r => r.r.Rating).Average()
+            };
+
+        }
 
         return response;
     }
@@ -199,6 +251,60 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         return uquery;
     }
 
+    public IQueryable<AgentsProfileResponse> GetPhysicalPublicAgents(AgentsProfileListRequest request)
+    {
+        var uquery = from user in _context.userstb.Where(d => d.IsAgent == true && d.IsPublicAgent == true)
+
+                     select new AgentsProfileResponse
+                     {
+                         BusinessName = user.BusinessName,
+                         FullName = user.fullname,
+                         IsOnline = true,
+                         IsVerify = true,
+                         AgentId = user.id,
+                         Photo = user.Photo,
+                         SellingProducts = (from hp in _context.HubAgentProducts.Where(s => s.AgentId == user.id)
+                                            join i in _context.ProductImages on hp.Id equals i.ProductId
+                                            join p in _context.HubProducts on hp.ProductId equals p.Id
+                                            select new { p, hp, i }).GroupBy(z => z.p.Name)
+                                            .Select(d => new SellingProduct
+                                            {
+                                                Name = d.Key,
+                                                Image = d.Select(e => e.i.ImageUrl).FirstOrDefault()
+                                            }).Take(10).ToList(),
+                         ReviewCount = (from hp in _context.HubAgentProducts.Where(s => s.AgentId == user.id)
+                                        join r in _context.HubReviews on hp.Id equals r.ProductId
+                                        where r.IsDigital == false
+                                        select r).Select(r => r.ProductId).Count(),
+                         MaxRating = (from hp in _context.HubAgentProducts.Where(s => s.AgentId == user.id)
+                                      join r in _context.HubReviews on hp.Id equals r.ProductId
+                                      where r.IsDigital == false
+                                      select r.Rating).OrderByDescending(r => r).FirstOrDefault(),
+                         Experience = _context.HubAgentProfiles.Where(r => r.UserId == user.id).Select(e => e.Experience).FirstOrDefault(),
+                         AgentsAddress = _context.ShippingAddresses.Where(r => r.CustomerId == user.id).Select(n => new AgentsAddress
+                         {
+                             Address = n.Address,
+                             City = n.City,
+                             State = n.State
+                         }).FirstOrDefault()
+                     };
+
+        if (request.IsOnline is not null)
+        {
+            uquery = uquery.Where(e => e.IsOnline == request.IsOnline);
+        }
+        if (!string.IsNullOrWhiteSpace(request.ProductName))
+        {
+            uquery = uquery.Where(e => e.SellingProducts.Any(r => r.Name!.Contains(request.ProductName)));
+        }
+        if (!string.IsNullOrWhiteSpace(request.Location))
+        {
+            uquery = uquery.Where(e => e.AgentsAddress != null && e.AgentsAddress.Address != null && e.AgentsAddress.Address.Contains(request.Location) || (e.AgentsAddress!.City != null && e.AgentsAddress.City.Contains(request.Location)) || (e.AgentsAddress!.State != null && e.AgentsAddress.State.Contains(request.Location)));
+        }
+
+        return uquery;
+    }
+
     public IQueryable<ProductDetailsResponse> GetAgentProducts(int categoryId, int agentId)
     {
         var query = (from ph in _context.HubAgentProducts.Where(d => d.AgentId == agentId)
@@ -219,6 +325,30 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                      });
         return query;
     }
+
+    public IQueryable<ProductDetailsResponse> GetPublicAgentProducts(int categoryId, int agentId)
+    {
+        var query = (from user in _context.userstb
+                     where user.IsAgent == true && user.IsPublicAgent == true && user.id == agentId
+                     join ph in _context.HubAgentProducts on user.id equals ph.AgentId
+                     join img in _context.ProductImages on ph.Id equals img.ProductId
+                     join p in _context.HubProducts on ph.ProductId equals p.Id
+                     where ph.CategoryId == categoryId || categoryId == 0
+                     orderby ph.DateCreated descending
+                     select new { ph, img, p }).GroupBy(d => d.img.ProductId).Select(f => new ProductDetailsResponse
+                     {
+                         ProductId = f.Key,
+                         Caption = f.Select(e => e.ph.Caption).FirstOrDefault(),
+                         Name = f.Select(e => e.p.Name).FirstOrDefault(),
+                         Price = f.Select(e => e.ph.Price).FirstOrDefault(),
+                         Description = f.Select(e => e.ph.Description).FirstOrDefault(),
+                         ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault(),
+                         ReviewCount = _context.HubReviews.Where(d => d.IsDigital == false && d.ProductId == f.Key).Count(),
+                         MaxRating = _context.HubReviews.Where(d => d.IsDigital == false && d.ProductId == f.Key).Sum(d => d.Rating) / 100
+                     });
+        return query;
+    }
+
     public IQueryable<HubFAQResponse> GetFAQs()
     {
         var query = _context.HubFAQs.Select(r => new HubFAQResponse

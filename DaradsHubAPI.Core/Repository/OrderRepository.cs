@@ -105,13 +105,11 @@ namespace DaradsHubAPI.Core.Repository
                 await _context.SaveChangesAsync();
             }
         }
-
         public async Task UpdateCart(shopCat model)
         {
             _context.shopCats.Update(model);
             await _context.SaveChangesAsync();
         }
-
         public async Task AddCart(shopCat model)
         {
             _context.shopCats.Add(model);
@@ -121,19 +119,16 @@ namespace DaradsHubAPI.Core.Repository
         {
             _context.HubOrderItems.Add(model);
         }
-
         public async Task AddHubOrderTracking(HubOrderTracking model)
         {
             _context.HubOrderTracking.Add(model);
             await _context.SaveChangesAsync();
         }
-
         public async Task AddShippingAddress(ShippingAddress model)
         {
             _context.ShippingAddresses.Add(model);
             await _context.SaveChangesAsync();
         }
-
         public IQueryable<ShippingAddress> GetShippingAddresses(int userId)
         {
             var shippingAddress = _context.ShippingAddresses.Where(d => d.CustomerId == userId);

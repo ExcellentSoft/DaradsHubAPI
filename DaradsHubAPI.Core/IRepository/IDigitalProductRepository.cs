@@ -11,5 +11,9 @@ public interface IDigitalProductRepository : IGenericRepository<HubDigitalProduc
     Task<Catalogue> GetCatalogue(long catalogueId);
     IQueryable<AgentsProfileResponse> GetDigitalAgents(AgentsProfileListRequest request);
     IQueryable<Catalogue> GetDigitalProducts(string? searchText, int agentId);
+    IQueryable<AgentsProfileResponse> GetDigitalPublicAgents(AgentsProfileListRequest request);
     IQueryable<LandingPageDigitalProductResponse> GetLandPageProducts();
+    Task<AgentProductProfileResponse> GetPublicAgentDigitalProductProfile(int agentId);
+    IQueryable<DigitalProductDetailsResponse> GetPublicAgentDigitalProducts(int catalogueId, int agentId);
+    IQueryable<LandingPageDigitalProductResponse> GetPublicLandPageProducts();
 }

@@ -4,6 +4,7 @@ using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.WebAPI.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -12,12 +13,22 @@ namespace DaradsHubAPI.WebAPI.Areas.Customer.Controllers;
 [Tags("Customer")]
 public class ProductController(IProductService _productService) : ApiBaseController
 {
+    [AllowAnonymous]
     [HttpGet("landing-page-products")]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<LandingProductResponse>>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetLandPageProducts()
     {
-        var response = await _productService.GetLandPageProducts();
-        return ResponseCode(response);
+        bool isAuthenticate = User.Identity!.IsAuthenticated;
+        if (isAuthenticate)
+        {
+            var response = await _productService.GetLandPageProducts();
+            return ResponseCode(response);
+        }
+        else
+        {
+            var response = await _productService.GetPublicLandPageProducts();
+            return ResponseCode(response);
+        }
     }
     /// <summary>
     /// Rating range is between 1-5
@@ -47,14 +58,25 @@ public class ProductController(IProductService _productService) : ApiBaseControl
         return ResponseCode(response);
     }
 
+    [AllowAnonymous]
     [HttpGet("agent-reviews")]
     [ProducesResponseType(typeof(ApiResponse<AgentReviewResponse>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetAgentReviews([FromQuery] int agentId)
     {
-        var response = await _productService.GetAgentReviews(agentId);
-        return ResponseCode(response);
+        bool isAuthenticate = User.Identity!.IsAuthenticated;
+        if (isAuthenticate)
+        {
+            var response = await _productService.GetAgentReviews(agentId);
+            return ResponseCode(response);
+        }
+        else
+        {
+            var response = await _productService.GetPublicAgentReviews(agentId);
+            return ResponseCode(response);
+        }
     }
 
+    [AllowAnonymous]
     [HttpGet("product-reviews")]
     [ProducesResponseType(typeof(ApiResponse<ProductReviewResponse>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetProductReviews([FromQuery] int productId)
@@ -71,14 +93,25 @@ public class ProductController(IProductService _productService) : ApiBaseControl
         return ResponseCode(response);
     }
 
+    [AllowAnonymous]
     [HttpGet("agent-products")]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<ProductDetailsResponse>>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetAgentProducts([FromQuery] AgentProductListRequest request)
     {
-        var response = await _productService.GetAgentProducts(request);
-        return ResponseCode(response);
+        bool isAuthenticate = User.Identity!.IsAuthenticated;
+        if (isAuthenticate)
+        {
+            var response = await _productService.GetAgentProducts(request);
+            return ResponseCode(response);
+        }
+        else
+        {
+            var response = await _productService.GetPublicAgentProducts(request);
+            return ResponseCode(response);
+        }
     }
 
+    [AllowAnonymous]
     [HttpGet("agent-product")]
     [ProducesResponseType(typeof(ApiResponse<ProductDetailResponse>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetAgentProduct([FromQuery] int productId)
@@ -87,12 +120,22 @@ public class ProductController(IProductService _productService) : ApiBaseControl
         return ResponseCode(response);
     }
 
+    [AllowAnonymous]
     [HttpGet("physical-agents")]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<AgentsProfileResponse>>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetPhysicalAgent([FromQuery] AgentsProfileListRequest request)
     {
-        var response = await _productService.GetPhysicalAgent(request);
-        return ResponseCode(response);
+        bool isAuthenticate = User.Identity!.IsAuthenticated;
+        if (isAuthenticate)
+        {
+            var response = await _productService.GetPhysicalAgent(request);
+            return ResponseCode(response);
+        }
+        else
+        {
+            var response = await _productService.GetPhysicalPublicAgent(request);
+            return ResponseCode(response);
+        }
     }
 
     [HttpPost("create-product-request")]
