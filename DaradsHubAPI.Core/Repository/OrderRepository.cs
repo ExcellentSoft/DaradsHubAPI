@@ -208,5 +208,43 @@ namespace DaradsHubAPI.Core.Repository
             }
             return res;
         }
+
+        public async Task<SingleOrderResponse?> GetAgentOrder(string orderCode)
+        {
+            var response = await (from order in _context.HubOrders
+                                  where order.Code == orderCode
+                                  select new SingleOrderResponse
+                                  {
+                                      Code = order.Code,
+                                      OrderDate = order.OrderDate,
+                                      OrderId = order.Id,
+                                      OrderStatus = order.Status,
+                                      TotalPrice = order.TotalCost,
+                                      ProductDetails = order.ProductType == "Digital" ? (from item in _context.HubOrderItems.Where(d => d.OrderCode == order.Code)
+                                                                                         join product in _context.HubDigitalProducts on item.ProductId equals product.Id
+                                                                                         join cat in _context.Catalogues on product.CatalogueId equals cat.Id
+                                                                                         select new OrderProductRecord
+                                                                                         {
+
+                                                                                             Name = cat.Name,
+                                                                                             Price = item.Price,
+                                                                                             Quantity = item.Quantity
+
+                                                                                         }).ToList() :
+                                                         (from item in _context.HubOrderItems.Where(d => d.OrderCode == order.Code)
+                                                          join product in _context.HubAgentProducts on item.ProductId equals product.Id
+                                                          select new OrderProductRecord
+                                                          {
+
+                                                              Name = product.Caption ?? "Nil",
+                                                              Price = item.Price,
+                                                              Quantity = item.Quantity
+
+                                                          }).ToList()
+
+
+                                  }).FirstOrDefaultAsync();
+            return response;
+        }
     }
 }

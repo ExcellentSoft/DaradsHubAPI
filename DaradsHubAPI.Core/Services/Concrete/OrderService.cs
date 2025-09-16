@@ -338,34 +338,19 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
 
         return new ApiResponse<List<AgentOrderListResponse>> { StatusCode = StatusEnum.Success, Message = "Orders fetched successfully.", Status = true, Data = orderResponse, Pages = request.PageSize, TotalRecord = totalRecordsCount, CurrentPage = request.PageNumber };
     }
+
     public async Task<ApiResponse<SingleOrderResponse>> GetOrder(string orderCode)
     {
-        //var qOrder = await (from order in _ecommerceDbContext.orders.Where(b => b.ReferenceNumber == referenceId)
-        //                    join item in _ecommerceDbContext.orderitems on order.ReferenceNumber equals item.ReferenceNumber
-        //                    join prod in _ecommerceDbContext.ecommerceproducts on item.ProductId equals prod.Id
-        //                    select new { order, item, prod }).GroupBy(d => d.item.ReferenceNumber).Select(d => new
-        //                    SingleOrderResponse
-        //                    {
-        //                        Description = d.Select(s => s.order.Description).FirstOrDefault(),
-        //                        ReferenceId = d.Select(s => s.order.ReferenceNumber).FirstOrDefault() ?? "",
-        //                        OrderStatus = d.Select(s => s.order.Status).FirstOrDefault(),
-        //                        OrderStatusText = d.Select(s => s.order.Status).FirstOrDefault().GetDescription(),
-        //                        PurchaseDate = d.Select(s => s.order.CreatedDate).FirstOrDefault(),
-        //                        ShopperName = d.Select(s => s.order.UserName).FirstOrDefault() ?? "",
-        //                        TotalPrice = d.Select(s => s.order.TotalSum).FirstOrDefault(),
-        //                        ProductDetails = d.Select(s => new OrderProductDetails
-        //                        {
-        //                            Name = s.prod.Name ?? "",
-        //                            Price = s.item.Price,
-        //                            Quantity = s.item.Quantity,
-        //                            TotalPrice = s.item.Quantity * s.item.Price
-        //                        }).ToList()
+        var response = await _unitOfWork.Orders.GetAgentOrder(orderCode);
+        if (response is null)
+        {
+            return new ApiResponse<SingleOrderResponse> { StatusCode = StatusEnum.NoRecordFound, Message = "Order record not found.", Status = false };
+        }
 
-        //                    }).FirstOrDefaultAsync();
-
-        return new ApiResponse<SingleOrderResponse> { StatusCode = StatusEnum.Success, Message = "Order product fetched successfully.", Status = true,/* Data = qOrder ?? new SingleOrderResponse { } */};
+        return new ApiResponse<SingleOrderResponse> { StatusCode = StatusEnum.Success, Message = "Order fetched successfully.", Status = true, Data = response };
 
     }
+
     public async Task<ApiResponse> ChangeOrderStatus(ChangeStatusRequest request)
     {
         var order = await _unitOfWork.Orders.GetSingleWhereAsync(e => e.Code == request.OrderCode);

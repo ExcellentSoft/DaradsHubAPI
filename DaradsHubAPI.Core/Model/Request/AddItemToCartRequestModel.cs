@@ -59,20 +59,17 @@ namespace DaradsHubAPI.Core.Model.Request
     }
     public record SingleOrderResponse
     {
-        public string OrderCode { get; set; } = default!;
-        public DateTime PurchaseDate { get; set; }
+        public long OrderId { get; set; }
+        public string? Code { get; set; }
+        public DateTime OrderDate { get; set; }
         public decimal TotalPrice { get; set; }
-        public string ShopperName { get; set; } = default!;
         public OrderStatus OrderStatus { get; set; }
-        public string OrderStatusText { get; set; } = default!;
-        public string? Description { get; set; }
         public IEnumerable<OrderProductRecord> ProductDetails { get; set; } = default!;
     }
     public record OrderProductRecord
     {
         public string Name { get; set; } = default!;
         public decimal Price { get; set; }
-        public decimal TotalPrice { get; set; }
         public int Quantity { get; set; }
     }
     public record ChangeStatusRequest
