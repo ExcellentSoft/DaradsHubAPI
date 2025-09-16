@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using DaradsHubAPI.Domain.Entities;
+using System.ComponentModel.DataAnnotations;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Model.Request
@@ -48,14 +49,13 @@ namespace DaradsHubAPI.Core.Model.Request
     public record AgentOrderListResponse
     {
         public long OrderId { get; set; }
-        public string? ProductName { get; set; }
-        public string OrderCode { get; set; } = default!;
-        public DateTime PurchaseDate { get; set; }
+        public string? Code { get; set; }
+        public string? CustomerName { get; set; }
+        public DateTime OrderDate { get; set; }
         public decimal TotalPrice { get; set; }
-        public int TotalProductCount { get; set; }
         public OrderStatus OrderStatus { get; set; }
-        public string OrderStatusText { get; set; } = default!;
-        public string? ShopperName { get; set; }
+        public string? ProductType { get; set; }
+
     }
     public record SingleOrderResponse
     {
