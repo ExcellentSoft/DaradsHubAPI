@@ -8,12 +8,12 @@ public class GenericRepository<T>(AppDbContext _context) : IGenericRepository<T>
 {
     private readonly DbSet<T> entities = _context.Set<T>();
 
-    public IEnumerable<T> GetAll()
+    public IQueryable<T> GetAll()
     {
         return entities;
     }
 
-    public IEnumerable<TResult> GetAll<TResult>(Expression<Func<T, TResult>> select)
+    public IQueryable<TResult> GetAll<TResult>(Expression<Func<T, TResult>> select)
     {
         return entities.Select(select);
     }

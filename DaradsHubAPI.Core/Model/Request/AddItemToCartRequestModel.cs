@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Model.Request
 {
@@ -25,5 +26,58 @@ namespace DaradsHubAPI.Core.Model.Request
         public string? State { get; set; }
         public string? Email { get; set; }
         public string PhoneNumber { get; set; } = default!;
+    }
+
+    public class AgentOrderMetricResponse
+    {
+        public int TotalOrderCount { get; set; }
+        public int RefundedOrderCount { get; set; }
+        public int CanceledOrderCount { get; set; }
+        public int CompletedOrderCount { get; set; }
+        public int PendingOrderCount { get; internal set; }
+        public int ProcessingOrderCount { get; internal set; }
+    }
+
+    public record AgentOrderListRequest : ListRequest
+    {
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public OrderStatus? Status { get; set; }
+    }
+
+    public record AgentOrderListResponse
+    {
+        public long OrderId { get; set; }
+        public string? ProductName { get; set; }
+        public string OrderCode { get; set; } = default!;
+        public DateTime PurchaseDate { get; set; }
+        public decimal TotalPrice { get; set; }
+        public int TotalProductCount { get; set; }
+        public OrderStatus OrderStatus { get; set; }
+        public string OrderStatusText { get; set; } = default!;
+        public string? ShopperName { get; set; }
+    }
+    public record SingleOrderResponse
+    {
+        public string OrderCode { get; set; } = default!;
+        public DateTime PurchaseDate { get; set; }
+        public decimal TotalPrice { get; set; }
+        public string ShopperName { get; set; } = default!;
+        public OrderStatus OrderStatus { get; set; }
+        public string OrderStatusText { get; set; } = default!;
+        public string? Description { get; set; }
+        public IEnumerable<OrderProductRecord> ProductDetails { get; set; } = default!;
+    }
+    public record OrderProductRecord
+    {
+        public string Name { get; set; } = default!;
+        public decimal Price { get; set; }
+        public decimal TotalPrice { get; set; }
+        public int Quantity { get; set; }
+    }
+    public record ChangeStatusRequest
+    {
+        public OrderStatus Status { get; set; }
+        public string OrderCode { get; set; } = default!;
     }
 }

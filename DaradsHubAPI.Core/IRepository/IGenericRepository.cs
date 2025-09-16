@@ -8,8 +8,8 @@ public interface IGenericRepository<T> where T : class
     Task<int> CountWhere(Expression<Func<T, bool>> expression);
     Task Delete(int id, bool save = true);
     Task DeleteWhere(Expression<Func<T, bool>> expression, bool save = true);
-    IEnumerable<T> GetAll();
-    IEnumerable<TResult> GetAll<TResult>(Expression<Func<T, TResult>> select);
+    IQueryable<T> GetAll();
+    IQueryable<TResult> GetAll<TResult>(Expression<Func<T, TResult>> select);
     Task<T?> GetById(int id);
     T? GetSingleWhere(Expression<Func<T, bool>> expression);
     Task<T?> GetSingleWhereAsync(Expression<Func<T, bool>> expression);

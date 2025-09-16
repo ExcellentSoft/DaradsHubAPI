@@ -89,12 +89,10 @@ public class Enum
     public enum OrderStatus
     {
         Order = 1,
-        Accepted,
-        Rejected,
-        Shipped,
-        Delivered,
-        DeliveryConfirmed,
-        Returned
+        Processing,
+        Cancelled,
+        Refunded,
+        Completed
     }
     public enum ProductRequestTypeEnum
     {

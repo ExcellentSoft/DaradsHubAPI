@@ -4,6 +4,8 @@ using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
+using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Repository
 {
@@ -134,5 +136,66 @@ namespace DaradsHubAPI.Core.Repository
             var shippingAddress = _context.ShippingAddresses.Where(d => d.CustomerId == userId);
             return shippingAddress;
         }
+
+        public async Task<AgentOrderMetricResponse> GetOrderMetrics(int agentId)
+        {
+            var query = from item in _context.HubOrderItems
+                        where item.AgentId == agentId
+                        join order in _context.HubOrders on item.OrderCode equals order.Code
+                        select new { order };
+            var metrics = new AgentOrderMetricResponse();
+            if (query.Any())
+            {
+                var queryD = query.GroupBy(d => d.order.Code);
+                metrics = new AgentOrderMetricResponse
+                {
+                    TotalOrderCount = queryD.Select(d => d.Key).Count(),
+                    PendingOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Order).Count(),
+                    CompletedOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Completed).Count(),
+                    CanceledOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Cancelled).Count(),
+                    RefundedOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Refunded).Count(),
+                    ProcessingOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Processing).Count(),
+                };
+            }
+
+            return await Task.FromResult(metrics);
+        }
+
+
+        //public IQueryable<ShippingAddress> GetOrders(AgentOrderListRequest request, int agentId)
+        //{
+        //    var qOrder = from order in _ecommerceDbContext.orders
+        //                 where (request.StartDate == null || order.CreatedDate.Date >= request.StartDate.Value.Date) &&
+        //                      (request.EndDate == null || order.CreatedDate.Date <= request.EndDate.Value.Date)
+        //                 select order;
+
+        //    if (!string.IsNullOrEmpty(request.SearchText))
+        //    {
+        //        var searchText = request.SearchText.Trim().ToLower();
+
+        //        qOrder = qOrder.Where(d => d.ReferenceNumber.Contains(request.SearchText));
+        //    }
+
+        //    if (request.Status is not null)
+        //    {
+        //        qOrder = qOrder.Where(d => d.Status == request.Status);
+        //    }
+
+        //    var totalRecordsCount = qOrder.Count();
+        //    var response = await qOrder.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).OrderByDescending(d => d.CreatedDate).Select(s => new OrderListResponse
+        //    {
+        //        OrderId = s.Id,
+        //        OrderStatus = s.Status,
+        //        OrderStatusText = s.Status.GetDescription(),
+        //        PurchaseDate = s.CreatedDate,
+        //        ReferenceId = s.ReferenceNumber,
+        //        ShopperName = s.UserName,
+        //        productName = (from item in _ecommerceDbContext.orderitems.Where(d => d.ReferenceNumber == s.ReferenceNumber)
+        //                       join product in _ecommerceDbContext.ecommerceproducts on item.ProductId equals product.Id
+        //                       select product.Name).FirstOrDefault(),
+        //        TotalPrice = s.TotalSum,
+        //        TotalProductCount = _ecommerceDbContext.orderitems.Where(d => d.ReferenceNumber == s.ReferenceNumber).Count()
+        //    }).ToListAsync();
+        //}
     }
 }
