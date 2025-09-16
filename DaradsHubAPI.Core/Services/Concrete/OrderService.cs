@@ -8,10 +8,11 @@ using DaradsHubAPI.Shared.Customs;
 using DaradsHubAPI.Shared.Static;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using DaradsHubAPI.Domain.Enums;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Services.Concrete;
-public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProvider) : IOrderService
+public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProvider, IEmailService _emailService) : IOrderService
 {
 
     public async Task<ApiResponse<IEnumerable<OrderListResponse>>> GetOrders(string email, OrderListRequest request)
@@ -396,50 +397,38 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
     }
     public async Task<ApiResponse> ChangeOrderStatus(ChangeStatusRequest request)
     {
-        //var audit = await _ecommerceDbContext.orderaudits.FirstOrDefaultAsync(s => s.ReferenceId == request.OrderCode);
+        var order = await _unitOfWork.Orders.GetSingleWhereAsync(e => e.Code == request.OrderCode);
+        if (order is null)
+        {
+            return new ApiResponse("Order record not found.", StatusEnum.NoRecordFound, false);
+        }
+        var tDescription = GenericStrings.GetDescription(request.Status, "");
 
-        //var tDescription = ConstantFields.GetDescription(request.Status, "");
-        //if (audit is not null)
-        //{
+        var newAudit = new HubOrderTracking
+        {
 
-        //    var newAudit = new orderaudit
-        //    {
-        //        CreatedDate = LocalDateTime.CurrentDateTime(),
-        //        Status = request.Status,
-        //        ReferenceId = request.OrderCode,
-        //        ActionById = audit.ActionById,
-        //        Description = tDescription,
-        //    };
-        //    _ecommerceDbContext.orderaudits.Add(newAudit);
-        //}
+            Status = request.Status,
+            OrderCode = request.OrderCode,
+            DateCreated = GetLocalDateTime.CurrentDateTime(),
+            Description = tDescription,
+        };
+        await _unitOfWork.Orders.AddHubOrderTracking(newAudit);
 
-        //var notification = await _ecommerceDbContext.notifications.FirstOrDefaultAsync(d => d.OrderReferenceId == request.OrderCode);
+        var newNotification = new HubNotification
+        {
+            TimeCreated = GetLocalDateTime.CurrentDateTime(),
+            Title = "Change Order Status",
+            NoteToEmail = order.UserEmail,
+            Message = tDescription,
+            NotificationType = NotificationType.ChangeOrderStatus
+        };
 
-        //if (notification is not null)
-        //{
-        //    var newNotification = new notification
-        //    {
-        //        CreatedDate = LocalDateTime.CurrentDateTime(),
-        //        Title = NotificationType.ChangeOrderStatus.GetDescription(),
-        //        NoteToEmail = notification.NoteToEmail,
-        //        Message = tDescription,
-        //        NotificationType = NotificationType.ChangeOrderStatus,
-        //        OrderReferenceId = request.OrderCode
-        //    };
-        //    _ecommerceDbContext.notifications.Add(newNotification);
-        //    await _ecommerceDbContext.SaveChangesAsync();
-        //}
+        order.Status = request.Status;
+        await _unitOfWork.Notifications.Insert(newNotification);
 
-        //await _ecommerceDbContext.orders.Where(e => e.ReferenceNumber == request.OrderCode).ExecuteUpdateAsync(r => r.SetProperty(c => c.Status, request.Status));
+        string body = $"Hello {order.UserEmail},<br/> Your order with code #{order.Code} has been updated to status: {request.Status.GetDescription()}<br/><br/>";
+        _emailService.SendMail(order.UserEmail ?? "", "Change Order status", body, "Darad");
 
-        //string emailFrom = ConfigHelpers.AppSetting("AppSettings", "EmailFrom") ?? "";
-
-        //if (notification is not null)
-        //{
-        //    string body = $"Hello {notification.NoteToEmail},<br/> Your order with code #{notification.OrderReferenceId} has been updated to status: {request.Status.GetDescription()}<br/><br/>";
-        //    await _emailService.SendMail_SendGrid(notification.NoteToEmail ?? "", "Place Order", body, emailFrom);
-
-        //  }
         return new ApiResponse("Success.", StatusEnum.Success, true);
     }
 

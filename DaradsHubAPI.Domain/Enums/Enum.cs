@@ -1,4 +1,7 @@
-﻿namespace DaradsHubAPI.Domain.Enums;
+﻿using System.ComponentModel;
+using System.Reflection;
+
+namespace DaradsHubAPI.Domain.Enums;
 public class Enum
 {
     public enum StatusEnum
@@ -88,10 +91,15 @@ public class Enum
 
     public enum OrderStatus
     {
+        [Description("Order")]
         Order = 1,
+        [Description("Processing")]
         Processing,
+        [Description("Cancelled")]
         Cancelled,
+        [Description("Refunded")]
         Refunded,
+        [Description("Completed")]
         Completed
     }
     public enum ProductRequestTypeEnum
@@ -111,6 +119,9 @@ public class Enum
         OrderSent,
         OrderDelivered,
         Login,
-        ForgetPassword
+        ForgetPassword,
+        ChangeOrderStatus,
     }
 }
+
+
