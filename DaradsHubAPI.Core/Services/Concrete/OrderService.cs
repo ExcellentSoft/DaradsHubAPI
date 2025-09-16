@@ -323,6 +323,125 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
     }
 
     #region Agent
+    public async Task<ApiResponse<AgentOrderMetricResponse>> OrderMetrics(int agentId)
+    {
+        var metrics = await _unitOfWork.Orders.GetOrderMetrics(agentId);
+        return new ApiResponse<AgentOrderMetricResponse> { StatusCode = StatusEnum.Success, Message = "Metrics fetched successfully.", Status = true, Data = metrics };
+    }
+
+    public async Task<ApiResponse<List<AgentOrderListResponse>>> GetOrders(AgentOrderListRequest request, int agentId)
+    {
+        //var qOrder = from order in _ecommerceDbContext.orders
+        //             where (request.StartDate == null || order.CreatedDate.Date >= request.StartDate.Value.Date) &&
+        //                  (request.EndDate == null || order.CreatedDate.Date <= request.EndDate.Value.Date)
+        //             select order;
+
+        //if (!string.IsNullOrEmpty(request.SearchText))
+        //{
+        //    var searchText = request.SearchText.Trim().ToLower();
+
+        //    qOrder = qOrder.Where(d => d.ReferenceNumber.Contains(request.SearchText));
+        //}
+
+        //if (request.Status is not null)
+        //{
+        //    qOrder = qOrder.Where(d => d.Status == request.Status);
+        //}
+
+        //var totalRecordsCount = qOrder.Count();
+        //var response = await qOrder.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).OrderByDescending(d => d.CreatedDate).Select(s => new OrderListResponse
+        //{
+        //    OrderId = s.Id,
+        //    OrderStatus = s.Status,
+        //    OrderStatusText = s.Status.GetDescription(),
+        //    PurchaseDate = s.CreatedDate,
+        //    ReferenceId = s.ReferenceNumber,
+        //    ShopperName = s.UserName,
+        //    productName = (from item in _ecommerceDbContext.orderitems.Where(d => d.ReferenceNumber == s.ReferenceNumber)
+        //                   join product in _ecommerceDbContext.ecommerceproducts on item.ProductId equals product.Id
+        //                   select product.Name).FirstOrDefault(),
+        //    TotalPrice = s.TotalSum,
+        //    TotalProductCount = _ecommerceDbContext.orderitems.Where(d => d.ReferenceNumber == s.ReferenceNumber).Count()
+        //}).ToListAsync();
+
+        return new ApiResponse<List<AgentOrderListResponse>> { StatusCode = StatusEnum.Success, Message = "Orders fetched successfully.", Status = true,/* Data = response,*/ Pages = request.PageSize, /*TotalRecord = totalRecordsCount,*/ CurrentPage = request.PageNumber };
+    }
+    public async Task<ApiResponse<SingleOrderResponse>> GetOrder(string orderCode)
+    {
+        //var qOrder = await (from order in _ecommerceDbContext.orders.Where(b => b.ReferenceNumber == referenceId)
+        //                    join item in _ecommerceDbContext.orderitems on order.ReferenceNumber equals item.ReferenceNumber
+        //                    join prod in _ecommerceDbContext.ecommerceproducts on item.ProductId equals prod.Id
+        //                    select new { order, item, prod }).GroupBy(d => d.item.ReferenceNumber).Select(d => new
+        //                    SingleOrderResponse
+        //                    {
+        //                        Description = d.Select(s => s.order.Description).FirstOrDefault(),
+        //                        ReferenceId = d.Select(s => s.order.ReferenceNumber).FirstOrDefault() ?? "",
+        //                        OrderStatus = d.Select(s => s.order.Status).FirstOrDefault(),
+        //                        OrderStatusText = d.Select(s => s.order.Status).FirstOrDefault().GetDescription(),
+        //                        PurchaseDate = d.Select(s => s.order.CreatedDate).FirstOrDefault(),
+        //                        ShopperName = d.Select(s => s.order.UserName).FirstOrDefault() ?? "",
+        //                        TotalPrice = d.Select(s => s.order.TotalSum).FirstOrDefault(),
+        //                        ProductDetails = d.Select(s => new OrderProductDetails
+        //                        {
+        //                            Name = s.prod.Name ?? "",
+        //                            Price = s.item.Price,
+        //                            Quantity = s.item.Quantity,
+        //                            TotalPrice = s.item.Quantity * s.item.Price
+        //                        }).ToList()
+
+        //                    }).FirstOrDefaultAsync();
+
+        return new ApiResponse<SingleOrderResponse> { StatusCode = StatusEnum.Success, Message = "Order product fetched successfully.", Status = true,/* Data = qOrder ?? new SingleOrderResponse { } */};
+
+    }
+    public async Task<ApiResponse> ChangeOrderStatus(ChangeStatusRequest request)
+    {
+        //var audit = await _ecommerceDbContext.orderaudits.FirstOrDefaultAsync(s => s.ReferenceId == request.OrderCode);
+
+        //var tDescription = ConstantFields.GetDescription(request.Status, "");
+        //if (audit is not null)
+        //{
+
+        //    var newAudit = new orderaudit
+        //    {
+        //        CreatedDate = LocalDateTime.CurrentDateTime(),
+        //        Status = request.Status,
+        //        ReferenceId = request.OrderCode,
+        //        ActionById = audit.ActionById,
+        //        Description = tDescription,
+        //    };
+        //    _ecommerceDbContext.orderaudits.Add(newAudit);
+        //}
+
+        //var notification = await _ecommerceDbContext.notifications.FirstOrDefaultAsync(d => d.OrderReferenceId == request.OrderCode);
+
+        //if (notification is not null)
+        //{
+        //    var newNotification = new notification
+        //    {
+        //        CreatedDate = LocalDateTime.CurrentDateTime(),
+        //        Title = NotificationType.ChangeOrderStatus.GetDescription(),
+        //        NoteToEmail = notification.NoteToEmail,
+        //        Message = tDescription,
+        //        NotificationType = NotificationType.ChangeOrderStatus,
+        //        OrderReferenceId = request.OrderCode
+        //    };
+        //    _ecommerceDbContext.notifications.Add(newNotification);
+        //    await _ecommerceDbContext.SaveChangesAsync();
+        //}
+
+        //await _ecommerceDbContext.orders.Where(e => e.ReferenceNumber == request.OrderCode).ExecuteUpdateAsync(r => r.SetProperty(c => c.Status, request.Status));
+
+        //string emailFrom = ConfigHelpers.AppSetting("AppSettings", "EmailFrom") ?? "";
+
+        //if (notification is not null)
+        //{
+        //    string body = $"Hello {notification.NoteToEmail},<br/> Your order with code #{notification.OrderReferenceId} has been updated to status: {request.Status.GetDescription()}<br/><br/>";
+        //    await _emailService.SendMail_SendGrid(notification.NoteToEmail ?? "", "Place Order", body, emailFrom);
+
+        //  }
+        return new ApiResponse("Success.", StatusEnum.Success, true);
+    }
 
     #endregion
     private async Task<(bool status, string message)> ValidateProducts(CheckoutRequest request)

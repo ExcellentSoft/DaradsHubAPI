@@ -14,6 +14,7 @@ public interface IOrderRepository : IGenericRepository<HubOrder>
     Task DeleteShippingAddress(int userId, long addressId);
     Task<shopCat?> GetCart(int userId, long productId);
     IQueryable<CartResponse> GetCartsListByUserId(int userId);
+    Task<AgentOrderMetricResponse> GetOrderMetrics(int agentId);
     IQueryable<OrderListResponse> GetOrders(string email, OrderListRequest request);
     IQueryable<ShippingAddress> GetShippingAddresses(int userId);
     Task UpdateCart(shopCat model);

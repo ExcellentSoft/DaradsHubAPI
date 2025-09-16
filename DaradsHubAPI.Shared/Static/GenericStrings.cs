@@ -14,20 +14,20 @@ namespace DaradsHubAPI.Shared.Static
         public const string SHIPPEDESCRIPTION = "Your product has been shipped successfully";
         public const string DELIVEREDDESCRIPTION = "Your product has been delivered successfully";
 
-        public static string GetStatus(OrderStatus status)
-        {
-            var response = status switch
-            {
-                OrderStatus.Order => "Ordered",
-                OrderStatus.Shipped => "Shipped",
-                OrderStatus.Delivered => "Delivered",
-                OrderStatus.Accepted => "Accepted",
-                OrderStatus.Rejected => "Rejected",
-                OrderStatus.DeliveryConfirmed => "Delivery Confirmed",
-                OrderStatus.Returned => "Returned",
-                _ => "Nil",
-            };
-            return response;
-        }
+        //public static string GetStatus(OrderStatus status)
+        //{
+        //    var response = status switch
+        //    {
+        //        OrderStatus.Order => "Ordered",
+        //        OrderStatus.Shipped => "Shipped",
+        //        OrderStatus.Delivered => "Delivered",
+        //        OrderStatus.Accepted => "Accepted",
+        //        OrderStatus.Rejected => "Rejected",
+        //        OrderStatus.DeliveryConfirmed => "Delivery Confirmed",
+        //        OrderStatus.Returned => "Returned",
+        //        _ => "Nil",
+        //    };
+        //    return response;
+        //}
     }
 }
