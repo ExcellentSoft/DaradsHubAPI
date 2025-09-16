@@ -40,9 +40,9 @@ public class ManageOrderController(IOrderService _orderService) : ApiBaseControl
 
     [HttpGet("order")]
     [ProducesResponseType(200, Type = typeof(ApiResponse<SingleOrderResponse>))]
-    public async Task<IActionResult> GetOrder([FromQuery] string referenceId)
+    public async Task<IActionResult> GetOrder([FromQuery] string orderCode)
     {
-        var result = await _orderService.GetOrder(referenceId);
+        var result = await _orderService.GetOrder(orderCode);
         return ResponseCode(result);
     }
 }
