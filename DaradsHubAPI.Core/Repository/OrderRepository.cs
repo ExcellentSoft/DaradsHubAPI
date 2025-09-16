@@ -5,7 +5,9 @@ using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using static DaradsHubAPI.Domain.Enums.Enum;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace DaradsHubAPI.Core.Repository
 {
@@ -167,41 +169,44 @@ namespace DaradsHubAPI.Core.Repository
             return await Task.FromResult(metrics);
         }
 
+        public async Task<List<AgentOrderListResponse>> GetAgentOrders(AgentOrderListRequest request, int agentId)
+        {
+            var qOrder = from item in _context.HubOrderItems
+                         where item.AgentId == agentId
+                         join order in _context.HubOrders on item.OrderCode equals order.Code
+                         where (request.StartDate == null || order.OrderDate.Date >= request.StartDate.Value.Date) &&
+                            (request.EndDate == null || order.OrderDate.Date <= request.EndDate.Value.Date)
+                         select new { order };
+            var res = new List<AgentOrderListResponse>();
+            if (qOrder.Any())
+            {
+                var qq = qOrder.GroupBy(d => d.order.Code).Select(q => new AgentOrderListResponse
+                {
+                    OrderId = q.Select(r => r.order.Id).FirstOrDefault(),
+                    Code = q.Select(r => r.order.Code).FirstOrDefault(),
+                    OrderDate = q.Select(r => r.order.OrderDate).FirstOrDefault(),
+                    OrderStatus = q.Select(r => r.order.Status).FirstOrDefault(),
+                    ProductType = q.Select(r => r.order.ProductType).FirstOrDefault(),
+                    TotalPrice = q.Select(r => r.order.TotalCost).FirstOrDefault(),
+                    CustomerName = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => d.fullname).FirstOrDefault()
 
-        //public IQueryable<ShippingAddress> GetOrders(AgentOrderListRequest request, int agentId)
-        //{
-        //    var qOrder = from order in _ecommerceDbContext.orders
-        //                 where (request.StartDate == null || order.CreatedDate.Date >= request.StartDate.Value.Date) &&
-        //                      (request.EndDate == null || order.CreatedDate.Date <= request.EndDate.Value.Date)
-        //                 select order;
+                });
 
-        //    if (!string.IsNullOrEmpty(request.SearchText))
-        //    {
-        //        var searchText = request.SearchText.Trim().ToLower();
+                if (!string.IsNullOrEmpty(request.SearchText))
+                {
+                    var searchText = request.SearchText.Trim().ToLower();
 
-        //        qOrder = qOrder.Where(d => d.ReferenceNumber.Contains(request.SearchText));
-        //    }
+                    qOrder = qOrder.Where(d => d.order.Code.Contains(request.SearchText));
+                }
 
-        //    if (request.Status is not null)
-        //    {
-        //        qOrder = qOrder.Where(d => d.Status == request.Status);
-        //    }
+                if (request.Status is not null)
+                {
+                    qOrder = qOrder.Where(d => d.order.Status == request.Status);
+                }
 
-        //    var totalRecordsCount = qOrder.Count();
-        //    var response = await qOrder.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).OrderByDescending(d => d.CreatedDate).Select(s => new OrderListResponse
-        //    {
-        //        OrderId = s.Id,
-        //        OrderStatus = s.Status,
-        //        OrderStatusText = s.Status.GetDescription(),
-        //        PurchaseDate = s.CreatedDate,
-        //        ReferenceId = s.ReferenceNumber,
-        //        ShopperName = s.UserName,
-        //        productName = (from item in _ecommerceDbContext.orderitems.Where(d => d.ReferenceNumber == s.ReferenceNumber)
-        //                       join product in _ecommerceDbContext.ecommerceproducts on item.ProductId equals product.Id
-        //                       select product.Name).FirstOrDefault(),
-        //        TotalPrice = s.TotalSum,
-        //        TotalProductCount = _ecommerceDbContext.orderitems.Where(d => d.ReferenceNumber == s.ReferenceNumber).Count()
-        //    }).ToListAsync();
-        //}
+                res = await qq.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).OrderByDescending(d => d.OrderDate).ToListAsync();
+            }
+            return res;
+        }
     }
 }

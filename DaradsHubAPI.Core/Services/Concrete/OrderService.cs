@@ -332,40 +332,11 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
 
     public async Task<ApiResponse<List<AgentOrderListResponse>>> GetOrders(AgentOrderListRequest request, int agentId)
     {
-        //var qOrder = from order in _ecommerceDbContext.orders
-        //             where (request.StartDate == null || order.CreatedDate.Date >= request.StartDate.Value.Date) &&
-        //                  (request.EndDate == null || order.CreatedDate.Date <= request.EndDate.Value.Date)
-        //             select order;
+        var orderResponse = await _unitOfWork.Orders.GetAgentOrders(request, agentId);
 
-        //if (!string.IsNullOrEmpty(request.SearchText))
-        //{
-        //    var searchText = request.SearchText.Trim().ToLower();
+        var totalRecordsCount = orderResponse.Count;
 
-        //    qOrder = qOrder.Where(d => d.ReferenceNumber.Contains(request.SearchText));
-        //}
-
-        //if (request.Status is not null)
-        //{
-        //    qOrder = qOrder.Where(d => d.Status == request.Status);
-        //}
-
-        //var totalRecordsCount = qOrder.Count();
-        //var response = await qOrder.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).OrderByDescending(d => d.CreatedDate).Select(s => new OrderListResponse
-        //{
-        //    OrderId = s.Id,
-        //    OrderStatus = s.Status,
-        //    OrderStatusText = s.Status.GetDescription(),
-        //    PurchaseDate = s.CreatedDate,
-        //    ReferenceId = s.ReferenceNumber,
-        //    ShopperName = s.UserName,
-        //    productName = (from item in _ecommerceDbContext.orderitems.Where(d => d.ReferenceNumber == s.ReferenceNumber)
-        //                   join product in _ecommerceDbContext.ecommerceproducts on item.ProductId equals product.Id
-        //                   select product.Name).FirstOrDefault(),
-        //    TotalPrice = s.TotalSum,
-        //    TotalProductCount = _ecommerceDbContext.orderitems.Where(d => d.ReferenceNumber == s.ReferenceNumber).Count()
-        //}).ToListAsync();
-
-        return new ApiResponse<List<AgentOrderListResponse>> { StatusCode = StatusEnum.Success, Message = "Orders fetched successfully.", Status = true,/* Data = response,*/ Pages = request.PageSize, /*TotalRecord = totalRecordsCount,*/ CurrentPage = request.PageNumber };
+        return new ApiResponse<List<AgentOrderListResponse>> { StatusCode = StatusEnum.Success, Message = "Orders fetched successfully.", Status = true, Data = orderResponse, Pages = request.PageSize, TotalRecord = totalRecordsCount, CurrentPage = request.PageNumber };
     }
     public async Task<ApiResponse<SingleOrderResponse>> GetOrder(string orderCode)
     {
