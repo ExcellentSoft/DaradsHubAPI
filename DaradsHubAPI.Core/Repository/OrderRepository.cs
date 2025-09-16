@@ -87,6 +87,12 @@ namespace DaradsHubAPI.Core.Repository
             return cart;
         }
 
+        public async Task<HubOrderTracking?> GetOrderTracking(string orderCode)
+        {
+            var tracking = await _context.HubOrderTracking.FirstOrDefaultAsync(d => d.OrderCode == orderCode);
+            return tracking;
+        }
+
         public async Task DeleteCart(int userId, long productId)
         {
             var cart = await _context.shopCats.FirstOrDefaultAsync(d => d.userId == userId && d.ProductId == productId);
