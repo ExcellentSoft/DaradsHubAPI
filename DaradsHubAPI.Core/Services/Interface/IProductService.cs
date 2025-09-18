@@ -30,4 +30,9 @@ public interface IProductService
     Task<ApiResponse<AgentReviewResponse>> GetPublicAgentReviews(int agentId);
     Task<ApiResponse<IEnumerable<AgentsProfileResponse>>> GetPhysicalPublicAgent(AgentsProfileListRequest request);
     Task<ApiResponse<IEnumerable<ProductDetailsResponse>>> GetPublicAgentProducts(AgentProductListRequest request);
+    Task<ApiResponse<ProductMetricResponse>> GetProductMetrics(int agentId);
+    Task<ApiResponse> DeleteProduct(int productId, bool isDigitalProduct, int agentId);
+    Task<ApiResponse<IEnumerable<AgentProductsResponse>>> GetProducts(AgentProductsRequest request, int agentId);
+    Task<ApiResponse<ProductOrderMetricResponse>> GetProductOrderMetrics(long productId, bool isDigital);
+    Task<ApiResponse<List<AgentOrderListResponse>>> GetProductOrders(ProductOrderListRequest request);
 }

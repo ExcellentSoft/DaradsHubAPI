@@ -46,6 +46,15 @@ namespace DaradsHubAPI.Core.Model.Request
         public OrderStatus? Status { get; set; }
     }
 
+    public record ProductOrderListRequest : ListRequest
+    {
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public OrderStatus? Status { get; set; }
+        public long ProductId { get; set; }
+        public bool IsDigital { get; set; }
+    }
+
     public record AgentOrderListResponse
     {
         public long OrderId { get; set; }

@@ -4,6 +4,7 @@ using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Repository;
 public class ProductRepository(AppDbContext _context) : GenericRepository<HubAgentProduct>(_context), IProductRepository
@@ -69,6 +70,206 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                      });
         return query;
     }
+
+    public IQueryable<AgentProductsResponse> GetProducts(AgentProductsRequest request, int agentId)
+    {
+        var physicalQuery = (from ph in _context.HubAgentProducts
+                             where ph.AgentId == agentId
+                             join p in _context.HubProducts on ph.ProductId equals p.Id
+                             join img in _context.ProductImages on ph.Id equals img.ProductId
+                             orderby ph.DateCreated descending
+                             select new { ph, img, p }).GroupBy(d => d.ph.Id).Select(f => new AgentProductsResponse
+                             {
+                                 ProductId = f.Key,
+                                 Name = f.Select(e => e.p.Name).FirstOrDefault() ?? "",
+                                 Caption = f.Select(e => e.ph.Caption).FirstOrDefault() ?? "",
+                                 Price = f.Select(e => e.ph.Price).FirstOrDefault(),
+                                 Stock = f.Select(e => e.ph.Stock).FirstOrDefault(),
+                                 ProductType = "Physical",
+                                 Orders = (from item in _context.HubOrderItems
+                                           where item.ProductId == f.Key
+                                           join order in _context.HubOrders on item.OrderCode equals order.Code
+                                           where order.ProductType == "Physical"
+                                           select new { order }).Count(),
+                                 UpdatedDate = f.Select(e => e.ph.DateUpdated).FirstOrDefault(),
+                                 Description = f.Select(e => e.ph.Description).FirstOrDefault(),
+                                 ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault()
+                             });
+
+        var digitalQuery = (from ph in _context.HubDigitalProducts
+                            where ph.AgentId == agentId
+                            join p in _context.Catalogues on ph.CatalogueId equals p.Id
+                            join img in _context.DigitalProductImages on ph.Id equals img.ProductId
+                            orderby ph.DateCreated descending
+                            select new { ph, img, p }).GroupBy(d => d.ph.Id).Select(f => new AgentProductsResponse
+                            {
+                                ProductId = f.Key,
+                                Name = f.Select(e => e.p.Name).FirstOrDefault() ?? "",
+                                Caption = f.Select(e => e.ph.Title).FirstOrDefault() ?? "",
+                                Price = f.Select(e => e.ph.Price).FirstOrDefault(),
+                                ProductType = "Digital",
+                                Orders = (from item in _context.HubOrderItems
+                                          where item.ProductId == f.Key
+                                          join order in _context.HubOrders on item.OrderCode equals order.Code
+                                          where order.ProductType == "Digital"
+                                          select new { order }).Count(),
+                                Stock = 1,
+                                UpdatedDate = f.Select(e => e.ph.DateUpdated).FirstOrDefault(),
+                                Description = f.Select(e => e.ph.Description).FirstOrDefault(),
+                                ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault()
+                            });
+
+
+        var query = physicalQuery.Union(digitalQuery);
+
+        if (!string.IsNullOrEmpty(request.ProductType))
+        {
+            request.ProductType = request.ProductType.Trim().ToLower();
+            query = query.Where(x => x.ProductType.ToLower() == request.ProductType);
+        }
+        if (!string.IsNullOrEmpty(request.SearchText))
+        {
+            request.SearchText = request.SearchText.Trim().ToLower();
+            query = query.Where(x => x.Name.ToLower().Contains(request.SearchText) || x.Caption.ToLower().Contains(request.SearchText));
+        }
+
+        return query;
+    }
+
+    public async Task<ProductOrderMetricResponse> GetDigitalProductOrderMetrics(long productId)
+    {
+        var query = from item in _context.HubOrderItems
+                    where item.ProductId == productId
+                    join order in _context.HubOrders on item.OrderCode equals order.Code
+                    where order.ProductType == "Digital"
+                    select new { order };
+
+        var metrics = new ProductOrderMetricResponse();
+        if (query.Any())
+        {
+            var queryD = query.GroupBy(d => d.order.Code);
+            metrics = new ProductOrderMetricResponse
+            {
+                TotalOrderCount = queryD.Select(d => d.Key).Count(),
+                PendingOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Order).Count(),
+                CompletedOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Completed).Count(),
+                CanceledOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Cancelled).Count(),
+                RefundedOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Refunded).Count(),
+                ProcessingOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Processing).Count(),
+            };
+        }
+
+        return await Task.FromResult(metrics);
+    }
+    public async Task<ProductOrderMetricResponse> GetPhysicalProductOrderMetrics(long productId)
+    {
+        var query = from item in _context.HubOrderItems
+                    where item.ProductId == productId
+                    join order in _context.HubOrders on item.OrderCode equals order.Code
+                    where order.ProductType == "Physical"
+                    select new { order };
+
+        var metrics = new ProductOrderMetricResponse();
+        if (query.Any())
+        {
+            var queryD = query.GroupBy(d => d.order.Code);
+            metrics = new ProductOrderMetricResponse
+            {
+                TotalOrderCount = queryD.Select(d => d.Key).Count(),
+                PendingOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Order).Count(),
+                CompletedOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Completed).Count(),
+                CanceledOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Cancelled).Count(),
+                RefundedOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Refunded).Count(),
+                ProcessingOrderCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Processing).Count(),
+            };
+        }
+
+        return await Task.FromResult(metrics);
+    }
+
+    public async Task<List<AgentOrderListResponse>> GetDigitalProductOrders(ProductOrderListRequest request)
+    {
+        var qOrder = from item in _context.HubOrderItems
+                     where item.ProductId == request.ProductId
+                     join order in _context.HubOrders on item.OrderCode equals order.Code
+                     where order.ProductType == "Digital"
+                     where (request.StartDate == null || order.OrderDate.Date >= request.StartDate.Value.Date) &&
+                        (request.EndDate == null || order.OrderDate.Date <= request.EndDate.Value.Date)
+                     select new { order };
+        var res = new List<AgentOrderListResponse>();
+        if (qOrder.Any())
+        {
+            var qq = qOrder.GroupBy(d => d.order.Code).Select(q => new AgentOrderListResponse
+            {
+                OrderId = q.Select(r => r.order.Id).FirstOrDefault(),
+                Code = q.Select(r => r.order.Code).FirstOrDefault(),
+                OrderDate = q.Select(r => r.order.OrderDate).FirstOrDefault(),
+                OrderStatus = q.Select(r => r.order.Status).FirstOrDefault(),
+                ProductType = q.Select(r => r.order.ProductType).FirstOrDefault(),
+                TotalPrice = q.Select(r => r.order.TotalCost).FirstOrDefault(),
+                CustomerName = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => d.fullname).FirstOrDefault()
+
+            });
+
+            if (!string.IsNullOrEmpty(request.SearchText))
+            {
+                var searchText = request.SearchText.Trim().ToLower();
+
+                qOrder = qOrder.Where(d => d.order.Code.Contains(request.SearchText));
+            }
+
+            if (request.Status is not null)
+            {
+                qOrder = qOrder.Where(d => d.order.Status == request.Status);
+            }
+
+            res = await qq.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).OrderByDescending(d => d.OrderDate).ToListAsync();
+        }
+        return res;
+    }
+
+    public async Task<List<AgentOrderListResponse>> GetPhysicalProductOrders(ProductOrderListRequest request)
+    {
+        var qOrder = from item in _context.HubOrderItems
+                     where item.ProductId == request.ProductId
+                     join order in _context.HubOrders on item.OrderCode equals order.Code
+                     where order.ProductType == "Physical"
+                     where (request.StartDate == null || order.OrderDate.Date >= request.StartDate.Value.Date) &&
+                        (request.EndDate == null || order.OrderDate.Date <= request.EndDate.Value.Date)
+                     select new { order };
+        var res = new List<AgentOrderListResponse>();
+        if (qOrder.Any())
+        {
+            var qq = qOrder.GroupBy(d => d.order.Code).Select(q => new AgentOrderListResponse
+            {
+                OrderId = q.Select(r => r.order.Id).FirstOrDefault(),
+                Code = q.Select(r => r.order.Code).FirstOrDefault(),
+                OrderDate = q.Select(r => r.order.OrderDate).FirstOrDefault(),
+                OrderStatus = q.Select(r => r.order.Status).FirstOrDefault(),
+                ProductType = q.Select(r => r.order.ProductType).FirstOrDefault(),
+                TotalPrice = q.Select(r => r.order.TotalCost).FirstOrDefault(),
+                CustomerName = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => d.fullname).FirstOrDefault()
+
+            });
+
+            if (!string.IsNullOrEmpty(request.SearchText))
+            {
+                var searchText = request.SearchText.Trim().ToLower();
+
+                qOrder = qOrder.Where(d => d.order.Code.Contains(request.SearchText));
+            }
+
+            if (request.Status is not null)
+            {
+                qOrder = qOrder.Where(d => d.order.Status == request.Status);
+            }
+
+            res = await qq.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).OrderByDescending(d => d.OrderDate).ToListAsync();
+        }
+        return res;
+    }
+
+
     public async Task<AgentProductProfileResponse> GetAgentProductProfile(int agentId)
     {
 
@@ -382,6 +583,31 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                                MaxRating = _context.HubReviews.Where(d => d.IsDigital == false && d.ProductId == f.Key).Sum(d => d.Rating) / 100
                            }).FirstOrDefaultAsync();
         return query ?? new ProductDetailResponse { };
+    }
+
+    public async Task<ProductMetricResponse> GetProductMetrics(int agentId)
+    {
+        var physicalProduct = await _context.HubAgentProducts.Where(e => e.AgentId == agentId).CountAsync();
+        var digitalProduct = await _context.HubDigitalProducts.Where(e => e.AgentId == agentId).CountAsync();
+        var metrics = new ProductMetricResponse
+        {
+            TotalPhysicalProduct = physicalProduct,
+            TotalDigitalProductCount = digitalProduct,
+            TotalProduct = physicalProduct + digitalProduct
+        };
+        return metrics;
+    }
+
+    public async Task DeleteProduct(long productId, bool isDigital, int agentId)
+    {
+        if (isDigital)
+        {
+            await _context.HubDigitalProducts.Where(x => x.Id == productId && x.AgentId == agentId).ExecuteDeleteAsync();
+        }
+        else
+        {
+            await _context.HubAgentProducts.Where(x => x.Id == productId && x.AgentId == agentId).ExecuteDeleteAsync();
+        }
     }
     #endregion
 }

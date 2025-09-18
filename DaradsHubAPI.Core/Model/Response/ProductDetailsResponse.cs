@@ -117,4 +117,20 @@ namespace DaradsHubAPI.Core.Model.Response
         public string Question { get; set; } = default!;
         public string Answer { get; set; } = default!;
     }
+    public class ProductMetricResponse
+    {
+        public int TotalProduct { get; set; }
+        public int TotalDigitalProductCount { get; set; }
+        public int TotalPhysicalProduct { get; set; }
+    }
+
+    public class ProductOrderMetricResponse
+    {
+        public int TotalOrderCount { get; set; }
+        public int RefundedOrderCount { get; set; }
+        public int CanceledOrderCount { get; set; }
+        public int CompletedOrderCount { get; set; }
+        public int PendingOrderCount { get; internal set; }
+        public int ProcessingOrderCount { get; internal set; }
+    }
 }
