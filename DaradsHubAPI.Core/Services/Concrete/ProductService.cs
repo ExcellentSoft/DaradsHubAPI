@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Services.Concrete;
@@ -376,5 +377,60 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         var responses = await _unitOfWork.Products.GetAgentProduct(productId);
 
         return new ApiResponse<ProductDetailResponse> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
+    }
+
+    public async Task<ApiResponse<ProductMetricResponse>> GetProductMetrics(int agentId)
+    {
+        var responses = await _unitOfWork.Products.GetProductMetrics(agentId);
+        return new ApiResponse<ProductMetricResponse> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
+    }
+
+    public async Task<ApiResponse> DeleteProduct(int productId, bool isDigitalProduct, int agentId)
+    {
+        await _unitOfWork.Products.DeleteProduct(productId, isDigitalProduct, agentId);
+        return new ApiResponse("Successful", StatusEnum.Success, false);
+    }
+
+    public async Task<ApiResponse<IEnumerable<AgentProductsResponse>>> GetProducts(AgentProductsRequest request, int agentId)
+    {
+        var query = _unitOfWork.Products.GetProducts(request, agentId);
+
+        var totalProducts = query.Count();
+        var paginatedProducts = await query
+            .Skip((request.PageNumber - 1) * request.PageSize)
+        .Take(request.PageSize).ToListAsync();
+
+        return new ApiResponse<IEnumerable<AgentProductsResponse>> { Message = "Successful", Status = true, Data = paginatedProducts, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
+    }
+
+    public async Task<ApiResponse<ProductOrderMetricResponse>> GetProductOrderMetrics(long productId, bool isDigital)
+    {
+        var responses = new ProductOrderMetricResponse();
+        if (isDigital)
+        {
+            responses = await _unitOfWork.Products.GetDigitalProductOrderMetrics(productId);
+        }
+        else
+        {
+            responses = await _unitOfWork.Products.GetPhysicalProductOrderMetrics(productId);
+        }
+        return new ApiResponse<ProductOrderMetricResponse> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
+    }
+
+    public async Task<ApiResponse<List<AgentOrderListResponse>>> GetProductOrders(ProductOrderListRequest request)
+    {
+        var response = new List<AgentOrderListResponse>();
+        if (request.IsDigital)
+        {
+            response = await _unitOfWork.Products.GetDigitalProductOrders(request);
+        }
+        else
+        {
+            response = await _unitOfWork.Products.GetPhysicalProductOrders(request);
+        }
+
+        var totalRecordsCount = response.Count;
+
+        return new ApiResponse<List<AgentOrderListResponse>> { StatusCode = StatusEnum.Success, Message = "Products Orders fetched successfully.", Status = true, Data = response, Pages = request.PageSize, TotalRecord = totalRecordsCount, CurrentPage = request.PageNumber };
     }
 }

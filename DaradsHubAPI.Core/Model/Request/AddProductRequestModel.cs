@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DaradsHubAPI.Domain.Entities;
+using Microsoft.AspNetCore.Http;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Model.Request;
@@ -79,5 +80,25 @@ public class UpdateDigitalHubProductRequest : AddDigitalHubProductRequest
 {
     public long Id { get; set; }
 }
+
+public record AgentProductsRequest : LogRequest
+{
+    public string? ProductType { get; set; }
+}
+public record AgentProductsResponse
+{
+    public long ProductId { get; set; }
+    public string Name { get; set; } = default!;
+    public decimal Price { get; set; }
+    // public decimal? OldPrice { get; set; }  
+    public string ProductType { get; set; } = default!; // "Physical" / "Digital"  
+    public int Orders { get; set; }
+    public DateTime UpdatedDate { get; set; }
+    public int Stock { get; set; }
+    public string? ImageUrl { get; set; }
+    public string Caption { get; set; } = default!;
+    public string? Description { get; internal set; }
+}
+
 
 
