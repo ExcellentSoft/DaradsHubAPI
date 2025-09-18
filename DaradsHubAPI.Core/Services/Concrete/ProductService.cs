@@ -9,11 +9,6 @@ using DaradsHubAPI.Shared.Interface;
 using DaradsHubAPI.Shared.Static;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Services.Concrete;
@@ -45,6 +40,10 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
     public async Task<ApiResponse> CreateProductRequest(CreateHubProductRequest model, string email)
     {
         var user = await _unitOfWork.Users.GetSingleWhereAsync(d => d.email == email);
+        if (model.AgentId < 1)
+        {
+            return new ApiResponse("Agent is required", StatusEnum.Validation, false);
+        }
         var request = new HubProductRequest
         {
             AgentId = model.AgentId,

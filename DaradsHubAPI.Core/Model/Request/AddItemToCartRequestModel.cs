@@ -38,7 +38,17 @@ namespace DaradsHubAPI.Core.Model.Request
         public int PendingOrderCount { get; internal set; }
         public int ProcessingOrderCount { get; internal set; }
     }
+    public class CatalogueInsightResponse
+    {
+        public int TotalDigitalProductCount { get; set; }
+        public BestSeller? BestSeller { get; set; }
 
+    }
+    public class BestSeller
+    {
+        public string Name { get; set; } = default!;
+        public int TotalSales { get; set; }
+    }
     public record AgentOrderListRequest : ListRequest
     {
         public DateTime? StartDate { get; set; }

@@ -13,11 +13,13 @@ public interface IProductRepository : IGenericRepository<HubAgentProduct>
     Task<ProductDetailResponse> GetAgentProduct(long productId);
     Task<AgentProductProfileResponse> GetAgentProductProfile(int agentId);
     IQueryable<ProductDetailsResponse> GetAgentProducts(int categoryId, int agentId);
+    Task<DashboardMetricResponse> GetDashboardMetrics(int agentId, string userEmail);
     Task<ProductOrderMetricResponse> GetDigitalProductOrderMetrics(long productId);
     Task<List<AgentOrderListResponse>> GetDigitalProductOrders(ProductOrderListRequest request);
     IQueryable<HubFAQResponse> GetFAQs();
     IQueryable<HubProduct> GetHubProducts(string? searchText);
     IQueryable<LandingProductResponse> GetLandPageProducts();
+    Task<IEnumerable<AgentReview>> GetLatestReview(int agentId);
     IQueryable<AgentsProfileResponse> GetPhysicalAgents(AgentsProfileListRequest request);
     Task<ProductOrderMetricResponse> GetPhysicalProductOrderMetrics(long productId);
     Task<List<AgentOrderListResponse>> GetPhysicalProductOrders(ProductOrderListRequest request);

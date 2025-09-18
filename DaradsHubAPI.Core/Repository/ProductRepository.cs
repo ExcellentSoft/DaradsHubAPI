@@ -373,6 +373,32 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         return response;
     }
 
+    public async Task<IEnumerable<AgentReview>> GetLatestReview(int agentId)
+    {
+        var query = from user in _context.userstb
+                    where user.id == agentId
+                    join r in _context.HubAgentReviews on user.id equals r.AgentId
+                    join u in _context.userstb on r.ReviewById equals u.id
+                    orderby r.ReviewDate descending
+                    select new { r, u };
+        var response = new List<AgentReview>();
+        if (query.Any())
+        {
+
+            response = await query.Select(r => new AgentReview
+            {
+                Content = r.r.Content,
+                Rating = r.r.Rating,
+                ReviewBy = r.u.fullname,
+                ReviewerPhoto = r.u.Photo,
+                ReviewDate = r.r.ReviewDate
+            }).Take(4).ToListAsync();
+
+        }
+
+        return response;
+    }
+
     public async Task<ProductReviewResponse> GetReviewByProductId(int productId)
     {
         var query = from r in _context.HubReviews
@@ -595,6 +621,39 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
             TotalDigitalProductCount = digitalProduct,
             TotalProduct = physicalProduct + digitalProduct
         };
+        return metrics;
+    }
+
+    public async Task<DashboardMetricResponse> GetDashboardMetrics(int agentId, string userEmail)
+    {
+        var walletBalance = await _context.wallettb.Where(e => e.UserId == userEmail).Select(c => c.Balance).FirstOrDefaultAsync();
+        var physicalProduct = await _context.HubAgentProducts.Where(e => e.AgentId == agentId).CountAsync();
+        var digitalProduct = await _context.HubDigitalProducts.Where(e => e.AgentId == agentId).CountAsync();
+        var requestCount = await _context.HubProductRequests.Where(e => e.AgentId == agentId).CountAsync();
+        var metrics = new DashboardMetricResponse
+        {
+            Earning = walletBalance,
+            TotalProductCount = physicalProduct + digitalProduct,
+            TotalRequestCount = requestCount
+        };
+
+        var query = from item in _context.HubOrderItems
+                    where item.AgentId == agentId
+                    join order in _context.HubOrders on item.OrderCode equals order.Code
+                    select new { order };
+        var orderData = new OrderDataResponse();
+        if (query.Any())
+        {
+            var queryD = query.GroupBy(d => d.order.Code);
+            orderData = new OrderDataResponse
+            {
+                TotalOrderCount = queryD.Select(d => d.Key).Count(),
+                TotalPendingCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Order).Count(),
+                TotalFulfillCount = queryD.Where(r => r.Select(e => e.order.Status).FirstOrDefault() == OrderStatus.Completed).Count()
+            };
+        }
+        metrics.OrderData = orderData;
+
         return metrics;
     }
 
