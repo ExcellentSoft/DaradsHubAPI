@@ -124,6 +124,21 @@ namespace DaradsHubAPI.Core.Model.Response
         public int TotalPhysicalProduct { get; set; }
     }
 
+    public class DashboardMetricResponse
+    {
+        public decimal? Earning { get; set; }
+        public int TotalProductCount { get; set; }
+        public int TotalRequestCount { get; set; }
+        public OrderDataResponse? OrderData { get; set; }
+    }
+
+    public class OrderDataResponse
+    {
+        public int TotalOrderCount { get; set; }
+        public int TotalPendingCount { get; set; }
+        public int TotalFulfillCount { get; set; }
+    }
+
     public class ProductOrderMetricResponse
     {
         public int TotalOrderCount { get; set; }

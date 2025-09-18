@@ -169,6 +169,28 @@ namespace DaradsHubAPI.Core.Repository
             return await Task.FromResult(metrics);
         }
 
+        public async Task<CatalogueInsightResponse> GetCatalogueInsight(int agentId)
+        {
+            var insight = new CatalogueInsightResponse();
+            insight.TotalDigitalProductCount = await _context.HubDigitalProducts.Where(d => d.AgentId == agentId).CountAsync();
+
+            var bestSeller = await (from item in _context.HubOrderItems
+                                    where item.AgentId == agentId
+                                    join order in _context.HubOrders on item.OrderCode equals order.Code
+                                    where order.ProductType == "Digital" && order.Status == OrderStatus.Completed
+                                    join dp in _context.HubDigitalProducts on item.ProductId equals dp.Id
+                                    group new { item, dp } by new { dp.Id, dp.Title, dp.Price } into g
+                                    orderby g.Sum(x => x.item.Quantity) descending
+                                    select new BestSeller
+                                    {
+                                        Name = g.Key.Title,
+                                        TotalSales = g.Sum(x => x.item.Quantity)
+                                    }).FirstOrDefaultAsync();
+            insight.BestSeller = bestSeller;
+
+            return await Task.FromResult(insight);
+        }
+
         public async Task<List<AgentOrderListResponse>> GetAgentOrders(AgentOrderListRequest request, int agentId)
         {
             var qOrder = from item in _context.HubOrderItems
