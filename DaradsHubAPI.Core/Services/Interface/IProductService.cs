@@ -35,4 +35,7 @@ public interface IProductService
     Task<ApiResponse<IEnumerable<AgentProductsResponse>>> GetProducts(AgentProductsRequest request, int agentId);
     Task<ApiResponse<ProductOrderMetricResponse>> GetProductOrderMetrics(long productId, bool isDigital);
     Task<ApiResponse<List<AgentOrderListResponse>>> GetProductOrders(ProductOrderListRequest request);
+    Task<ApiResponse<IEnumerable<CustomerRequestResponse>>> GetCustomerRequests(CustomerRequestsRequest request, int agentId);
+    Task<ApiResponse<SingleCustomerRequestResponse>> GetCustomerRequest(long requestId);
+    Task<ApiResponse> ChangeRequestStatus(ChangeRequestStatus request);
 }

@@ -3,7 +3,9 @@ using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
+using DaradsHubAPI.Shared.Static;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Repository;
@@ -15,6 +17,11 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         searchText = searchText?.Trim().ToLower();
         var hubProducts = _context.HubProducts.Where(s => searchText == null || s.Name.ToLower().Contains(searchText));
         return hubProducts;
+    }
+    public async Task<HubProductRequest?> GetHubProductRequest(long id)
+    {
+        var request = await _context.HubProductRequests.Where(s => s.Id == id).FirstOrDefaultAsync();
+        return request;
     }
     public async Task AddHubProductImages(ProductImages productImages)
     {
@@ -69,6 +76,77 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                          ImageUrls = f.Select(e => e.img.ImageUrl).ToList()
                      });
         return query;
+    }
+
+    public async Task<List<CustomerRequestResponse>> GetCustomerRequests(CustomerRequestsRequest request, int agentId)
+    {
+        var qOrder = from req in _context.HubProductRequests
+                     where req.AgentId == agentId && (request.StartDate == null || req.DateCreated >= request.StartDate.Value.Date) &&
+                        (request.EndDate == null || req.DateCreated <= request.EndDate.Value.Date)
+                     select new CustomerRequestResponse
+                     {
+                         IsUrgent = req.IsUrgent,
+                         DateCreated = req.DateCreated,
+                         Location = req.Location,
+                         PreferredDate = req.PreferredDate,
+                         ProductService = req.CustomerNeed,
+                         Quantity = req.Quantity,
+                         Reference = $"#REQ-{req.Id}",
+                         RequestId = req.Id,
+                         ProductServiceImageUrl = _context.ProductRequestImages.Where(d => d.RequestId == req.Id).Select(u => u.ImageUrl).FirstOrDefault(),
+                         Customer = _context.userstb.Where(r => r.id == req.CustomerId).Select(e => new RequestedUser
+                         {
+                             FullName = e.fullname,
+                             Photo = e.Photo
+                         }).FirstOrDefault(),
+                         Status = req.Status,
+                     };
+
+        var res = new List<CustomerRequestResponse>();
+        if (qOrder.Any())
+        {
+            if (!string.IsNullOrEmpty(request.SearchText))
+            {
+                var searchText = request.SearchText.Trim().ToLower();
+
+                qOrder = qOrder.Where(d => d.ProductService.ToLower().Contains(request.SearchText));
+            }
+
+            if (request.Status is not null)
+            {
+                qOrder = qOrder.Where(d => d.Status == request.Status);
+            }
+
+            res = await qOrder.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).OrderByDescending(d => d.DateCreated).ToListAsync();
+        }
+        return res;
+    }
+
+    public async Task<SingleCustomerRequestResponse?> GetCustomerRequest(long requestId)
+    {
+        var request = await (from req in _context.HubProductRequests
+                             where req.Id == requestId
+                             select new SingleCustomerRequestResponse
+                             {
+                                 IsUrgent = req.IsUrgent,
+                                 DateCreated = req.DateCreated,
+                                 Location = req.Location,
+                                 PreferredDate = req.PreferredDate,
+                                 ProductService = req.CustomerNeed,
+                                 Quantity = req.Quantity,
+                                 Reference = $"#REQ-{req.Id}",
+                                 RequestId = req.Id,
+                                 ProductServiceImageUrls = _context.ProductRequestImages.Where(d => d.RequestId == req.Id).Select(u => u.ImageUrl).ToList(),
+                                 ProductType = req.ProductRequestTypeEnum.GetDescription(),
+                                 Category = req.ProductRequestTypeEnum == ProductRequestTypeEnum.Digital ? _context.Catalogues.Where(e => e.Id == req.CategoryId).Select(w => w.Name).FirstOrDefault() : _context.categories.Where(e => e.id == req.CategoryId).Select(w => w.name).FirstOrDefault(),
+                                 Customer = _context.userstb.Where(r => r.id == req.CustomerId).Select(e => new RequestedUser
+                                 {
+                                     FullName = e.fullname,
+                                     Photo = e.Photo
+                                 }).FirstOrDefault(),
+                                 Status = req.Status,
+                             }).FirstOrDefaultAsync();
+        return request;
     }
 
     public IQueryable<AgentProductsResponse> GetProducts(AgentProductsRequest request, int agentId)

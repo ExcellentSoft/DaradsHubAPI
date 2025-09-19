@@ -56,6 +56,13 @@ namespace DaradsHubAPI.Core.Model.Request
         public OrderStatus? Status { get; set; }
     }
 
+    public record CustomerRequestsRequest : ListRequest
+    {
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public RequestStatus? Status { get; set; }
+    }
+
     public record ProductOrderListRequest : ListRequest
     {
         public DateTime? StartDate { get; set; }
@@ -76,6 +83,45 @@ namespace DaradsHubAPI.Core.Model.Request
         public string? ProductType { get; set; }
 
     }
+
+    public record CustomerRequestResponse
+    {
+        public long RequestId { get; set; }
+        public int Quantity { get; set; }
+        public string Reference { get; set; } = default!;
+        public string ProductService { get; set; } = default!;
+        public string? ProductServiceImageUrl { get; set; }
+        public DateTime PreferredDate { get; set; }
+        public string? Location { get; set; }
+        public bool IsUrgent { get; set; }
+        public RequestStatus Status { get; set; }
+        public DateTime DateCreated { get; set; }
+        public RequestedUser? Customer { get; set; }
+
+    }
+    public record SingleCustomerRequestResponse
+    {
+        public long RequestId { get; set; }
+        public int Quantity { get; set; }
+        public string Reference { get; set; } = default!;
+        public string ProductService { get; set; } = default!;
+        public IEnumerable<string> ProductServiceImageUrls { get; set; } = default!;
+        public DateTime PreferredDate { get; set; }
+        public string? Location { get; set; }
+        public string? Category { get; set; }
+        public string ProductType { get; set; } = default!;
+        public bool IsUrgent { get; set; }
+        public RequestStatus Status { get; set; }
+        public DateTime DateCreated { get; set; }
+        public RequestedUser? Customer { get; set; }
+
+    }
+    public record RequestedUser
+    {
+        public string? FullName { get; set; }
+        public string? Photo { get; set; }
+    }
+
     public record SingleOrderResponse
     {
         public long OrderId { get; set; }
@@ -95,5 +141,10 @@ namespace DaradsHubAPI.Core.Model.Request
     {
         public OrderStatus Status { get; set; }
         public string OrderCode { get; set; } = default!;
+    }
+    public record ChangeRequestStatus
+    {
+        public RequestStatus Status { get; set; }
+        public long RequestId { get; set; }
     }
 }

@@ -55,10 +55,10 @@ public partial class HubProductRequest
     public string? Description { get; set; }
     public DateTime PreferredDate { get; set; }
     public decimal Budget { get; set; }
-    public string? ReferenceFileUrl { get; set; }
     public string? Location { get; set; }
     public bool IsUrgent { get; set; }
     public ProductRequestTypeEnum ProductRequestTypeEnum { get; set; }
+    public RequestStatus Status { get; set; }
     public DateTime DateCreated { get; set; }
     public int CategoryId { get; set; }
 }

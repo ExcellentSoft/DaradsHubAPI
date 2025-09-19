@@ -76,7 +76,7 @@ public class ManageProductController(IProductService _productService, IDigitalPr
 
     [HttpGet("product-ordered-metrics")]
     [ProducesResponseType(200, Type = typeof(ApiResponse<ProductOrderMetricResponse>))]
-    public async Task<IActionResult> GetProductMetrics(long productId, bool isDigital)
+    public async Task<IActionResult> GetProductOrderMetrics(long productId, bool isDigital)
     {
         var response = await _productService.GetProductOrderMetrics(productId, isDigital);
         return ResponseCode(response);
@@ -84,9 +84,34 @@ public class ManageProductController(IProductService _productService, IDigitalPr
 
     [HttpGet("product-orders")]
     [ProducesResponseType(200, Type = typeof(ApiResponse<IEnumerable<AgentOrderListResponse>>))]
-    public async Task<IActionResult> GetProducts([FromQuery] ProductOrderListRequest request)
+    public async Task<IActionResult> GetProductOrders([FromQuery] ProductOrderListRequest request)
     {
         var result = await _productService.GetProductOrders(request);
         return ResponseCode(result);
+    }
+
+    [HttpGet("customers-requests")]
+    [ProducesResponseType(200, Type = typeof(ApiResponse<IEnumerable<CustomerRequestResponse>>))]
+    public async Task<IActionResult> GetCustomerRequests([FromQuery] CustomerRequestsRequest request)
+    {
+        var agentId = int.Parse(User.Identity?.GetUserId() ?? "");
+        var result = await _productService.GetCustomerRequests(request, agentId);
+        return ResponseCode(result);
+    }
+
+    [HttpGet("customers-request")]
+    [ProducesResponseType(200, Type = typeof(ApiResponse<SingleCustomerRequestResponse>))]
+    public async Task<IActionResult> GetCustomerRequests([FromQuery] long requestId)
+    {
+        var result = await _productService.GetCustomerRequest(requestId);
+        return ResponseCode(result);
+    }
+
+    [HttpPut("change-request-status")]
+    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> ChangeOrderStatus([FromQuery] ChangeRequestStatus request)
+    {
+        var response = await _productService.ChangeRequestStatus(request);
+        return ResponseCode(response);
     }
 }
