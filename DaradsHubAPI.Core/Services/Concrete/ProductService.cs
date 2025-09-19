@@ -356,6 +356,18 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         return new ApiResponse<IEnumerable<ProductDetailsResponse>> { Message = "Successful", Status = true, Data = paginatedProducts, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
     }
 
+    public async Task<ApiResponse<IEnumerable<AgentReview>>> GetAgentReviews(AgentReviewRequest request, int agentId)
+    {
+        var query = _unitOfWork.Products.GetAgentReviews(request, agentId);
+
+        var totalProducts = query.Count();
+        var paginatedReviews = await query
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize).ToListAsync();
+
+        return new ApiResponse<IEnumerable<AgentReview>> { Message = "Successful", Status = true, Data = paginatedReviews, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
+    }
+
     public async Task<ApiResponse<IEnumerable<ProductDetailsResponse>>> GetPublicAgentProducts(AgentProductListRequest request)
     {
         var query = _unitOfWork.Products.GetPublicAgentProducts(request.CategoryId, request.AgentId);

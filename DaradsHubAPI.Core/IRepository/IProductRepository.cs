@@ -35,4 +35,5 @@ public interface IProductRepository : IGenericRepository<HubAgentProduct>
     Task<AgentReviewResponse> GetReviewByAgentId(int agentId);
     Task<ProductReviewResponse> GetReviewByProductId(int productId);
     Task<AgentReviewResponse> GetReviewByPubicAgentId(int agentId);
+    IQueryable<AgentReview> GetAgentReviews(AgentReviewRequest request, int agentId);
 }

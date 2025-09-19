@@ -38,4 +38,5 @@ public interface IProductService
     Task<ApiResponse<IEnumerable<CustomerRequestResponse>>> GetCustomerRequests(CustomerRequestsRequest request, int agentId);
     Task<ApiResponse<SingleCustomerRequestResponse>> GetCustomerRequest(long requestId);
     Task<ApiResponse> ChangeRequestStatus(ChangeRequestStatus request);
+    Task<ApiResponse<IEnumerable<AgentReview>>> GetAgentReviews(AgentReviewRequest request, int agentId);
 }

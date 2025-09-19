@@ -422,6 +422,33 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         return response;
     }
 
+    public IQueryable<AgentReview> GetAgentReviews(AgentReviewRequest request, int agentId)
+    {
+        var query = from user in _context.userstb
+                    where user.IsAgent == true && user.id == agentId
+                    join r in _context.HubAgentReviews on user.id equals r.AgentId
+                    join u in _context.userstb on r.ReviewById equals u.id
+                    orderby r.ReviewDate descending
+                    where (request.StartDate == null || r.ReviewDate >= request.StartDate.Value.Date) &&
+                       (request.EndDate == null || r.ReviewDate <= request.EndDate.Value.Date)
+                    select new { r, u };
+
+        if (!string.IsNullOrWhiteSpace(request.SearchText))
+        {
+            request.SearchText = request.SearchText.Trim().ToLower();
+            query = query.Where(d => d.u.fullname.ToLower().Contains(request.SearchText));
+        }
+        var response = query.Select(r => new AgentReview
+        {
+            Content = r.r.Content,
+            Rating = r.r.Rating,
+            ReviewBy = r.u.fullname,
+            ReviewerPhoto = r.u.Photo,
+            ReviewDate = r.r.ReviewDate
+        });
+        return response;
+    }
+
     public async Task<AgentReviewResponse> GetReviewByPubicAgentId(int agentId)
     {
         var query = from user in _context.userstb

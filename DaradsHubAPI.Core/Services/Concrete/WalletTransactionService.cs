@@ -28,4 +28,22 @@ public class WalletTransactionService(IUnitOfWork _unitOfWork, IFileService _fil
 
         return new ApiResponse<IEnumerable<WalletTransactionRecords>> { Message = "Wallet transactions fetched successfully.", Status = true, Data = paginatedTransactions, StatusCode = StatusEnum.Success, TotalRecord = totalTransactions, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
     }
+
+    public async Task<ApiResponse<IEnumerable<AgentWalletTransactionRecord>>> GetAgentWalletTransactions(TransactionListRequest request, string email)
+    {
+        var query = _unitOfWork.WalletTransactions.GetAgentWalletTransactions(email);
+
+        if (!string.IsNullOrWhiteSpace(request.SearchText))
+        {
+            query = query
+                .Where(s => s.Type != null && s.Type.ToLower().Contains(request.SearchText.ToLower()) || s.ReferenceNumber != null && s.ReferenceNumber.ToLower().Contains(request.SearchText.ToLower()));
+        }
+
+        var totalTransactions = query.Count();
+        var paginatedTransactions = await query
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize).ToListAsync();
+
+        return new ApiResponse<IEnumerable<AgentWalletTransactionRecord>> { Message = "Wallet transactions fetched successfully.", Status = true, Data = paginatedTransactions, StatusCode = StatusEnum.Success, TotalRecord = totalTransactions, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
+    }
 }
