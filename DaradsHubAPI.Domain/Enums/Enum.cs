@@ -102,9 +102,20 @@ public class Enum
         [Description("Completed")]
         Completed
     }
+    public enum RequestStatus
+    {
+        [Description("Pending")]
+        Pending = 1,
+        [Description("Approved")]
+        Approved,
+        [Description("Rejected")]
+        Rejected
+    }
     public enum ProductRequestTypeEnum
     {
+        [Description("Digital")]
         Digital = 1,
+        [Description("Physical")]
         Physical
     }
     public enum DeliveryMethodType

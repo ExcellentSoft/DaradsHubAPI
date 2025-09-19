@@ -37,6 +37,46 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         return new ApiResponse<IEnumerable<IdNameRecord>> { Data = iCategories, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
     }
 
+    public async Task<ApiResponse<IEnumerable<CustomerRequestResponse>>> GetCustomerRequests(CustomerRequestsRequest request, int agentId)
+    {
+        var customerRequests = await _unitOfWork.Products.GetCustomerRequests(request, agentId);
+
+        return new ApiResponse<IEnumerable<CustomerRequestResponse>> { Data = customerRequests, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
+    }
+
+    public async Task<ApiResponse<SingleCustomerRequestResponse>> GetCustomerRequest(long requestId)
+    {
+        var customerRequests = await _unitOfWork.Products.GetCustomerRequest(requestId);
+        if (customerRequests is null)
+        {
+            return new ApiResponse<SingleCustomerRequestResponse> { Message = "Request record not found.", Status = false, StatusCode = StatusEnum.NoRecordFound };
+        }
+        return new ApiResponse<SingleCustomerRequestResponse> { Data = customerRequests, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
+    }
+
+    public async Task<ApiResponse> ChangeRequestStatus(ChangeRequestStatus request)
+    {
+        var req = await _unitOfWork.Products.GetHubProductRequest(request.RequestId);
+        if (req is null)
+        {
+            return new ApiResponse("Request record not found.", StatusEnum.NoRecordFound, false);
+        }
+        var customer = await _unitOfWork.Users.GetSingleWhereAsync(e => e.id == req.CustomerId) ?? new userstb();
+        var newNotification = new HubNotification
+        {
+            TimeCreated = GetLocalDateTime.CurrentDateTime(),
+            Title = "Change Request Status",
+            NoteToEmail = customer.email,
+            Message = $"Your {req.CustomerNeed} has been {request.Status.GetDescription()}",
+            NotificationType = NotificationType.ChangeOrderStatus
+        };
+
+        req.Status = request.Status;
+        await _unitOfWork.Notifications.Insert(newNotification);
+
+        return new ApiResponse("Success.", StatusEnum.Success, true);
+    }
+
     public async Task<ApiResponse> CreateProductRequest(CreateHubProductRequest model, string email)
     {
         var user = await _unitOfWork.Users.GetSingleWhereAsync(d => d.email == email);
@@ -53,6 +93,7 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
             CustomerNeed = model.CustomerNeed,
             Location = model.Location,
             IsUrgent = model.IsUrgent,
+            Status = RequestStatus.Pending,
             ProductRequestTypeEnum = model.ProductRequestTypeEnum,
             PreferredDate = model.PreferredDate,
             Quantity = model.Quantity,
