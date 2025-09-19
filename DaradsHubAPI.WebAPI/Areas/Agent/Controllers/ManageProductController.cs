@@ -101,7 +101,7 @@ public class ManageProductController(IProductService _productService, IDigitalPr
 
     [HttpGet("customers-request")]
     [ProducesResponseType(200, Type = typeof(ApiResponse<SingleCustomerRequestResponse>))]
-    public async Task<IActionResult> GetCustomerRequests([FromQuery] long requestId)
+    public async Task<IActionResult> GetCustomerRequest([FromQuery] long requestId)
     {
         var result = await _productService.GetCustomerRequest(requestId);
         return ResponseCode(result);
@@ -109,7 +109,7 @@ public class ManageProductController(IProductService _productService, IDigitalPr
 
     [HttpPut("change-request-status")]
     [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
-    public async Task<IActionResult> ChangeOrderStatus([FromQuery] ChangeRequestStatus request)
+    public async Task<IActionResult> ChangeRequestStatus([FromQuery] ChangeRequestStatus request)
     {
         var response = await _productService.ChangeRequestStatus(request);
         return ResponseCode(response);
