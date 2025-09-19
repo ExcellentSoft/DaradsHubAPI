@@ -12,7 +12,7 @@ public class TransactionController(IWalletTransactionService _walletTransactionS
 {
     [HttpGet("wallet-transactions")]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<WalletTransactionRecords>>), (int)HttpStatusCode.OK)]
-    public async Task<IActionResult> GetAgentProducts([FromQuery] TransactionListRequest request)
+    public async Task<IActionResult> GetWalletTransactions([FromQuery] TransactionListRequest request)
     {
         var email = User.Identity?.GetUserEmail() ?? "";
         var response = await _walletTransactionService.GetWalletTransactions(request, email);

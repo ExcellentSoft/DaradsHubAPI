@@ -342,6 +342,17 @@ public record WalletTransactionRecords
     public DateTime TransactionDate { get; set; }
     public int Id { get; set; }
 }
+public record AgentWalletTransactionRecord
+{
+    public string ReferenceNumber { get; set; }
+    public string Type { get; set; }
+    public string Status { get; set; }
+    public decimal Amount { get; set; }
+    public decimal? Balance { get; set; }
+    public DateTime TransactionDate { get; set; }
+    public int Id { get; set; }
+}
+
 public record TransactionsResponse
 {
     public DateTime? TransactionDate { get; set; }

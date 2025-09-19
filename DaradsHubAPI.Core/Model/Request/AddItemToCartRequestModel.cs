@@ -72,6 +72,13 @@ namespace DaradsHubAPI.Core.Model.Request
         public bool IsDigital { get; set; }
     }
 
+
+    public record AgentReviewRequest : ListRequest
+    {
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+    }
+
     public record AgentOrderListResponse
     {
         public long OrderId { get; set; }

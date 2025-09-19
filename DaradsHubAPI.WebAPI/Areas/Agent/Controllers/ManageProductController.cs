@@ -114,4 +114,13 @@ public class ManageProductController(IProductService _productService, IDigitalPr
         var response = await _productService.ChangeRequestStatus(request);
         return ResponseCode(response);
     }
+
+    [HttpGet("reviews")]
+    [ProducesResponseType(typeof(ApiResponse<AgentReview>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAgentReviews([FromQuery] AgentReviewRequest request)
+    {
+        var agentId = int.Parse(User.Identity?.GetUserId() ?? "");
+        var response = await _productService.GetAgentReviews(request, agentId);
+        return ResponseCode(response);
+    }
 }
