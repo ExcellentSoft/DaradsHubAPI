@@ -1,6 +1,7 @@
 using DaradsHubAPI.Core;
 using DaradsHubAPI.Infrastructure;
 using DaradsHubAPI.Shared;
+using DaradsHubAPI.WebAPI.ChatHelper;
 using DaradsHubAPI.WebAPI.Extensions;
 using DaradsHubAPI.WebAPI.Middleware;
 using Microsoft.AspNetCore.Mvc;
@@ -39,6 +40,8 @@ builder.Services.AddApiVersioning(Options =>
 
 });
 
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 
@@ -53,6 +56,7 @@ app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
 app.UseAuthentication();
 app.UseStatusCodePages();
 app.UseAuthorization();
+
 app.MapAreaControllerRoute(
     name: "AdminArea",
     areaName: "Admin",
@@ -69,5 +73,6 @@ app.MapAreaControllerRoute(
     pattern: "Agent/{controller}/{action}/{id?}");
 
 app.MapControllers();
+app.MapHub<ChatHub>("/chatHub");
 
 app.Run();
