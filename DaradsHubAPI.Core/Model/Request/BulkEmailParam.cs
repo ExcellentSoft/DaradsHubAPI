@@ -1,5 +1,6 @@
 ﻿namespace DaradsHubAPI.Core.Model.Request
 {
+#nullable disable
     public class BulkEmailParam
     {
         public EmailItems EmailParam { get; set; }

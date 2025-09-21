@@ -149,6 +149,84 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         return request;
     }
 
+    public IQueryable<AgentProductsResponse> GetDigiatlProducts(AgentProductsRequest request, int agentId)
+    {
+        var query = (from ph in _context.HubDigitalProducts
+                     where ph.AgentId == agentId
+                     join p in _context.Catalogues on ph.CatalogueId equals p.Id
+                     join img in _context.DigitalProductImages on ph.Id equals img.ProductId
+                     orderby ph.DateCreated descending
+                     select new { ph, img, p }).GroupBy(d => d.ph.Id).Select(f => new AgentProductsResponse
+                     {
+                         ProductId = f.Key,
+                         Name = f.Select(e => e.p.Name).FirstOrDefault() ?? "",
+                         Caption = f.Select(e => e.ph.Title).FirstOrDefault() ?? "",
+                         Price = f.Select(e => e.ph.Price).FirstOrDefault(),
+                         ProductType = "Digital",
+                         Orders = (from item in _context.HubOrderItems
+                                   where item.ProductId == f.Key
+                                   join order in _context.HubOrders on item.OrderCode equals order.Code
+                                   where order.ProductType == "Digital"
+                                   select new { order }).Count(),
+                         Stock = 1,
+                         UpdatedDate = f.Select(e => e.ph.DateUpdated).FirstOrDefault(),
+                         Description = f.Select(e => e.ph.Description).FirstOrDefault(),
+                         ImageUrls = f.Select(e => e.img.ImageUrl).ToList()
+                     });
+
+        if (!string.IsNullOrEmpty(request.ProductType))
+        {
+            request.ProductType = request.ProductType.Trim().ToLower();
+            query = query.Where(x => x.ProductType.ToLower() == request.ProductType);
+        }
+        if (!string.IsNullOrEmpty(request.SearchText))
+        {
+            request.SearchText = request.SearchText.Trim().ToLower();
+            query = query.Where(x => x.Name.ToLower().Contains(request.SearchText) || x.Caption.ToLower().Contains(request.SearchText));
+        }
+
+        return query;
+    }
+
+    public IQueryable<AgentProductsResponse> GetPhysicalProducts(AgentProductsRequest request, int agentId)
+    {
+        var query = (from ph in _context.HubAgentProducts
+                     where ph.AgentId == agentId
+                     join p in _context.HubProducts on ph.ProductId equals p.Id
+                     join img in _context.ProductImages on ph.Id equals img.ProductId
+                     orderby ph.DateCreated descending
+                     select new { ph, img, p }).GroupBy(d => d.ph.Id).Select(f => new AgentProductsResponse
+                     {
+                         ProductId = f.Key,
+                         Name = f.Select(e => e.p.Name).FirstOrDefault() ?? "",
+                         Caption = f.Select(e => e.ph.Caption).FirstOrDefault() ?? "",
+                         Price = f.Select(e => e.ph.Price).FirstOrDefault(),
+                         Stock = f.Select(e => e.ph.Stock).FirstOrDefault(),
+                         ProductType = "Physical",
+                         Orders = (from item in _context.HubOrderItems
+                                   where item.ProductId == f.Key
+                                   join order in _context.HubOrders on item.OrderCode equals order.Code
+                                   where order.ProductType == "Physical"
+                                   select new { order }).Count(),
+                         UpdatedDate = f.Select(e => e.ph.DateUpdated).FirstOrDefault(),
+                         Description = f.Select(e => e.ph.Description).FirstOrDefault(),
+                         ImageUrls = f.Select(e => e.img.ImageUrl).ToList()
+                     });
+
+        if (!string.IsNullOrEmpty(request.ProductType))
+        {
+            request.ProductType = request.ProductType.Trim().ToLower();
+            query = query.Where(x => x.ProductType.ToLower() == request.ProductType);
+        }
+        if (!string.IsNullOrEmpty(request.SearchText))
+        {
+            request.SearchText = request.SearchText.Trim().ToLower();
+            query = query.Where(x => x.Name.ToLower().Contains(request.SearchText) || x.Caption.ToLower().Contains(request.SearchText));
+        }
+
+        return query;
+    }
+
     public IQueryable<AgentProductsResponse> GetProducts(AgentProductsRequest request, int agentId)
     {
         var physicalQuery = (from ph in _context.HubAgentProducts
@@ -171,7 +249,7 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                                            select new { order }).Count(),
                                  UpdatedDate = f.Select(e => e.ph.DateUpdated).FirstOrDefault(),
                                  Description = f.Select(e => e.ph.Description).FirstOrDefault(),
-                                 ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault()
+                                 // TempImageUrl = string.Join(',', f.Select(e => e.img.ImageUrl))
                              });
 
         var digitalQuery = (from ph in _context.HubDigitalProducts
@@ -194,7 +272,7 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                                 Stock = 1,
                                 UpdatedDate = f.Select(e => e.ph.DateUpdated).FirstOrDefault(),
                                 Description = f.Select(e => e.ph.Description).FirstOrDefault(),
-                                ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault()
+                                //TempImageUrl = string.Join(',', f.Select(e => e.img.ImageUrl))
                             });
 
 
@@ -502,6 +580,12 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         }
 
         return response;
+    }
+
+    public async Task<IEnumerable<string>> GetPhysicalProductImages(long productId)
+    {
+        var images = await _context.ProductImages.Where(s => s.ProductId == productId).Select(d => d.ImageUrl).ToListAsync();
+        return images;
     }
 
     public async Task<ProductReviewResponse> GetReviewByProductId(int productId)

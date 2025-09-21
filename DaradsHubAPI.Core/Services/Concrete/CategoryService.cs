@@ -66,7 +66,7 @@ public class CategoryService(IUnitOfWork _unitOfWork, IFileService _fileService)
             Name = c.name
         }).ToList();
 
-        return new ApiResponse<IEnumerable<CategoryResponse>> { Data = categories, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
+        return await Task.FromResult(new ApiResponse<IEnumerable<CategoryResponse>> { Data = categories, Message = "Successful", Status = true, StatusCode = StatusEnum.Success });
     }
 
     public async Task<ApiResponse<IEnumerable<IdNameRecord>>> GetSubCategories(string? searchText, int categoryId)

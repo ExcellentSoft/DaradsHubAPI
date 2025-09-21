@@ -52,6 +52,12 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
                      });
         return query;
     }
+    public async Task<IEnumerable<string>> GetDigitalProductImages(long productId)
+    {
+        var images = await _context.DigitalProductImages.Where(s => s.ProductId == productId).Select(d => d.ImageUrl).ToListAsync();
+        return images;
+    }
+
 
     public IQueryable<LandingPageDigitalProductResponse> GetPublicLandPageProducts()
     {

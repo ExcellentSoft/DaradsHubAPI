@@ -23,6 +23,29 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
         }).ToListAsync();
         return new ApiResponse<IEnumerable<IdNameRecord>> { Data = iProducts, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
     }
+
+    public async Task<ApiResponse<DigitalHubProductResponse>> GetDigitalProduct(long productId)
+    {
+        var product = await _unitOfWork.DigitalProducts.GetSingleWhereAsync(e => e.Id == productId);
+        if (product is null)
+        {
+            return new ApiResponse<DigitalHubProductResponse> { Message = "Product record not found", Status = false, StatusCode = StatusEnum.NoRecordFound };
+        }
+        var response = new DigitalHubProductResponse
+        {
+            Title = product.Title,
+            CatalogueId = product.CatalogueId,
+            Value = product.Value,
+            Description = product.Description,
+            DiscountPrice = product.DiscountPrice,
+            Price = product.Price
+        };
+
+        response.Images = await _unitOfWork.DigitalProducts.GetDigitalProductImages(productId);
+
+        return new ApiResponse<DigitalHubProductResponse> { Data = response, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
+    }
+
     public async Task<ApiResponse> AddDigitalProduct(AddDigitalHubProductRequest model, string email)
     {
         var user = await _unitOfWork.Users.GetSingleWhereAsync(d => d.email == email && d.IsAgent == true);
