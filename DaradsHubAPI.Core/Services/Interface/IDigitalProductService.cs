@@ -16,6 +16,7 @@ public interface IDigitalProductService
     Task<ApiResponse<DigitalProductDetailResponse>> GetAgentProduct(int productId);
     Task<ApiResponse<IEnumerable<DigitalProductDetailsResponse>>> GetAgentProducts(AgentDigitalProductListRequest request);
     Task<ApiResponse<IEnumerable<AgentsProfileResponse>>> GetDigitalAgents(AgentsProfileListRequest request);
+    Task<ApiResponse<DigitalHubProductResponse>> GetDigitalProduct(long productId);
     Task<ApiResponse<IEnumerable<IdNameRecord>>> GetDigitalProducts(string? searchText, int agentId);
     Task<ApiResponse<IEnumerable<AgentsProfileResponse>>> GetDigitalPublicAgents(AgentsProfileListRequest request);
     Task<ApiResponse<IEnumerable<LandingPageDigitalProductResponse>>> GetLandPageProducts();

@@ -58,10 +58,26 @@ public class ManageProductController(IProductService _productService, IDigitalPr
 
     [HttpDelete("delete-product")]
     [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
-    public async Task<IActionResult> UpdateProfile(int productId, bool isDigital)
+    public async Task<IActionResult> DeleteProduct(int productId, bool isDigital)
     {
         var agentId = int.Parse(User.Identity?.GetUserId() ?? "");
         var response = await _productService.DeleteProduct(productId, isDigital, agentId);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("physical-product")]
+    [ProducesResponseType(typeof(ApiResponse<AgentHubProductResponse>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetPhysicalProduct([FromQuery] long productId)
+    {
+        var response = await _productService.GetPhysicalProduct(productId);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("digital-product")]
+    [ProducesResponseType(typeof(ApiResponse<DigitalHubProductResponse>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetDigitalProduct([FromQuery] long productId)
+    {
+        var response = await _digitalProductService.GetDigitalProduct(productId);
         return ResponseCode(response);
     }
 

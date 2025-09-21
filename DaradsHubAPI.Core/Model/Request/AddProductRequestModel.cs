@@ -45,6 +45,23 @@ public class AddAgentHubProductRequest
     public int Stock { get; set; }
 }
 
+public class AgentHubProductResponse
+{
+    public string? Caption { get; set; }
+    public long ProductId { get; set; }
+    public int CategoryId { get; set; }
+    public long SubCategoryId { get; set; }
+    public string? Description { get; set; }
+    public string? SKU { get; set; }
+    public decimal Price { get; set; }
+    public decimal DeliveryPrice { get; set; }
+    public decimal DiscountPrice { get; set; }
+    public bool IsFreeShipping { get; set; }
+    public string? EstimateDeliveryTime { get; set; }
+    public IEnumerable<string> Images { get; set; } = default!;
+    public int Stock { get; set; }
+}
+
 public class CreateHubProductRequest
 {
     public int AgentId { get; set; }
@@ -76,6 +93,17 @@ public class AddDigitalHubProductRequest
     public string? Value { get; set; }
 }
 
+public class DigitalHubProductResponse
+{
+    public string Title { get; set; } = default!;
+    public long CatalogueId { get; set; }
+    public decimal Price { get; set; }
+    public decimal DiscountPrice { get; set; }
+    public string? Description { get; set; }
+    public IEnumerable<string> Images { get; set; } = default!;
+    public string? Value { get; set; }
+}
+
 public class UpdateDigitalHubProductRequest : AddDigitalHubProductRequest
 {
     public long Id { get; set; }
@@ -95,9 +123,9 @@ public record AgentProductsResponse
     public int Orders { get; set; }
     public DateTime UpdatedDate { get; set; }
     public int Stock { get; set; }
-    public string? ImageUrl { get; set; }
     public string Caption { get; set; } = default!;
     public string? Description { get; internal set; }
+    public IEnumerable<string> ImageUrls { get; set; } = Enumerable.Empty<string>();
 }
 
 

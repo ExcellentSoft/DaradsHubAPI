@@ -8,6 +8,7 @@ using DaradsHubAPI.Shared.Customs;
 using DaradsHubAPI.Shared.Interface;
 using DaradsHubAPI.Shared.Static;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
@@ -304,6 +305,32 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         return new ApiResponse<AgentReviewResponse> { Data = review, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
     }
 
+    public async Task<ApiResponse<AgentHubProductResponse>> GetPhysicalProduct(long productId)
+    {
+        var product = await _unitOfWork.Products.GetSingleWhereAsync(e => e.Id == productId);
+        if (product is null)
+        {
+            return new ApiResponse<AgentHubProductResponse> { Message = "Product record not found", Status = false, StatusCode = StatusEnum.NoRecordFound };
+        }
+        var response = new AgentHubProductResponse
+        {
+            Caption = product.Caption,
+            CategoryId = product.CategoryId,
+            DeliveryPrice = product.DeliveryPrice,
+            Description = product.Description,
+            DiscountPrice = product.DiscountPrice,
+            EstimateDeliveryTime = product.EstimateDeliveryTime,
+            IsFreeShipping = product.IsFreeShipping,
+            Price = product.Price,
+            ProductId = product.ProductId,
+            SKU = product.SKU,
+            Stock = product.Stock,
+            SubCategoryId = product.SubCategoryId,
+        };
+        response.Images = await _unitOfWork.Products.GetPhysicalProductImages(productId);
+        return new ApiResponse<AgentHubProductResponse> { Data = response, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
+    }
+
     public async Task<ApiResponse<AgentReviewResponse>> GetPublicAgentReviews(int agentId)
     {
         var review = await _unitOfWork.Products.GetReviewByPubicAgentId(agentId);
@@ -445,13 +472,14 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
 
     public async Task<ApiResponse<IEnumerable<AgentProductsResponse>>> GetProducts(AgentProductsRequest request, int agentId)
     {
-        var query = _unitOfWork.Products.GetProducts(request, agentId);
+        var digitalProducts = await _unitOfWork.Products.GetDigiatlProducts(request, agentId).ToListAsync();
+        var physicalProducts = await _unitOfWork.Products.GetPhysicalProducts(request, agentId).ToListAsync();
 
-        var totalProducts = query.Count();
-        var paginatedProducts = await query
+        var finalData = digitalProducts.Concat(physicalProducts);
+        var totalProducts = finalData.Count();
+        var paginatedProducts = finalData
             .Skip((request.PageNumber - 1) * request.PageSize)
-        .Take(request.PageSize).ToListAsync();
-
+        .Take(request.PageSize).ToList();
         return new ApiResponse<IEnumerable<AgentProductsResponse>> { Message = "Successful", Status = true, Data = paginatedProducts, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
     }
 
