@@ -63,7 +63,7 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
         };
         await _unitOfWork.DigitalProducts.Insert(prod);
 
-        if (model.Images.Any())
+        if (model.Images is not null)
         {
             foreach (var image in model.Images)
             {
@@ -100,7 +100,7 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
         product.Value = model.Value;
         product.DateUpdated = DateTime.Now;
 
-        if (model.Images.Any())
+        if (model.Images is not null)
         {
             foreach (var image in model.Images)
             {

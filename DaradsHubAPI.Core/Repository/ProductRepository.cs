@@ -363,7 +363,12 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                 OrderStatus = q.Select(r => r.order.Status).FirstOrDefault(),
                 ProductType = q.Select(r => r.order.ProductType).FirstOrDefault(),
                 TotalPrice = q.Select(r => r.order.TotalCost).FirstOrDefault(),
-                CustomerName = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => d.fullname).FirstOrDefault()
+                CustomerDetails = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => new CustomerData
+                {
+                    Email = d.email,
+                    Name = d.fullname,
+                    PhoneNumber = d.phone
+                }).FirstOrDefault()
 
             });
 
@@ -404,7 +409,12 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                 OrderStatus = q.Select(r => r.order.Status).FirstOrDefault(),
                 ProductType = q.Select(r => r.order.ProductType).FirstOrDefault(),
                 TotalPrice = q.Select(r => r.order.TotalCost).FirstOrDefault(),
-                CustomerName = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => d.fullname).FirstOrDefault()
+                CustomerDetails = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => new CustomerData
+                {
+                    Email = d.email,
+                    Name = d.fullname,
+                    PhoneNumber = d.phone
+                }).FirstOrDefault()
 
             });
 

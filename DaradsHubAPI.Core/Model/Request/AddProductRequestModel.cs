@@ -41,7 +41,7 @@ public class AddAgentHubProductRequest
     public decimal DiscountPrice { get; set; }
     public bool IsFreeShipping { get; set; }
     public string? EstimateDeliveryTime { get; set; }
-    public IEnumerable<IFormFile> Images { get; set; } = default!;
+    public IEnumerable<IFormFile>? Images { get; set; }
     public int Stock { get; set; }
 }
 
@@ -89,7 +89,7 @@ public class AddDigitalHubProductRequest
     public decimal Price { get; set; }
     public decimal DiscountPrice { get; set; }
     public string? Description { get; set; }
-    public IEnumerable<IFormFile> Images { get; set; } = default!;
+    public IEnumerable<IFormFile>? Images { get; set; }
     public string? Value { get; set; }
 }
 
