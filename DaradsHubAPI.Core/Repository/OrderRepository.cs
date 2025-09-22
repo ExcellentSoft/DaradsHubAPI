@@ -3,6 +3,7 @@ using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
+using DaradsHubAPI.Shared.Static;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -246,6 +247,7 @@ namespace DaradsHubAPI.Core.Repository
                                       OrderDate = order.OrderDate,
                                       OrderId = order.Id,
                                       OrderStatus = order.Status,
+                                      DeliveryMethod = order.DeliveryMethodType.GetDescription(),
                                       TotalPrice = order.TotalCost,
                                       ProductDetails = order.ProductType == "Digital" ? (from item in _context.HubOrderItems.Where(d => d.OrderCode == order.Code)
                                                                                          join product in _context.HubDigitalProducts on item.ProductId equals product.Id
@@ -267,10 +269,30 @@ namespace DaradsHubAPI.Core.Repository
                                                               Price = item.Price,
                                                               Quantity = item.Quantity
 
-                                                          }).ToList()
+                                                          }).ToList(),
 
-
+                                      CustomerOrderRecord = (from user in _context.userstb
+                                                             where order.UserEmail == user.email
+                                                             from address in _context.ShippingAddresses
+                                                             where address.Id == order.ShippingAddressId
+                                                             select new CustomerOrderRecord
+                                                             {
+                                                                 Address = address.Address,
+                                                                 City = address.City,
+                                                                 Email = user.email,
+                                                                 PhoneNumber = user.phone
+                                                             }).FirstOrDefault(),
+                                      OrderActivitiesRecords = (from track in _context.HubOrderTracking
+                                                                where track.OrderCode == order.Code
+                                                                select new OrderActivitiesRecord
+                                                                {
+                                                                    DateCreated = track.DateCreated,
+                                                                    Description = track.Description,
+                                                                    Status = track.Status
+                                                                }).ToList()
                                   }).FirstOrDefaultAsync();
+
+
             return response;
         }
     }
