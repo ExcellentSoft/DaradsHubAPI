@@ -83,14 +83,19 @@ namespace DaradsHubAPI.Core.Model.Request
     {
         public long OrderId { get; set; }
         public string? Code { get; set; }
-        public string? CustomerName { get; set; }
+        public CustomerData? CustomerDetails { get; set; }
         public DateTime OrderDate { get; set; }
         public decimal TotalPrice { get; set; }
         public OrderStatus OrderStatus { get; set; }
         public string? ProductType { get; set; }
 
     }
-
+    public record CustomerData
+    {
+        public string? Name { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? Email { get; set; }
+    }
     public record CustomerRequestResponse
     {
         public long RequestId { get; set; }

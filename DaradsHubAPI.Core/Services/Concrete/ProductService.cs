@@ -149,7 +149,7 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         };
         await _unitOfWork.Products.Insert(prod);
 
-        if (model.Images.Any())
+        if (model.Images is not null)
         {
             foreach (var image in model.Images)
             {
@@ -193,7 +193,7 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         product.Caption = model.Caption;
         product.EstimateDeliveryTime = model.EstimateDeliveryTime;
 
-        if (model.Images.Any())
+        if (model.Images is not null)
         {
             foreach (var image in model.Images)
             {
