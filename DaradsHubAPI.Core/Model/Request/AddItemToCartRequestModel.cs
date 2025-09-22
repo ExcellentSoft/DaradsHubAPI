@@ -142,7 +142,26 @@ namespace DaradsHubAPI.Core.Model.Request
         public decimal TotalPrice { get; set; }
         public OrderStatus OrderStatus { get; set; }
         public IEnumerable<OrderProductRecord> ProductDetails { get; set; } = default!;
+        public IEnumerable<OrderActivitiesRecord> OrderActivitiesRecords { get; set; } = default!;
+        public string? DeliveryMethod { get; set; }
+        public CustomerOrderRecord? CustomerOrderRecord { get; set; }
     }
+
+    public record CustomerOrderRecord
+    {
+        public string? Address { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? Email { get; set; }
+        public string? City { get; set; }
+    }
+
+    public record OrderActivitiesRecord
+    {
+        public string? Description { get; set; }
+        public DateTime DateCreated { get; set; }
+        public OrderStatus Status { get; internal set; }
+    }
+
     public record OrderProductRecord
     {
         public string Name { get; set; } = default!;
