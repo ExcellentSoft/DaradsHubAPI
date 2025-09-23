@@ -4,5 +4,6 @@ using DaradsHubAPI.Core.Model.Request;
 namespace DaradsHubAPI.Core.Services.Interface;
 public interface IAdminService
 {
+    Task<ApiResponse<DailySalesOverviewResponse?>> DailySalesOverview();
     Task<ApiResponse<AdminDashboardMetricResponse>> GetDashboardMetrics();
 }
