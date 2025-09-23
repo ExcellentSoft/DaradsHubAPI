@@ -134,6 +134,7 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                                  PreferredDate = req.PreferredDate,
                                  ProductService = req.CustomerNeed,
                                  Quantity = req.Quantity,
+                                 Budget = req.Budget,
                                  Reference = $"#REQ-{req.Id}",
                                  RequestId = req.Id,
                                  ProductServiceImageUrls = _context.ProductRequestImages.Where(d => d.RequestId == req.Id).Select(u => u.ImageUrl).ToList(),

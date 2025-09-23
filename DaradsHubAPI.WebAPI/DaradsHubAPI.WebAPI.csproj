@@ -29,8 +29,4 @@
     <ProjectReference Include="..\DaradsHubAPI.Core\DaradsHubAPI.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Areas\Admin\Controllers\" />
-  </ItemGroup>
-
 </Project>
