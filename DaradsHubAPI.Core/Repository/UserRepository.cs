@@ -427,7 +427,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         var response = new AgentProfileResponse
         {
             Email = email,
-            UserName = customerUser.username,
+            FullName = customerUser.fullname,
             PhoneNumber = customerUser.phone,
             Photo = customerUser.Photo,
             BusinessEmail = customerUser.BusinessEmail,

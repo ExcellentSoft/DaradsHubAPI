@@ -10,7 +10,8 @@ public interface IOrderRepository : IGenericRepository<HubOrder>
     Task AddHubOrderTracking(HubOrderTracking model);
     void AddOrderItem(HubOrderItem model);
     Task AddShippingAddress(ShippingAddress model);
-    Task<IEnumerable<DailySalesOverviewResponse>> DailySalesOverview();
+    Task<AdminDashboardMetricResponse> AdminDashboardMetrics();
+    Task<DailySalesOverviewResponse?> DailySalesOverview();
     Task DeleteCart(int userId, long productId);
     Task DeleteShippingAddress(int userId, long addressId);
     Task<SingleOrderResponse?> GetAgentOrder(string orderCode);

@@ -6,13 +6,21 @@ using Microsoft.AspNetCore.Mvc;
 namespace DaradsHubAPI.WebAPI.Areas.Admin.Controllers;
 
 [Tags("Admin")]
-public class AdminController(IAdminService _adminService) : ApiBaseController
+public class DashboardController(IAdminService _adminService) : ApiBaseController
 {
-    [HttpGet("metrics")]
+    [HttpGet("dashboard-metrics")]
     [ProducesResponseType(200, Type = typeof(ApiResponse<AdminDashboardMetricResponse>))]
     public async Task<IActionResult> GetDashboardMetrics()
     {
         var response = await _adminService.GetDashboardMetrics();
+        return ResponseCode(response);
+    }
+
+    [HttpGet("daily-sales-overview")]
+    [ProducesResponseType(200, Type = typeof(ApiResponse<DailySalesOverviewResponse?>))]
+    public async Task<IActionResult> DailySalesOverview()
+    {
+        var response = await _adminService.DailySalesOverview();
         return ResponseCode(response);
     }
 }
