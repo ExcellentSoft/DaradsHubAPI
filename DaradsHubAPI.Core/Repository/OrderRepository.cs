@@ -5,6 +5,8 @@ using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
 using DaradsHubAPI.Shared.Static;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.Collections;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using static DaradsHubAPI.Domain.Enums.Enum;
@@ -14,6 +16,31 @@ namespace DaradsHubAPI.Core.Repository
 {
     public class OrderRepository(AppDbContext _context) : GenericRepository<HubOrder>(_context), IOrderRepository
     {
+        #region Admin Queries
+        public async Task<IEnumerable<DailySalesOverviewResponse>> DailySalesOverview()
+        {
+            var query = from item in _context.HubOrderItems
+                        join order in _context.HubOrders on item.OrderCode equals order.Code
+                        join agent in _context.userstb on item.AgentId equals agent.id
+                        group new { order, item } by new
+                        {
+                            agent.id,
+                            agent.fullname
+                        } into g
+                        select new DailySalesOverviewResponse
+                        {
+                            AgentId = g.Key.id,
+                            AgentName = g.Key.fullname,
+                            // Revenue = Sum of item.Price * item.Quantity
+                            Revenue = g.Sum(x => x.item.Price * x.item.Quantity),
+                            // Orders = number of unique order codes
+                            Orders = g.Select(x => x.order.Code).Distinct().Count()
+                        };
+
+            return await query.ToListAsync();
+        }
+        #endregion
+
         public IQueryable<OrderListResponse> GetOrders(string email, OrderListRequest request)
         {
             var qOrder = from order in _context.HubOrders.Where(e => e.UserEmail == email)

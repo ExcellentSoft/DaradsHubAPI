@@ -126,7 +126,7 @@ namespace DaradsHubAPI.Core.Model.Request
         public RequestStatus Status { get; set; }
         public DateTime DateCreated { get; set; }
         public RequestedUser? Customer { get; set; }
-
+        public decimal Budget { get; internal set; }
     }
     public record RequestedUser
     {
