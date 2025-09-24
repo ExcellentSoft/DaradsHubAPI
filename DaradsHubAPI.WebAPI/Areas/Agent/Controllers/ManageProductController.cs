@@ -141,7 +141,7 @@ public class ManageProductController(IProductService _productService, IDigitalPr
     }
 
     [HttpGet("reviews")]
-    [ProducesResponseType(typeof(ApiResponse<AgentReview>), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<AgentReview>>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetAgentReviews([FromQuery] AgentReviewRequest request)
     {
         var agentId = int.Parse(User.Identity?.GetUserId() ?? "");
