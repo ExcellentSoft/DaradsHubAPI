@@ -62,3 +62,14 @@ public partial class HubProductRequest
     public DateTime DateCreated { get; set; }
     public int CategoryId { get; set; }
 }
+
+public partial class HubAgentProductSetting
+{
+    [Key]
+    public long Id { get; set; }
+    public int AgentId { get; set; }
+    public int MaximumProduct { get; set; }
+    public bool CanSellDigitalProduct { get; set; }
+    public bool CanSellPhysicalProduct { get; set; }
+    public DateTime DateCreated { get; set; }
+}

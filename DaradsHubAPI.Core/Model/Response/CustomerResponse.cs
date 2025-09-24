@@ -141,6 +141,15 @@ public record AgentProfileResponse
     public string? BusinessEmail { get; internal set; }
     public string? BusinessName { get; internal set; }
 }
+public record ShortAgentProfileResponse
+{
+    public string FullName { get; set; } = default!;
+    public string PhoneNumber { get; set; } = default!;
+    public string Photo { get; set; } = default!;
+    public string Code { get; set; } = default!;
+    public int TotalProductCount { get; set; }
+    public AgentAddress? Address { get; set; }
+}
 
 public record AgentAddress
 {

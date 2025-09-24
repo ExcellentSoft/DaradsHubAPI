@@ -30,11 +30,29 @@ public class UtilitiesController(ICategoryService _categoryService, IProductServ
         return ResponseCode(response);
     }
 
+    /// <summary>
+    /// Get all categories
+    /// </summary>
+    /// <param name="searchText"></param>
+    /// <returns></returns>
     [HttpGet("categories-dropdown")]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<CategoryResponse>>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetCategories([FromQuery] string? searchText)
     {
         var response = await _categoryService.GetCategories(searchText);
+        return ResponseCode(response);
+    }
+
+    /// <summary>
+    /// Get all catalogues
+    /// </summary>
+    /// <param name="searchText"></param>
+    /// <returns></returns>
+    [HttpGet("catalogues-dropdown")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<IdNameRecord>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetCatalogues([FromQuery] string? searchText)
+    {
+        var response = await _categoryService.GetCatalogues(searchText);
         return ResponseCode(response);
     }
 

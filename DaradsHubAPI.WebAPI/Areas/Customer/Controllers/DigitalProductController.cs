@@ -14,12 +14,35 @@ namespace DaradsHubAPI.WebAPI.Areas.Customer.Controllers;
 [Tags("Customer")]
 public class DigitalProductController(IDigitalProductService _digitalProductService, IProductService _productService) : ApiBaseController
 {
+    /// <summary>
+    /// Get agent catalogues 
+    /// </summary>
+    /// <param name="searchText"></param>
+    /// <param name="agentId"></param>
+    /// <returns></returns>
     [AllowAnonymous]
+
     [HttpGet("digital-products-dropdown")]
-    [ProducesResponseType(typeof(ApiResponse<IEnumerable<CategoryResponse>>), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<IdNameRecord>>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetDigitalProducts([FromQuery] string? searchText, [FromQuery] int agentId)
     {
         var response = await _digitalProductService.GetDigitalProducts(searchText, agentId);
+        return ResponseCode(response);
+    }
+
+    /// <summary>
+    /// Get agent categories
+    /// </summary>
+    /// <param name="searchText"></param>
+    /// <param name="agentId"></param>
+    /// <returns></returns>
+
+    [AllowAnonymous]
+    [HttpGet("agent-categories-dropdown")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<IdNameRecord>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAgentCategories([FromQuery] string? searchText, [FromQuery] int agentId)
+    {
+        var response = await _productService.GetAgentCategories(searchText, agentId);
         return ResponseCode(response);
     }
 

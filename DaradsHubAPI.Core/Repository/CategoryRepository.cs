@@ -25,5 +25,11 @@ namespace DaradsHubAPI.Core.Repository
             var category = _context.SubCategories.Where(s => s.CategoryId == categoryId);
             return category;
         }
+
+        public IQueryable<Catalogue> GetCatalogues()
+        {
+            var catalogues = _context.Catalogues.AsNoTracking();
+            return catalogues;
+        }
     }
 }

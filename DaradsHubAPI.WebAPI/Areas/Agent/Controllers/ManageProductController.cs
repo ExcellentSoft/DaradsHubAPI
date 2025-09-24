@@ -106,6 +106,15 @@ public class ManageProductController(IProductService _productService, IDigitalPr
         return ResponseCode(result);
     }
 
+    [HttpGet("customers-requests-metrics")]
+    [ProducesResponseType(200, Type = typeof(ApiResponse<CustomerRequestMetricResponse>))]
+    public async Task<IActionResult> GetCustomerRequestMetrics()
+    {
+        var agentId = int.Parse(User.Identity?.GetUserId() ?? "");
+        var response = await _productService.GetCustomerRequestMetrics(agentId);
+        return ResponseCode(response);
+    }
+
     [HttpGet("customers-requests")]
     [ProducesResponseType(200, Type = typeof(ApiResponse<IEnumerable<CustomerRequestResponse>>))]
     public async Task<IActionResult> GetCustomerRequests([FromQuery] CustomerRequestsRequest request)

@@ -23,6 +23,7 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         }
         return query;
     }
+
     public async Task<Catalogue> GetCatalogue(long catalogueId)
     {
         var catalogue = await _context.Catalogues.Where(r => r.Id == catalogueId).FirstOrDefaultAsync();

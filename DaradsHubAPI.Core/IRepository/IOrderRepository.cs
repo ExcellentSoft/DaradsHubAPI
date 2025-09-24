@@ -19,9 +19,12 @@ public interface IOrderRepository : IGenericRepository<HubOrder>
     Task<shopCat?> GetCart(int userId, long productId);
     IQueryable<CartResponse> GetCartsListByUserId(int userId);
     Task<CatalogueInsightResponse> GetCatalogueInsight(int agentId);
+    Task<List<LastFourCustomerRequest>> GetLastCustomerRequests();
     Task<AgentOrderMetricResponse> GetOrderMetrics(int agentId);
     IQueryable<OrderListResponse> GetOrders(string email, OrderListRequest request);
     Task<HubOrderTracking?> GetOrderTracking(string orderCode);
     IQueryable<ShippingAddress> GetShippingAddresses(int userId);
+    Task<IEnumerable<TopPerformingAgentResponse>> TopPerformingAgents();
+    Task<IEnumerable<TopPerformingAgentResponse>> TopPerformingAgents2();
     Task UpdateCart(shopCat model);
 }
