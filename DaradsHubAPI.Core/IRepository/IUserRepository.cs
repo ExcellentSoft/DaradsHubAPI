@@ -13,11 +13,13 @@ public interface IUserRepository : IGenericRepository<userstb>
     Task<(bool status, string message, string? userId)> ForgetPassword(ForgetPasswordRequest request);
     Task<(bool status, string message, AgentProfileResponse? res)> GetAgentProfile(string email);
     Task<List<MessagesSent>> GetAllSentMessages();
+    Task<User?> GetAppUser(string email);
     Task<MessageAudiences> GetAudiences(string audienceType);
     Task<List<userstb>> GetCustomers(string audienceType, int pageSize, int pageIndex);
     Task<MessageEmailTemplates> GetEmailTemplates(int Id);
     Task<(bool status, string message, CustomerProfileResponse? res)> GetProfile(string email);
     Task<MessagesSent> GetSentMessage(int Id);
+    Task<(bool status, string message, CustomerLoginResponse? cresponse)> LoginAdmin(AdminLoginRequest request);
     Task<(bool status, string message, CustomerLoginResponse? cresponse)> LoginUser(LoginRequest request);
     Task<(bool status, string message)> ResendEmailVerificationCode(string userId);
     Task<(bool status, string message)> ResendResetPasswordCode(string userId);

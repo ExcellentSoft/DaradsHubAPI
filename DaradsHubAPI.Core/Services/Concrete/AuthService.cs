@@ -100,6 +100,28 @@ public class AuthService(IUnitOfWork _unitOfWork) : IAuthService
         }
         return new ApiResponse(resendResponse.message, StatusEnum.Success, resendResponse.status);
     }
+
+    public async Task<ApiResponse<CustomerLoginResponse>> LoginAdmin(AdminLoginRequest request)
+    {
+        var loginResponse = await _unitOfWork.Users.LoginAdmin(request);
+
+        if (!loginResponse.status)
+        {
+            return new ApiResponse<CustomerLoginResponse> { Message = loginResponse.message, StatusCode = StatusEnum.Validation, Status = false };
+        }
+        var today = GetLocalDateTime.CurrentDateTime();
+        await _unitOfWork.Notifications.SaveNotification(new HubNotification
+        {
+            TimeCreated = GetLocalDateTime.CurrentDateTime(),
+            Title = "Login Successful",
+            NoteToEmail = loginResponse.cresponse?.Email ?? "",
+            Message = $"You are successfully logged in at  {today:yyy-MM-dd HH:mm:ss}",
+            NotificationType = NotificationType.Login
+        });
+
+        return new ApiResponse<CustomerLoginResponse> { Message = loginResponse.message, StatusCode = StatusEnum.Success, Status = true, Data = loginResponse.cresponse ?? new CustomerLoginResponse { } };
+    }
+
     public async Task<ApiResponse<CustomerLoginResponse>> LoginUser(LoginRequest request)
     {
         var loginResponse = await _unitOfWork.Users.LoginUser(request);

@@ -1,4 +1,5 @@
-﻿using DaradsHubAPI.Core.Model.Response;
+﻿using DaradsHubAPI.Core.Model.Request;
+using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -10,4 +11,5 @@ namespace DaradsHubAPI.Core.IRepository;
 public interface IHubUserRepository : IGenericRepository<userstb>
 {
     Task<(bool status, string message, ShortAgentProfileResponse? res)> GetAgentProductProfile(int agentId);
+    Task<(bool status, string message)> UpdateAgentVisibility(AgentVisibilityRequest request);
 }
