@@ -55,3 +55,19 @@ public record LastFourCustomerRequest
     public RequestedUser? Customer { get; set; }
 
 }
+
+public record AgentVisibilityRequest
+{
+    public int AgentId { get; set; }
+    public bool IsPublic { get; set; }
+    public int ProductLimit { get; set; }
+    public IEnumerable<int>? CategoriesIds { get; set; }
+    public IEnumerable<long>? CataloguesIds { get; set; }
+}
+
+public record AgentStatusRequest
+{
+    public int AgentId { get; set; }
+    public EntityStatusEnum EntityStatus { get; set; }
+
+}

@@ -13,6 +13,7 @@ public interface IAuthService
     Task<ApiResponse<string>> CreateAgent(CreateAgentRequest request);
     Task<ApiResponse<string>> CreateCustomer(CreateCustomerRequest request);
     Task<ApiResponse<string>> ForgetPassword(ForgetPasswordRequest request);
+    Task<ApiResponse<CustomerLoginResponse>> LoginAdmin(AdminLoginRequest request);
     Task<ApiResponse<CustomerLoginResponse>> LoginUser(LoginRequest request);
     Task<ApiResponse> ResendEmailVerificationCode(string userId);
     Task<ApiResponse> ResendResetPasswordCode(string email);

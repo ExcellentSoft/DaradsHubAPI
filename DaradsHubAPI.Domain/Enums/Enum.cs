@@ -55,7 +55,9 @@ public class Enum
     {
         Active = 1,
         InActive,
-        Delete
+        Delete,
+        Suspended,
+        Blocked
     }
 
     public enum TransactionTypeEnum

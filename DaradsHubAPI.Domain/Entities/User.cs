@@ -68,6 +68,12 @@ public record LoginRequest : ForgetPasswordRequest
     public string Password { get; set; } = default!;
 }
 
+public record AdminLoginRequest
+{
+    public string PhoneNumber { get; set; } = default!;
+    public string PIN { get; set; } = default!;
+}
+
 public record ForgetPasswordRequest
 {
     public string Email { get; set; } = default!;

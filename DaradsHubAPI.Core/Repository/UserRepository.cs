@@ -164,6 +164,82 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
             return new(false, $"Unable to login, please try again later.", null);
         }
     }
+
+    public async Task<(bool status, string message, CustomerLoginResponse? cresponse)> LoginAdmin(AdminLoginRequest request)
+    {
+        var aUser = await _context.userstb.Where(d => d.phone == request.PhoneNumber).FirstOrDefaultAsync();
+
+        if (aUser is null)
+            return new(false, "User record not found, check and try again.", null);
+        var user = await _userManager.Users.FirstOrDefaultAsync(d => d.UserName == aUser.username);
+        if (user is null)
+            return new(false, "User record not found, check and try again.", null);
+        if (!await _userManager.CheckPasswordAsync(user!, request.PIN))
+            return new(false, "Unauthorized.", null);
+
+        try
+        {
+            var signInResult = await _signInManager.PasswordSignInAsync(user, request.PIN, false, true);
+            if (!signInResult.Succeeded)
+            {
+                if (signInResult.IsLockedOut)
+                {
+                    user.LockoutEnd = DateTime.MaxValue;
+                    await _userManager.UpdateAsync(user);
+                    return new(false, "Your account has been locked. Kindly initiate a password reset to unlock your account.", null);
+                }
+                else
+                {
+                    int maxAttempts = _userManager.Options.Lockout.MaxFailedAccessAttempts;
+                    int failedAttempts = await _userManager.GetAccessFailedCountAsync(user);
+                    if (maxAttempts - failedAttempts == 0)
+                    {
+                        user.LockoutEnabled = true;
+                        user.LockoutEnd = DateTime.MaxValue;
+                        await _userManager.UpdateAsync(user);
+
+                        return new(false, "Your account has been locked. Kindly initiate a password reset to unlock your account.", null);
+                    }
+
+                    return new(false, $"Invalid login credentials.You have {maxAttempts - failedAttempts} attempts left.", null);
+                }
+            }
+
+            user.LockoutEnabled = false;
+            user.LockoutEnd = null;
+            user.AccessFailedCount = 0;
+            var lockoutResponse = await _userManager.UpdateAsync(user);
+            var lifeTime = _optionsSnapshot.Lifetime;
+            var expires = DateTimeOffset.Now.AddMinutes(Convert.ToDouble(lifeTime));
+            var token = await CreateToken(user, aUser!.id);
+
+            var response = new CustomerLoginResponse
+            {
+                UserId = user.Id,
+                IsCustomer = user.Is_customer,
+                IsAgent = user.Is_agent,
+                IsAdmin = user.Is_admin,
+                UserIdInt = aUser.id,
+                Email = user.Email,
+                Expires = expires.ToUnixTimeSeconds(),
+                ExpiresTime = expires,
+                Name = aUser.fullname,
+                Token = token,
+                Photo = aUser.Photo,
+                Is2FA = user.TwoFactorEnabled,
+                IsVerify = aUser.status == 1,
+                PhoneNumber = aUser.phone
+            };
+            //Send Message to Customer: 
+            return new(true, "Login was successful.", response);
+        }
+        catch (Exception)
+        {
+            return new(false, $"Unable to login, please try again later.", null);
+        }
+    }
+
+
     public async Task<(bool status, string message)> ResendEmailVerificationCode(string userId)
     {
         var model = await (from customer in _context.userstb.Where(vc => vc.userid == userId)
@@ -533,6 +609,12 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
 
         return response;
     }
+
+    public async Task<User?> GetAppUser(string email)
+    {
+        return await _userManager.Users.FirstOrDefaultAsync(s => s.Email == email);
+    }
+
     public async Task AddAgentReview(HubAgentReview model)
     {
         _context.HubAgentReviews.Add(model);

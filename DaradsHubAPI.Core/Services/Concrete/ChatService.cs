@@ -37,7 +37,9 @@ public class ChatService(IUnitOfWork _unitOfWork) : IChatService
         {
             return new ApiResponse("Agent record not found", StatusEnum.Validation, false);
         }
+
         agent.IsOnline = isOnline;
+        agent.ModifiedDate = GetLocalDateTime.CurrentDateTime();
         await _unitOfWork.Users.SaveAsync();
 
         return new ApiResponse("Success", StatusEnum.Success, true);

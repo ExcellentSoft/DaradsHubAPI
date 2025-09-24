@@ -19,4 +19,20 @@ public class ManageAgentController(IManageAgentService _agentService) : ApiBaseC
         var response = await _agentService.GetAgentProfile(agentId);
         return ResponseCode(response);
     }
+
+    [HttpPatch("update-agent-visibility")]
+    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> UpdateAgentVisibility([FromBody] AgentVisibilityRequest request)
+    {
+        var response = await _agentService.UpdateAgentVisibility(request);
+        return ResponseCode(response);
+    }
+
+    [HttpPatch("update-agent-status")]
+    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> UpdateAgentStatus([FromBody] AgentStatusRequest request)
+    {
+        var response = await _agentService.UpdateAgentStatus(request);
+        return ResponseCode(response);
+    }
 }
