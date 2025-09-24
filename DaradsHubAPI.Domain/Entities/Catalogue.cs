@@ -20,6 +20,14 @@ public partial class CatalogueMapping
     public long CatalogueId { get; set; }
 }
 
+public partial class CategoryMapping
+{
+    [Key]
+    public long Id { get; set; }
+    public int AgentId { get; set; }
+    public int CategoryId { get; set; }
+}
+
 
 public partial class HubDigitalProduct
 {

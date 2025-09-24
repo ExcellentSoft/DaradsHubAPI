@@ -5,12 +5,83 @@ using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
 using DaradsHubAPI.Shared.Static;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Repository;
 public class ProductRepository(AppDbContext _context) : GenericRepository<HubAgentProduct>(_context), IProductRepository
 {
+    #region Admin Queries
+
+    public async Task<List<CustomerRequestResponse>> GetCustomerRequestsForAdmin(CustomerRequestsRequest request)
+    {
+        var qOrder = from req in _context.HubProductRequests
+                     where (request.StartDate == null || req.DateCreated >= request.StartDate.Value.Date) &&
+                        (request.EndDate == null || req.DateCreated <= request.EndDate.Value.Date)
+                     orderby req.DateCreated descending
+                     select new CustomerRequestResponse
+                     {
+                         IsUrgent = req.IsUrgent,
+                         DateCreated = req.DateCreated,
+                         Location = req.Location,
+                         PreferredDate = req.PreferredDate,
+                         ProductService = req.CustomerNeed,
+                         Quantity = req.Quantity,
+                         Reference = $"#REQ-{req.Id}",
+                         RequestId = req.Id,
+                         ProductServiceImageUrl = _context.ProductRequestImages.Where(d => d.RequestId == req.Id).Select(u => u.ImageUrl).FirstOrDefault(),
+                         Customer = _context.userstb.Where(r => r.id == req.CustomerId).Select(e => new RequestedUser
+                         {
+                             FullName = e.fullname,
+                             Photo = e.Photo
+                         }).FirstOrDefault(),
+                         Status = req.Status,
+                     };
+
+        var res = new List<CustomerRequestResponse>();
+        if (qOrder.Any())
+        {
+            if (!string.IsNullOrEmpty(request.SearchText))
+            {
+                var searchText = request.SearchText.Trim().ToLower();
+
+                qOrder = qOrder.Where(d => d.ProductService.ToLower().Contains(request.SearchText));
+            }
+
+            if (request.Status is not null)
+            {
+                qOrder = qOrder.Where(d => d.Status == request.Status);
+            }
+
+            res = await qOrder.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).OrderByDescending(d => d.DateCreated).ToListAsync();
+        }
+        return res;
+
+
+    }
+    public async Task<CustomerRequestMetricResponse> GetCustomerRequestMetricsForAdmin()
+    {
+        var query = from req in _context.HubProductRequests
+                    select req;
+
+        var metrics = new CustomerRequestMetricResponse();
+        if (query.Any())
+        {
+            metrics = new CustomerRequestMetricResponse
+            {
+                TotalCount = query.Count(),
+                PendingCount = query.Where(r => r.Status == RequestStatus.Pending).Count(),
+                ApproveCount = query.Where(r => r.Status == RequestStatus.Approved).Count(),
+                RejectCount = query.Where(r => r.Status == RequestStatus.Rejected).Count()
+            };
+        }
+
+        return await Task.FromResult(metrics);
+    }
+
+    #endregion
+
     #region Physical Product    
     public IQueryable<HubProduct> GetHubProducts(string? searchText)
     {
@@ -78,11 +149,33 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         return query;
     }
 
+    public async Task<CustomerRequestMetricResponse> GetCustomerRequestMetrics(long agentId)
+    {
+        var query = from req in _context.HubProductRequests
+                    where req.AgentId == agentId
+                    select req;
+
+        var metrics = new CustomerRequestMetricResponse();
+        if (query.Any())
+        {
+            metrics = new CustomerRequestMetricResponse
+            {
+                TotalCount = query.Count(),
+                PendingCount = query.Where(r => r.Status == RequestStatus.Pending).Count(),
+                ApproveCount = query.Where(r => r.Status == RequestStatus.Approved).Count(),
+                RejectCount = query.Where(r => r.Status == RequestStatus.Rejected).Count()
+            };
+        }
+
+        return await Task.FromResult(metrics);
+    }
+
     public async Task<List<CustomerRequestResponse>> GetCustomerRequests(CustomerRequestsRequest request, int agentId)
     {
         var qOrder = from req in _context.HubProductRequests
                      where req.AgentId == agentId && (request.StartDate == null || req.DateCreated >= request.StartDate.Value.Date) &&
                         (request.EndDate == null || req.DateCreated <= request.EndDate.Value.Date)
+                     orderby req.DateCreated descending
                      select new CustomerRequestResponse
                      {
                          IsUrgent = req.IsUrgent,
@@ -225,6 +318,22 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
             query = query.Where(x => x.Name.ToLower().Contains(request.SearchText) || x.Caption.ToLower().Contains(request.SearchText));
         }
 
+        return query;
+    }
+
+    public IQueryable<category> GetAgentCategories(string? searchText, int agentId)
+    {
+        searchText = searchText?.Trim().ToLower();
+
+        var query = from mapping in _context.CategoryMappings
+                    where mapping.AgentId == agentId
+                    join cate in _context.categories on mapping.CategoryId equals cate.id
+                    select cate;
+
+        if (!string.IsNullOrEmpty(searchText))
+        {
+            query = query.Where(d => d.name.ToLower().Contains(searchText));
+        }
         return query;
     }
 

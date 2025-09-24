@@ -15,6 +15,7 @@ public class UnitOfWork(AppDbContext _context, UserManager<User> _userManager, S
     public IOrderRepository Orders => new OrderRepository(_context);
     public IWalletRepository Wallets => new WalletRepository(_context);
     public INotificationRepository Notifications => new NotificationRepository(_context);
+    public IHubUserRepository HubUsers => new HubUserRepository(_context);
 
     public void Dispose()
     {

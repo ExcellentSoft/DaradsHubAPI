@@ -69,6 +69,25 @@ public class CategoryService(IUnitOfWork _unitOfWork, IFileService _fileService)
         return await Task.FromResult(new ApiResponse<IEnumerable<CategoryResponse>> { Data = categories, Message = "Successful", Status = true, StatusCode = StatusEnum.Success });
     }
 
+    public async Task<ApiResponse<IEnumerable<IdNameRecord>>> GetCatalogues(string? searchText)
+    {
+        searchText = searchText?.Trim().ToLower();
+        var catalogues = _unitOfWork.Categories.GetCatalogues();
+
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            catalogues = catalogues.Where(s => s.Name.ToLower().Contains(searchText));
+        }
+
+        var iCatalogues = await catalogues.Select(c => new IdNameRecord
+        {
+            Id = c.Id,
+            Name = c.Name
+        }).ToListAsync();
+
+        return await Task.FromResult(new ApiResponse<IEnumerable<IdNameRecord>> { Data = iCatalogues, Message = "Successful", Status = true, StatusCode = StatusEnum.Success });
+    }
+
     public async Task<ApiResponse<IEnumerable<IdNameRecord>>> GetSubCategories(string? searchText, int categoryId)
     {
         searchText = searchText?.Trim().ToLower();

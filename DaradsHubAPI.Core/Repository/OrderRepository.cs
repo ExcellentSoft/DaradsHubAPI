@@ -7,13 +7,117 @@ using DaradsHubAPI.Shared.Customs;
 using DaradsHubAPI.Shared.Static;
 using Microsoft.EntityFrameworkCore;
 using static DaradsHubAPI.Domain.Enums.Enum;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace DaradsHubAPI.Core.Repository
 {
     public class OrderRepository(AppDbContext _context) : GenericRepository<HubOrder>(_context), IOrderRepository
     {
         #region Admin Queries
+        public async Task<List<LastFourCustomerRequest>> GetLastCustomerRequests()
+        {
+            var response = await (from req in _context.HubProductRequests
+                                  where req.Status == RequestStatus.Pending
+                                  orderby req.DateCreated descending
+                                  select new LastFourCustomerRequest
+                                  {
+                                      DateCreated = req.DateCreated,
+                                      ProductService = req.CustomerNeed,
+                                      Location = req.Location,
+                                      PreferredDate = req.PreferredDate,
+                                      Quantity = req.Quantity,
+                                      Reference = $"#REQ-{req.Id}",
+                                      RequestId = req.Id,
+                                      Customer = _context.userstb.Where(r => r.id == req.CustomerId).Select(e => new RequestedUser
+                                      {
+                                          FullName = e.fullname,
+                                          Photo = e.Photo
+                                      }).FirstOrDefault(),
+                                      Status = req.Status,
+                                  }).Take(4).ToListAsync();
+            return response;
+        }
+
+        public async Task<IEnumerable<TopPerformingAgentResponse>> TopPerformingAgents2()
+        {
+            var today = DateTime.Now.Date;
+            var yesterday = today.AddDays(-1);
+
+            var query = from item in _context.HubOrderItems
+                        join order in _context.HubOrders on item.OrderCode equals order.Code
+                        join agent in _context.userstb on item.AgentId equals agent.id
+                        where order.OrderDate.Date == today || order.OrderDate.Date == yesterday
+                        select new
+                        {
+                            AgentId = agent.id,
+                            AgentName = agent.fullname,
+                            agent.Photo,
+                            OrderDate = order.OrderDate.Date,
+                            Amount = item.Price * item.Quantity,
+                            order
+                        };
+
+            var agentTrend = await query
+                .GroupBy(x => new { x.AgentId, x.AgentName, x.OrderDate })
+                .Select(g => new
+                {
+                    g.Key.AgentId,
+                    g.Key.AgentName,
+                    g.Key.OrderDate,
+                    Revenue = g.Sum(x => x.Amount),
+                    Orders = g.Select(x => x.order.Code).Distinct().Count(),
+                    Photo = g.Select(r => r.Photo).FirstOrDefault()
+                }).OrderByDescending(w => w.Revenue)
+                .ToListAsync();
+
+            var result = agentTrend
+                .GroupBy(a => new { a.AgentId, a.AgentName })
+                .Select(g => new TopPerformingAgentResponse
+                {
+                    AgentId = g.Key.AgentId,
+                    AgentName = g.Key.AgentName,
+                    OrdersCount = g.Select(d => d.Orders).LastOrDefault(),
+                    Photo = g.Select(d => d.Photo).FirstOrDefault(),
+                    Revenue = g.Where(d => d.OrderDate == today).Sum(d => d.Revenue),
+                    TrendPercentage = g.Where(d => d.OrderDate == yesterday).Sum(d => d.Revenue) > 0
+                        ? Math.Round(((g.Where(d => d.OrderDate == today).Sum(d => d.Revenue) -
+                                      g.Where(d => d.OrderDate == yesterday).Sum(d => d.Revenue)) /
+                                      g.Where(d => d.OrderDate == yesterday).Sum(d => d.Revenue)) * 100, 2)
+                        : 100
+                })
+                .Take(4)
+                .ToList();
+
+            return result;
+
+        }
+
+        public async Task<IEnumerable<TopPerformingAgentResponse>> TopPerformingAgents()
+        {
+            var today = DateTime.UtcNow.Date;
+            var yesterday = today.AddDays(-1);
+
+            var query = await (from item in _context.HubOrderItems
+                               join order in _context.HubOrders on item.OrderCode equals order.Code
+                               join agent in _context.userstb on item.AgentId equals agent.id
+                               where order.OrderDate.Date == today || order.OrderDate.Date == yesterday
+                               group new { item, order } by new { agent.fullname, agent.Photo, agent.id } into g
+                               orderby g.Sum(x => x.item.Quantity) descending
+                               select new TopPerformingAgentResponse
+                               {
+                                   AgentId = g.Key.id,
+                                   AgentName = g.Key.fullname,
+                                   Photo = g.Key.Photo,
+                                   Revenue = g.Sum(x => x.item.Price * x.item.Quantity),
+                                   OrdersCount = g.Select(x => x.order.Code).Distinct().Count(),
+                                   TrendPercentage = g.Where(d => d.order.OrderDate == yesterday).Sum(x => x.item.Price * x.item.Quantity) > 0
+            ? Math.Round(((g.Where(d => d.order.OrderDate == today).Sum(x => x.item.Price * x.item.Quantity) -
+                          g.Where(d => d.order.OrderDate == yesterday).Sum(x => x.item.Price * x.item.Quantity)) /
+                          g.Where(d => d.order.OrderDate == yesterday).Sum(x => x.item.Price * x.item.Quantity)) * 100, 2) : 100
+
+                               }).Take(10).ToListAsync();
+            return query;
+        }
+
         public async Task<DailySalesOverviewResponse?> DailySalesOverview()
         {
             var today = GetLocalDateTime.CurrentDateTime();

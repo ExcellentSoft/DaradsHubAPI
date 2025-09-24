@@ -483,6 +483,17 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         return new ApiResponse<IEnumerable<AgentProductsResponse>> { Message = "Successful", Status = true, Data = paginatedProducts, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
     }
 
+    public async Task<ApiResponse<IEnumerable<IdNameRecord>>> GetAgentCategories(string? searchText, int agentId)
+    {
+        var products = _unitOfWork.Products.GetAgentCategories(searchText, agentId);
+        var iProducts = await products.Select(c => new IdNameRecord
+        {
+            Id = c.id,
+            Name = c.name
+        }).ToListAsync();
+        return new ApiResponse<IEnumerable<IdNameRecord>> { Data = iProducts, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
+    }
+
     public async Task<ApiResponse<ProductOrderMetricResponse>> GetProductOrderMetrics(long productId, bool isDigital)
     {
         var responses = new ProductOrderMetricResponse();
@@ -495,6 +506,19 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
             responses = await _unitOfWork.Products.GetPhysicalProductOrderMetrics(productId);
         }
         return new ApiResponse<ProductOrderMetricResponse> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
+    }
+
+    public async Task<ApiResponse<CustomerRequestMetricResponse>> GetCustomerRequestMetrics(long agentId)
+    {
+        var responses = await _unitOfWork.Products.GetCustomerRequestMetrics(agentId);
+        return new ApiResponse<CustomerRequestMetricResponse>
+        {
+            Message = "Successful",
+            Status = true,
+            Data = responses,
+            StatusCode = StatusEnum.Success
+
+        };
     }
 
     public async Task<ApiResponse<List<AgentOrderListResponse>>> GetProductOrders(ProductOrderListRequest request)

@@ -122,6 +122,8 @@ namespace DaradsHubAPI.Core.Model.Response
         public int TotalProduct { get; set; }
         public int TotalDigitalProductCount { get; set; }
         public int TotalPhysicalProduct { get; set; }
+        public int TotalActiveChats { get; set; }
+        public int TotalPendingReplies { get; set; }
     }
 
     public class DashboardMetricResponse
@@ -147,5 +149,13 @@ namespace DaradsHubAPI.Core.Model.Response
         public int CompletedOrderCount { get; set; }
         public int PendingOrderCount { get; internal set; }
         public int ProcessingOrderCount { get; internal set; }
+    }
+    public class CustomerRequestMetricResponse
+    {
+        public int TotalCount { get; set; }
+        public int RejectCount { get; set; }
+        public int ApproveCount { get; set; }
+        public int PendingCount { get; internal set; }
+
     }
 }

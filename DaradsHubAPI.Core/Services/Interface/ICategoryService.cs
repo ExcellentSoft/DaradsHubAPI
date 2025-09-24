@@ -9,6 +9,7 @@ public interface ICategoryService
     Task<ApiResponse> DeleteCategory(int categoryId);
     Task<ApiResponse<IEnumerable<IdNameRecord>>> GetAgentsLookUp(string? searchText);
     Task<CategoryResponse> GetById(int Id);
+    Task<ApiResponse<IEnumerable<IdNameRecord>>> GetCatalogues(string? searchText);
     Task<ApiResponse<IEnumerable<CategoryResponse>>> GetCategories(string? searchText);
     Task<ApiResponse<IEnumerable<IdNameRecord>>> GetSubCategories(string? searchText, int categoryId);
     Task<ApiResponse> UpdateCategory(UpdateCategoryRequestModel model);
