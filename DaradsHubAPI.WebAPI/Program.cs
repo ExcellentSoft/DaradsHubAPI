@@ -12,16 +12,28 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
-
-    options.AddDefaultPolicy(
-
-           builder => builder.WithOrigins("http://localhost:5174")
-                 .AllowAnyHeader()
-                 .AllowAnyOrigin()
-                 .AllowAnyHeader()
-                 .AllowAnyMethod()
-                 );
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5174")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              //.AllowAnyOrigin()
+              .AllowCredentials();
+    });
 });
+
+//builder.Services.AddCors(,options =>
+//{
+
+//    options.AddDefaultPolicy(
+
+//           builder => builder.WithOrigins("http://localhost:5174")
+//                 .AllowAnyHeader()
+//                 .AllowAnyOrigin()
+//                 .AllowAnyHeader()
+//                 .AllowAnyMethod()
+//                 );
+//});
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("mycon")!));
 
@@ -52,7 +64,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseMiddleware<ExceptionMiddleware>();
-app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseStatusCodePages();
 app.UseAuthorization();
@@ -73,6 +85,6 @@ app.MapAreaControllerRoute(
     pattern: "Agent/{controller}/{action}/{id?}");
 
 app.MapControllers();
-app.MapHub<ChatHub>("/chatHub");
+app.MapHub<ChatHub>("/chatHub").RequireCors("AllowFrontend");
 
 app.Run();
