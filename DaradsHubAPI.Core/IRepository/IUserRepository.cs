@@ -1,9 +1,11 @@
-﻿using DaradsHubAPI.Core.Model.Response;
+﻿using DaradsHubAPI.Core.Model.Request;
+using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Domain.Entities;
 
 namespace DaradsHubAPI.Core.IRepository;
 public interface IUserRepository : IGenericRepository<userstb>
 {
+    Task<(bool status, string message)> AddAgentByAdmin(AddAgentRequest request, string photoUrl);
     Task AddAgentReview(HubAgentReview model);
     Task<(bool status, string message)> ChangePassword(ChangePasswordRequest request, string email);
     Task<int> CountCustomers(string audienceType);

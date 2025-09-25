@@ -1,4 +1,5 @@
 ﻿using DaradsHubAPI.Core.IRepository;
+using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.Domain.Entities;
@@ -664,6 +665,99 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         catch (Exception)
         {
             return new(false, "Unable to register, please try again later.", null);
+        }
+    }
+
+    public async Task<(bool status, string message)> AddAgentByAdmin(AddAgentRequest request, string photoUrl)
+    {
+        try
+        {
+            var uCustomer = request.ToUser();
+            var createUser = await _userManager.CreateAsync(uCustomer, request.Password);
+            if (!createUser.Succeeded)
+            {
+                var errors = createUser.Errors.Select(x => x.Description);
+                return new(false, $"Unable to register at this time. {string.Join(" ", errors)}");
+            }
+
+            var agent = request.ToAgent(uCustomer.Id, photoUrl);
+            await _context.userstb.AddAsync(agent);
+
+            var walletCode = $"Wal-{CustomizeCodes.GetCode()}";
+            var customerWallet = request.ToCustomerWallet(walletCode);
+            await _context.wallettb.AddAsync(customerWallet);
+
+            await _context.SaveChangesAsync();
+
+            bool canSellDigitalProduct = false;
+            bool canSellPhysicalProduct = false;
+
+            if (request.CataloguesIds is not null)
+            {
+                await _context.CatalogueMappings.Where(e => e.AgentId == agent.id).ExecuteDeleteAsync();
+
+                foreach (var id in request.CataloguesIds)
+                {
+                    var map = new CatalogueMapping
+                    {
+                        AgentId = agent.id,
+                        CatalogueId = id
+                    };
+                    _context.CatalogueMappings.Add(map);
+                }
+                canSellDigitalProduct = true;
+                await _context.SaveChangesAsync();
+            }
+
+            if (request.CategoriesIds is not null)
+            {
+                await _context.CategoryMappings.Where(e => e.AgentId == agent.id).ExecuteDeleteAsync();
+
+                foreach (var id in request.CategoriesIds)
+                {
+                    var map = new CategoryMapping
+                    {
+                        AgentId = agent.id,
+                        CategoryId = id
+                    };
+                    _context.CategoryMappings.Add(map);
+                }
+                canSellPhysicalProduct = true;
+                await _context.SaveChangesAsync();
+            }
+
+            var settings = await _context.HubAgentProductSettings.FirstOrDefaultAsync(s => s.AgentId == agent.id);
+            if (settings is null)
+            {
+                settings = new HubAgentProductSetting
+                {
+                    CanSellDigitalProduct = canSellDigitalProduct,
+                    CanSellPhysicalProduct = canSellPhysicalProduct,
+                    DateCreated = GetLocalDateTime.CurrentDateTime(),
+                    AgentId = agent.id
+                };
+
+                _context.HubAgentProductSettings.Add(settings);
+            }
+            else
+            {
+                settings.CanSellDigitalProduct = canSellDigitalProduct;
+                settings.CanSellPhysicalProduct = canSellPhysicalProduct;
+            }
+            await _context.SaveChangesAsync();
+
+            var scope = _serviceProvider.GetRequiredService<IEmailService>();
+            string message = $"Hello {request.FullName}, Your account has been successfully created. You can log in using the following credentials: <br/><br/>" +
+                $"Email : {request.Email}" +
+                $"Password : {request.Password}";
+
+            scope.SendMail(request.Email, "Account Creation", message, "Darads", useTemplate: true);
+
+            return new(true, message = $"Success! Agent created successfully.");
+        }
+        catch (Exception)
+        {
+            return new(false, "Unable to register, please try again later.");
         }
     }
 

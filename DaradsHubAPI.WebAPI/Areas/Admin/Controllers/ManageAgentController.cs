@@ -45,4 +45,12 @@ public class ManageAgentController(IManageAgentService _agentService) : ApiBaseC
         return ResponseCode(response);
 
     }
+
+    [HttpPost("create-agent-account")]
+    [ProducesResponseType(typeof(ApiResponse<string>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> AddAgent([FromForm] AddAgentRequest request)
+    {
+        var response = await _agentService.CreateAgent(request);
+        return ResponseCode(response);
+    }
 }

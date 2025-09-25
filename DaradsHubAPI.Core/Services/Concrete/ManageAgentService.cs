@@ -4,12 +4,89 @@ using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.Domain.Entities;
+using DaradsHubAPI.Shared.Extentions;
+using DaradsHubAPI.Shared.Interface;
+using DaradsHubAPI.Shared.Static;
 using Microsoft.EntityFrameworkCore;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Services.Concrete;
-public class ManageAgentService(IUnitOfWork _unitOfWork) : IManageAgentService
+public class ManageAgentService(IUnitOfWork _unitOfWork, IFileService _fileService) : IManageAgentService
 {
+    static ApiResponse ValidateAgentRequest(AddAgentRequest request)
+    {
+        if (string.IsNullOrEmpty(request.FullName))
+            return new ApiResponse("First name is required.", StatusEnum.Validation, false);
+
+        else if (string.IsNullOrEmpty(request.Email))
+            return new ApiResponse("Email is required.", StatusEnum.Validation, false);
+
+        else if (!request.Email.IsValidEmail())
+            return new ApiResponse("Invalid email address.", StatusEnum.Validation, false);
+
+        else if (!request.PhoneNumber.IsValidPhoneNumber())
+            return new ApiResponse("Invalid phone number.", StatusEnum.Validation, false);
+
+        else
+            return new ApiResponse("Validation passed.", StatusEnum.Success, true);
+    }
+
+    public async Task<ApiResponse<string>> CreateAgent(AddAgentRequest request)
+    {
+        var validateResult = ValidateAgentRequest(request);
+        if (!validateResult.Status.GetValueOrDefault())
+            return new ApiResponse<string> { Status = validateResult.Status, Message = validateResult.Message, StatusCode = StatusEnum.Validation };
+
+        request.Email = request.Email.Trim().ToLower();
+
+        var customer = await _unitOfWork.Users.GetSingleWhereAsync(u => u.email == request.Email);
+
+        if (await _unitOfWork.Users.AnyAsync(us => us.email == request.Email && us.phone == request.PhoneNumber))
+        {
+            return new ApiResponse<string> { Status = false, Message = $"Agent with {request.FullName} already exists. Please verify and try again.", StatusCode = StatusEnum.Validation };
+        }
+
+        if (_unitOfWork.Users.Any(us => us.email == request.Email))
+        {
+            return new ApiResponse<string> { Status = false, Message = $"Email  address  {request.Email} already registered, check and try again later.", StatusCode = StatusEnum.Validation };
+        }
+
+        if (_unitOfWork.Users.Any(us => us.phone == request.PhoneNumber))
+        {
+
+            return new ApiResponse<string> { Status = false, Message = $"Phone number  {request.PhoneNumber} already registered, check and try again later.", StatusCode = StatusEnum.Validation };
+        }
+
+        var photoPath = "";
+        if (request.Photo is not null)
+        {
+            var maxUploadSize = 5;
+            var allowedExtensions = new[] { ".png", ".jpg", ".jpeg", ".jpe", ".gif" };
+            if (request.Photo.Length > (maxUploadSize * 1024 * 1024))
+                return new ApiResponse<string> { Status = false, Message = $"Max upload size exceeded. Max size is {maxUploadSize}MB", StatusCode = StatusEnum.Validation };
+
+            var ext = Path.GetExtension(request.Photo.FileName);
+            if (!allowedExtensions.Contains(ext))
+                return new ApiResponse<string> { Status = false, Message = $"Invalid file format. Supported file formats include {string.Join(", ", allowedExtensions)}", StatusCode = StatusEnum.Validation };
+
+            var fileResponse = await _fileService.AddPhoto(request.Photo, GenericStrings.PROFILE_IMAGES_FOLDER_NAME);
+            Uri url = fileResponse.SecureUrl;
+            if (!string.IsNullOrEmpty(url.AbsoluteUri))
+            {
+                photoPath = url.AbsoluteUri;
+            }
+        }
+
+        var createResponse = await _unitOfWork.Users.AddAgentByAdmin(request, photoPath);
+        if (!createResponse.status)
+        {
+            return new ApiResponse<string> { Status = createResponse.status, Message = createResponse.message, StatusCode = StatusEnum.Validation };
+        }
+
+        return new ApiResponse<string> { Status = createResponse.status, Message = createResponse.message, StatusCode = StatusEnum.Success };
+    }
+
+
     public async Task<ApiResponse<IEnumerable<AgentsListResponse>>> GetAgents(AgentsListRequest request)
     {
         var query = _unitOfWork.HubUsers.GetAgents(request);
