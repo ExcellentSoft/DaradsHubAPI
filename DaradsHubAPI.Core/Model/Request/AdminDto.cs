@@ -1,4 +1,7 @@
 ﻿using DaradsHubAPI.Core.Model.Response;
+using DaradsHubAPI.Domain.Entities;
+using DaradsHubAPI.Shared.Customs;
+using Microsoft.AspNetCore.Http;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Model.Request;
@@ -115,4 +118,68 @@ public class ProductTypeData
     public string Digital { get; set; } = default!;
     public string Physical { get; set; } = default!;
 
+}
+
+public record AddAgentRequest
+{
+    public string FullName { get; set; } = default!;
+    public string Email { get; set; } = default!;
+    public string PhoneNumber { get; set; } = default!;
+    public string Password { get; set; } = default!;
+
+    public IEnumerable<int>? CategoriesIds { get; set; }
+    public IEnumerable<long>? CataloguesIds { get; set; }
+    public bool IsPublic { get; set; }
+    public string? BusinessName { get; set; }
+    public IFormFile? Photo { get; set; }
+
+
+    public User ToUser()
+    {
+        return new User
+        {
+            Email = Email,
+            Is_customer = 0,
+            Is_admin = 0,
+            Is_agent = 1,
+            NormalizedEmail = Email.ToUpper(),
+            UserName = Email,
+            NormalizedUserName = Email.ToUpper(),
+            Status = EntityStatusEnum.Active,
+            SignUpType = "AG",
+            PhoneNumber = PhoneNumber,
+
+        };
+    }
+
+    public userstb ToAgent(string userId, string photoUrl)
+    {
+        return new userstb
+        {
+            userid = userId,
+            email = Email,
+            phone = PhoneNumber,
+            status = (int)EntityStatusEnum.Active,
+            fullname = FullName,
+            regdate = GetLocalDateTime.CurrentDateTime(),
+            IsAgent = true,
+            BusinessName = BusinessName,
+            Photo = photoUrl,
+            IsPublicAgent = IsPublic
+        };
+    }
+
+    public wallettb ToCustomerWallet(string code)
+    {
+        return new wallettb
+        {
+
+            UserId = Email,
+            Balance = 0.0M,
+            CreatedDate = GetLocalDateTime.CurrentDateTime(),
+            Walletcode = code,
+            NewAcct = "Y",
+            UpdateDate = GetLocalDateTime.CurrentDateTime()
+        };
+    }
 }
