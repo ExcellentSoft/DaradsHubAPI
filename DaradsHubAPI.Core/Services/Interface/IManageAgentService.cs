@@ -11,6 +11,7 @@ namespace DaradsHubAPI.Core.Services.Interface;
 public interface IManageAgentService
 {
     Task<ApiResponse<ShortAgentProfileResponse>> GetAgentProfile(int agentId);
+    Task<ApiResponse<IEnumerable<AgentsListResponse>>> GetAgents(AgentsListRequest request);
     Task<ApiResponse> UpdateAgentStatus(AgentStatusRequest request);
     Task<ApiResponse> UpdateAgentVisibility(AgentVisibilityRequest request);
 }

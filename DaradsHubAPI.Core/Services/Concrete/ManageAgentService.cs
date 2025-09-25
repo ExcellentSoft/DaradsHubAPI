@@ -3,11 +3,25 @@ using DaradsHubAPI.Core.Model;
 using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Interface;
+using DaradsHubAPI.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Services.Concrete;
 public class ManageAgentService(IUnitOfWork _unitOfWork) : IManageAgentService
 {
+    public async Task<ApiResponse<IEnumerable<AgentsListResponse>>> GetAgents(AgentsListRequest request)
+    {
+        var query = _unitOfWork.HubUsers.GetAgents(request);
+
+        var totalProducts = query.Count();
+        var paginatedAgents = await query
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize).ToListAsync();
+
+        return new ApiResponse<IEnumerable<AgentsListResponse>> { Message = "Successful", Status = true, Data = paginatedAgents, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
+    }
+
     public async Task<ApiResponse<ShortAgentProfileResponse>> GetAgentProfile(int agentId)
     {
         var profileResponse = await _unitOfWork.HubUsers.GetAgentProductProfile(agentId);

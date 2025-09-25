@@ -23,7 +23,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public virtual DbSet<subscriptionplan> subscriptionplan { get; set; }
     public virtual DbSet<GiftCardOrders> GiftCardOrders { get; set; }
     public virtual DbSet<userstb> userstb { get; set; }
-    public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<wallettb> wallettb { get; set; }
     public virtual DbSet<Withdrawtb> Withdrawtb { get; set; }
     public virtual DbSet<Logapp_error> Logapp_error { get; set; }
