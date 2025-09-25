@@ -71,3 +71,48 @@ public record AgentStatusRequest
     public EntityStatusEnum EntityStatus { get; set; }
 
 }
+
+public record AgentsListRequest
+{
+    public int PageSize { get; set; } = 10;
+    public int PageNumber { get; set; } = 1;
+    public string? SearchText { get; set; }
+    public int? Status { get; set; }
+    public bool? IsPublic { get; set; }
+    public string? ProductType { get; set; }
+    public bool? CanSellPhysicalProducts { get; set; }
+    public bool? CanSellDigitalProducts { get; set; }
+}
+
+public class AgentsListResponse
+{
+    public int AgentId { get; set; }
+    public bool CanSellPhysicalProducts { get; internal set; }
+    public bool CanSellDigitalProducts { get; internal set; }
+    public string? FullName { get; set; }
+    public int? Status { get; set; }
+    public decimal? RevenueAmount { get; set; }
+    public decimal WithdrawAmount { get; set; }
+    public double MaxRating { get; set; }
+    public int OrderCount { get; set; }
+    public bool? IsPublic { get; set; }
+    public string? Photo { get; set; }
+    public string? LastActive { get; set; }
+    public IEnumerable<string> ProductTypes
+    {
+        get
+        {
+            var types = new List<string>();
+            if (CanSellDigitalProducts) types.Add("Digital");
+            if (CanSellPhysicalProducts) types.Add("Physical");
+            return types;
+        }
+    }
+}
+
+public class ProductTypeData
+{
+    public string Digital { get; set; } = default!;
+    public string Physical { get; set; } = default!;
+
+}

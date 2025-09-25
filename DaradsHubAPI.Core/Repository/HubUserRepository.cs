@@ -1,16 +1,68 @@
 ﻿using DaradsHubAPI.Core.IRepository;
 using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
-using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
 using DaradsHubAPI.Shared.Customs;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace DaradsHubAPI.Core.Repository;
 public class HubUserRepository(AppDbContext _context) : GenericRepository<userstb>(_context), IHubUserRepository
 {
+    public IQueryable<AgentsListResponse> GetAgents(AgentsListRequest request)
+    {
+        var today = GetLocalDateTime.CurrentDateTime();
+        var uquery = from user in _context.userstb.Where(d => d.IsAgent == true)
+                     let cansellPhysical = _context.HubAgentProductSettings.Where(s => s.AgentId == user.id).Select(e => e.CanSellPhysicalProduct).FirstOrDefault()
+                     let cansellDigital = _context.HubAgentProductSettings.Where(s => s.AgentId == user.id).Select(e => e.CanSellDigitalProduct).FirstOrDefault()
+                     select new AgentsListResponse
+                     {
+                         FullName = user.fullname,
+                         LastActive = CustomizeCodes.GetPeriodDifference(user.ModifiedDate, today),
+                         IsPublic = user.IsPublicAgent,
+                         CanSellPhysicalProducts = cansellPhysical,
+                         CanSellDigitalProducts = cansellDigital,
+                         Status = user.status,
+                         AgentId = user.id,
+                         Photo = user.Photo,
+                         OrderCount = (from item in _context.HubOrderItems
+                                       join order in _context.HubOrders on item.OrderCode equals order.Code
+                                       where item.AgentId == user.id
+                                       select order.Code).Distinct().Count(),
+                         RevenueAmount = _context.wallettb.Where(s => s.UserId == user.email).Select(d => d.Balance).FirstOrDefault(),
+                         MaxRating = (from hp in _context.HubDigitalProducts.Where(s => s.AgentId == user.id)
+                                      join r in _context.HubReviews on hp.Id equals r.ProductId
+                                      where r.IsDigital == true
+                                      select r.Rating).OrderByDescending(r => r).FirstOrDefault() == 0 ?
+                                      (from hp in _context.HubAgentProducts.Where(s => s.AgentId == user.id)
+                                       join r in _context.HubReviews on hp.Id equals r.ProductId
+                                       where r.IsDigital == false
+                                       select r.Rating).OrderByDescending(r => r).FirstOrDefault() : 0
+                     };
+
+        if (request.CanSellPhysicalProducts is not null)
+        {
+            uquery = uquery.Where(e => e.CanSellPhysicalProducts);
+        }
+        if (request.CanSellDigitalProducts is not null)
+        {
+            uquery = uquery.Where(e => e.CanSellDigitalProducts);
+        }
+        if (request.Status is not null)
+        {
+            uquery = uquery.Where(e => e.Status == request.Status);
+        }
+        if (request.IsPublic is not null)
+        {
+            uquery = uquery.Where(e => e.IsPublic == request.IsPublic);
+        }
+        if (!string.IsNullOrWhiteSpace(request.SearchText))
+        {
+            uquery = uquery.Where(e => e.FullName != null && e.FullName.ToLower().Contains(request.SearchText.ToLower()));
+        }
+        return uquery;
+    }
+
     public async Task<(bool status, string message, ShortAgentProfileResponse? res)> GetAgentProductProfile(int agentId)
     {
         var customerUser = await _context.userstb.FirstOrDefaultAsync(us => us.id == agentId);

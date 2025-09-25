@@ -3,6 +3,7 @@ using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Concrete;
 using DaradsHubAPI.Core.Services.Interface;
+using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.WebAPI.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -34,5 +35,14 @@ public class ManageAgentController(IManageAgentService _agentService) : ApiBaseC
     {
         var response = await _agentService.UpdateAgentStatus(request);
         return ResponseCode(response);
+    }
+
+    [HttpGet("view-agents")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<AgentsListResponse>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAgents([FromQuery] AgentsListRequest request)
+    {
+        var response = await _agentService.GetAgents(request);
+        return ResponseCode(response);
+
     }
 }
