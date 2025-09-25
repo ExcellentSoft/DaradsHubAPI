@@ -6,7 +6,7 @@ namespace DaradsHubAPI.WebAPI.ChatHelper;
 
 public class ChatHub(IChatService _chatService) : Hub
 {
-    public async Task SendMessageToConversation(string conversationId, string senderId, string message)
+    public async Task SendMessage(string conversationId, string senderId, string message)
     {
         var today = GetLocalDateTime.CurrentDateTime();
         await _chatService.AddMessageAsync(long.Parse(conversationId), int.Parse(senderId), message);
