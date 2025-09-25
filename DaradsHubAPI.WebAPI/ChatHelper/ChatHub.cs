@@ -14,4 +14,10 @@ public class ChatHub(IChatService _chatService) : Hub
         await Clients.Group(conversationId)
             .SendAsync("ReceiveMessage", senderId, message, today);
     }
+
+    public async Task JoinConversation(int conversationId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, conversationId.ToString());
+    }
+
 }
