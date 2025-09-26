@@ -8,5 +8,5 @@ using System.Threading.Tasks;
 namespace DaradsHubAPI.Core.IRepository;
 public interface IWalletRepository : IGenericRepository<wallettb>
 {
-
+    Task<AgentBalanceResponse> GetAgentWalletBalance(string email);
 }

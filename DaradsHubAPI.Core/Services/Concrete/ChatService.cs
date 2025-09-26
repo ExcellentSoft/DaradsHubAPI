@@ -54,6 +54,20 @@ public class ChatService(IUnitOfWork _unitOfWork) : IChatService
         return new ApiResponse<IEnumerable<ChatMessageResponse>> { Data = iMessages, Message = "Messages fetched successfully.", Status = true, StatusCode = StatusEnum.Success, Pages = request.PageSize, TotalRecord = totalRecordsCount, CurrentPageCount = request.PageNumber };
     }
 
+    public async Task<ApiResponse<IEnumerable<ViewChatMessagesResponse>>> GetAgentChatMessages(int agentId)
+    {
+        var messages = await _unitOfWork.Notifications.GetAgentChatMessages(agentId).ToListAsync();
+
+        return new ApiResponse<IEnumerable<ViewChatMessagesResponse>> { Data = messages, Message = "Agent chats  fetched successfully.", Status = true, StatusCode = StatusEnum.Success };
+    }
+
+    public async Task<ApiResponse<IEnumerable<ViewChatMessagesResponse>>> GetCustomerChatMessages(int customerId)
+    {
+        var messages = await _unitOfWork.Notifications.GetCustomerChatMessages(customerId).ToListAsync();
+
+        return new ApiResponse<IEnumerable<ViewChatMessagesResponse>> { Data = messages, Message = "Customer chats  fetched successfully.", Status = true, StatusCode = StatusEnum.Success };
+    }
+
     public async Task<ApiResponse> MarkAllMessageAsRead(long conversationId)
     {
         await _unitOfWork.Notifications.MarkAllMessageAsRead(conversationId);

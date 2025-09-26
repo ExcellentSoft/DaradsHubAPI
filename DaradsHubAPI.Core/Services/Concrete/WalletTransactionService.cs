@@ -46,4 +46,11 @@ public class WalletTransactionService(IUnitOfWork _unitOfWork, IFileService _fil
 
         return new ApiResponse<IEnumerable<AgentWalletTransactionRecord>> { Message = "Wallet transactions fetched successfully.", Status = true, Data = paginatedTransactions, StatusCode = StatusEnum.Success, TotalRecord = totalTransactions, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
     }
+
+    public async Task<ApiResponse<AgentBalanceResponse>> GetAgentBalance(string email)
+    {
+        var balanceResponse = await _unitOfWork.Wallets.GetAgentWalletBalance(email);
+
+        return new ApiResponse<AgentBalanceResponse> { Message = "Agent balance fetched successfully.", Status = true, Data = balanceResponse, StatusCode = StatusEnum.Success };
+    }
 }

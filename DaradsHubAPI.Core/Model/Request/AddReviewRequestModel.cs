@@ -90,7 +90,18 @@ namespace DaradsHubAPI.Core.Model.Request
         public bool IsRead { get; set; }
         public long MessageId { get; internal set; }
     }
-
+    public record ViewChatMessagesResponse
+    {
+        public long ConversationId { get; set; }
+        public int TotalPendingCount { get; set; }
+        public LastMessage? LastMessage { get; set; }
+    }
+    public record LastMessage
+    {
+        public string? Content { get; set; }
+        public DateTime SentAt { get; set; }
+        public SenderDetails? Sender { get; set; }
+    }
     public record SenderDetails
     {
         public string? FullName { get; set; }

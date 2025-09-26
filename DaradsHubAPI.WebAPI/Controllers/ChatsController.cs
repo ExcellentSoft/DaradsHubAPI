@@ -35,19 +35,27 @@ public class ChatsController(IChatService _chatService) : ApiBaseController
         return ResponseCode(response);
     }
 
-    //[HttpPost("add-message")]
-    //[ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
-    //public async Task<IActionResult> AddMessageAsync(long conversionId, int senderId, string message)
-    //{
-    //    await _chatService.AddMessageAsync(conversionId, senderId, message);
-    //    return Ok();
-    //}
-
     [HttpGet("messages")]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<ChatMessageResponse>>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetChatMessages([FromQuery] MessageListRequest request)
     {
         var response = await _chatService.GetChatMessages(request);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("agent-chats")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ViewChatMessagesResponse>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAgentChatMessages([FromQuery] int agentId)
+    {
+        var response = await _chatService.GetAgentChatMessages(agentId);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("customer-chats")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ViewChatMessagesResponse>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetCustomerChatMessages([FromQuery] int customerId)
+    {
+        var response = await _chatService.GetCustomerChatMessages(customerId);
         return ResponseCode(response);
     }
 
