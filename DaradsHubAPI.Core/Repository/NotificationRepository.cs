@@ -57,6 +57,60 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
         return message;
     }
 
+    public IQueryable<ViewChatMessagesResponse> GetAgentChatMessages(int agentId)
+    {
+        var message = (from c in _context.HubChatConversations
+                       where c.AgentId == agentId
+                       join m in _context.HubChatMessages on c.Id equals m.ConversationId
+                       join u in _context.userstb on m.SenderId equals u.id
+                       orderby m.SentAt descending
+                       select new { u, m, c }).GroupBy(g => g.c.Id).Select(w => new ViewChatMessagesResponse
+                       {
+                           ConversationId = w.Key,
+                           TotalPendingCount = w.Count(e => e.m.IsRead == false),
+                           LastMessage = w.Select(r => new LastMessage
+                           {
+                               Content = r.m.Content,
+                               SentAt = r.m.SentAt,
+                               Sender = _context.userstb.Where(e => e.id == r.m.SenderId).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
+                               }).FirstOrDefault()
+                           }).OrderBy(e => e.SentAt).LastOrDefault()
+                       });
+        return message;
+    }
+
+    public IQueryable<ViewChatMessagesResponse> GetCustomerChatMessages(int customerId)
+    {
+        var message = (from c in _context.HubChatConversations
+                       where c.CustomerId == customerId
+                       join m in _context.HubChatMessages on c.Id equals m.ConversationId
+                       join u in _context.userstb on m.SenderId equals u.id
+                       orderby m.SentAt descending
+                       select new { u, m, c }).GroupBy(g => g.c.Id).Select(w => new ViewChatMessagesResponse
+                       {
+                           ConversationId = w.Key,
+                           TotalPendingCount = w.Count(e => e.m.IsRead == false),
+                           LastMessage = w.Select(r => new LastMessage
+                           {
+                               Content = r.m.Content,
+                               SentAt = r.m.SentAt,
+                               Sender = _context.userstb.Where(e => e.id == r.m.SenderId).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
+                               }).FirstOrDefault()
+                           }).OrderBy(e => e.SentAt).LastOrDefault()
+                       });
+        return message;
+    }
+
     public async Task SaveNotification(HubNotification entity)
     {
         await _context.HubNotifications.AddAsync(entity);

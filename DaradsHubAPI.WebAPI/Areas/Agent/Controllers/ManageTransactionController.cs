@@ -21,4 +21,13 @@ public class ManageTransactionController(IWalletTransactionService _walletTransa
         var response = await _walletTransaction.GetAgentWalletTransactions(request, email);
         return ResponseCode(response);
     }
+
+    [HttpGet("agent-wallet-balance")]
+    [ProducesResponseType(typeof(ApiResponse<AgentBalanceResponse>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAgentBalance()
+    {
+        var email = User.Identity?.GetUserEmail() ?? "";
+        var response = await _walletTransaction.GetAgentBalance(email);
+        return ResponseCode(response);
+    }
 }
