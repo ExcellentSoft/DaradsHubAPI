@@ -96,12 +96,16 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
             var query = from hp in _context.HubDigitalProducts.Where(s => s.AgentId == agentId)
                         join p in _context.Catalogues on hp.CatalogueId equals p.Id
                         select new { p };
+            var dquery = from hp in _context.HubAgentProducts.Where(s => s.AgentId == agentId)
+                         join p in _context.categories on hp.CategoryId equals p.id
+                         select new { hp, p };
+
 
             var rQuery = from hp in _context.HubDigitalProducts.Where(s => s.AgentId == agentId)
                          join r in _context.HubReviews on hp.Id equals r.ProductId
                          where r.IsDigital == true
                          select new { r };
-
+            response.AnotherSellingProducts = await dquery.Select(d => d.p.name).Distinct().Take(10).ToListAsync();
             response.SellingProducts = await query.Select(d => d.p.Name).Distinct().Take(10).ToListAsync();
             response.ReviewCount = await rQuery.Select(r => r.r).CountAsync();
             response.MaxRating = await rQuery.SumAsync(r => r.r.Rating) / 100;
@@ -141,11 +145,17 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
                         join p in _context.Catalogues on hp.CatalogueId equals p.Id
                         select new { p };
 
+            var dquery = from hp in _context.HubAgentProducts.Where(s => s.AgentId == agentId)
+                         join p in _context.categories on hp.CategoryId equals p.id
+                         select new { hp, p };
+
+
             var rQuery = from hp in _context.HubDigitalProducts.Where(s => s.AgentId == agentId)
                          join r in _context.HubReviews on hp.Id equals r.ProductId
                          where r.IsDigital == true
                          select new { r };
 
+            response.AnotherSellingProducts = await dquery.Select(d => d.p.name).Distinct().Take(10).ToListAsync();
             response.SellingProducts = await query.Select(d => d.p.Name).Distinct().Take(10).ToListAsync();
             response.ReviewCount = await rQuery.Select(r => r.r).CountAsync();
             response.MaxRating = await rQuery.SumAsync(r => r.r.Rating) / 100;

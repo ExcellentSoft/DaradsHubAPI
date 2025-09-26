@@ -14,7 +14,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5174")
+        policy.WithOrigins("http://localhost:5174",
+            "http://localhost:5175",
+            "http://localhost:5173",
+            "https://darads-hub-web.vercel.app")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -22,18 +25,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-//builder.Services.AddCors(,options =>
-//{
-
-//    options.AddDefaultPolicy(
-
-//           builder => builder.WithOrigins("http://localhost:5174")
-//                 .AllowAnyHeader()
-//                 .AllowAnyOrigin()
-//                 .AllowAnyHeader()
-//                 .AllowAnyMethod()
-//                 );
-//});
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("mycon")!));
 
