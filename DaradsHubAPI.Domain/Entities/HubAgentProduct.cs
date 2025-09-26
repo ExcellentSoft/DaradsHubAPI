@@ -63,6 +63,21 @@ public partial class HubProductRequest
     public int CategoryId { get; set; }
 }
 
+public partial class HubWithdrawalRequest
+{
+    [Key]
+    public long Id { get; set; }
+    public int AgentId { get; set; }
+    public decimal Amount { get; set; }
+    public string BankName { get; set; } = default!;
+    public string AccountNumber { get; set; } = default!;
+    public string AccountName { get; set; } = default!;
+    public string ReferenceNumber { get; set; } = default!;
+    public WithdrawalRequestStatus Status { get; set; }
+    public DateTime DateCreated { get; set; }
+    public DateTime DateUpdated { get; set; }
+}
+
 public partial class HubAgentProductSetting
 {
     [Key]

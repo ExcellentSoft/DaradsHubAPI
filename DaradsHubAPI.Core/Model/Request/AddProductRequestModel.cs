@@ -77,6 +77,23 @@ public class CreateHubProductRequest
     public int CategoryId { get; set; }
 }
 
+public class CreateWithdrawalRequest
+{
+    public decimal Amount { get; set; }
+    public string Bank { get; set; } = default!;
+    public string AccountNumber { get; set; } = default!;
+    public string AccountName { get; set; } = default!;
+}
+
+public class WithdrawalRequestResponse
+{
+    public long Id { get; set; }
+    public decimal Amount { get; set; }
+    public DateTime DateCreated { get; set; }
+    public string RefNumber { get; set; } = default!;
+    public string Status { get; set; } = default!;
+}
+
 public class UpdateAgentHubProductRequest : AddAgentHubProductRequest
 {
     public long Id { get; set; }

@@ -113,6 +113,15 @@ public class Enum
         [Description("Rejected")]
         Rejected
     }
+    public enum WithdrawalRequestStatus
+    {
+        [Description("Processing")]
+        Processing = 1,
+        [Description("Paid")]
+        Paid,
+        [Description("Failed")]
+        Failed
+    }
     public enum ProductRequestTypeEnum
     {
         [Description("Digital")]
