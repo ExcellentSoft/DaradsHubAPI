@@ -561,15 +561,20 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
             response.Photo = user.Photo;
 
             var query = from hp in _context.HubAgentProducts.Where(s => s.AgentId == agentId)
-                        join p in _context.HubProducts on hp.ProductId equals p.Id
+                        join p in _context.categories on hp.CategoryId equals p.id
                         select new { hp, p };
+
+            var dquery = from hp in _context.HubDigitalProducts.Where(s => s.AgentId == agentId)
+                         join p in _context.Catalogues on hp.CatalogueId equals p.Id
+                         select new { p };
 
             var rQuery = from hp in _context.HubAgentProducts.Where(s => s.AgentId == agentId)
                          join r in _context.HubReviews on hp.Id equals r.ProductId
                          where r.IsDigital == false
                          select new { r };
 
-            response.SellingProducts = await query.Select(d => d.p.Name).Distinct().Take(10).ToListAsync();
+            response.SellingProducts = await query.Select(d => d.p.name).Distinct().Take(10).ToListAsync();
+            response.AnotherSellingProducts = await dquery.Select(d => d.p.Name).Distinct().Take(10).ToListAsync();
             response.ReviewCount = rQuery.Select(r => r.r.ProductId).Count();
             response.MaxRating = rQuery.Sum(r => r.r.Rating) / 100;
 

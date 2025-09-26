@@ -83,6 +83,7 @@ namespace DaradsHubAPI.Core.Model.Response
         public bool IsVerify { get; set; }
         public bool IsOnline { get; set; }
         public string? Photo { get; set; }
+        public List<string> AnotherSellingProducts { get; internal set; }
     }
     public class AgentsProfileResponse
     {
