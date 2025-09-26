@@ -30,4 +30,23 @@ public class ManageTransactionController(IWalletTransactionService _walletTransa
         var response = await _walletTransaction.GetAgentBalance(email);
         return ResponseCode(response);
     }
+
+    [HttpPost("create-withdrawal-request")]
+    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> CreateWithdrawalRequest([FromBody] CreateWithdrawalRequest request)
+    {
+        var email = User.Identity?.GetUserEmail() ?? "";
+        var agentId = int.Parse(User.Identity?.GetUserId() ?? "");
+        var response = await _walletTransaction.CreateWithdrawalRequest(request, email, agentId);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("withdrawal-requests")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<WithdrawalRequestResponse>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetWithdrawalRequests()
+    {
+        var agentId = int.Parse(User.Identity?.GetUserId() ?? "");
+        var response = await _walletTransaction.GetWithdrawalRequests(agentId);
+        return ResponseCode(response);
+    }
 }
