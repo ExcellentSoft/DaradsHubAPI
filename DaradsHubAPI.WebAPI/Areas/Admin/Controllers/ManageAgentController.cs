@@ -53,4 +53,16 @@ public class ManageAgentController(IManageAgentService _agentService) : ApiBaseC
         var response = await _agentService.CreateAgent(request);
         return ResponseCode(response);
     }
+
+    [HttpPatch("toggle-agent-visibility")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> ToggleVisibility([FromQuery] int agentId, [FromQuery] bool isPublic)
+    {
+        var response = await _agentService.ToggleVisibility(agentId, isPublic);
+        if (!response.Status.GetValueOrDefault())
+        {
+            return BadRequest(response);
+        }
+        return Ok(response);
+    }
 }

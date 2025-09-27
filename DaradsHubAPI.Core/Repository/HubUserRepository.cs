@@ -73,6 +73,8 @@ public class HubUserRepository(AppDbContext _context) : GenericRepository<userst
         {
             FullName = customerUser.fullname,
             PhoneNumber = customerUser.phone,
+            JoinedDate = customerUser.regdate,
+
             Photo = customerUser.Photo,
             Code = $"AGT-{customerUser.id}",
             Address = _context.ShippingAddresses.Where(d => d.CustomerId == customerUser.id).Select(d => new AgentAddress
@@ -83,6 +85,23 @@ public class HubUserRepository(AppDbContext _context) : GenericRepository<userst
                 City = d.City,
             }).FirstOrDefault()
         };
+        var query = from hp in _context.HubAgentProducts.Where(s => s.AgentId == agentId)
+                    join p in _context.categories on hp.CategoryId equals p.id
+                    select new { hp, p };
+
+        var dquery = from hp in _context.HubDigitalProducts.Where(s => s.AgentId == agentId)
+                     join p in _context.Catalogues on hp.CatalogueId equals p.Id
+                     select new { p };
+
+        var rQuery = from hp in _context.HubAgentProducts.Where(s => s.AgentId == agentId)
+                     join r in _context.HubReviews on hp.Id equals r.ProductId
+                     select new { r.Rating, r.ProductId };
+
+        response.SellingProducts = await query.Select(d => d.p.name).Distinct().Take(10).ToListAsync();
+        response.AnotherSellingProducts = await dquery.Select(d => d.p.Name).Distinct().Take(10).ToListAsync();
+        response.ReviewCount = rQuery.Select(r => r.ProductId).Count();
+        response.MaxRating = rQuery.Select(w => w.Rating).OrderByDescending(r => r).FirstOrDefault();
+
         var physicalProduct = await _context.HubAgentProducts.Where(e => e.AgentId == agentId).CountAsync();
         var digitalProduct = await _context.HubDigitalProducts.Where(e => e.AgentId == agentId).CountAsync();
 
@@ -162,5 +181,20 @@ public class HubUserRepository(AppDbContext _context) : GenericRepository<userst
 
         await _context.SaveChangesAsync();
         return new(true, $"Agent visibility updated successfully.");
+    }
+
+    public async Task<(bool status, string message, bool IsPublic)> ToggleVisibility(int agentId, bool IsPublic)
+    {
+        var agent = await _context.userstb.Where(d => d.id == agentId).FirstOrDefaultAsync();
+
+        if (agent is null)
+        {
+            return new(false, $"Agent record not found", false);
+        }
+
+        agent.IsPublicAgent = IsPublic;
+
+        await _context.SaveChangesAsync();
+        return new(true, $"Successful", agent.IsPublicAgent.GetValueOrDefault());
     }
 }
