@@ -149,6 +149,11 @@ public record ShortAgentProfileResponse
     public string Code { get; set; } = default!;
     public int TotalProductCount { get; set; }
     public AgentAddress? Address { get; set; }
+    public DateTime? JoinedDate { get; internal set; }
+    public List<string> SellingProducts { get; internal set; }
+    public List<string> AnotherSellingProducts { get; internal set; }
+    public int ReviewCount { get; internal set; }
+    public int MaxRating { get; internal set; }
 }
 
 public record AgentAddress

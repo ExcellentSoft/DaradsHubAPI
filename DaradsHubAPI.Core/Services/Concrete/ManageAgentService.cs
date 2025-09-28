@@ -124,6 +124,17 @@ public class ManageAgentService(IUnitOfWork _unitOfWork, IFileService _fileServi
         return new ApiResponse(message, StatusEnum.Success, status);
     }
 
+    public async Task<ApiResponse<bool>> ToggleVisibility(int agentId, bool isPublic)
+    {
+        var (status, message, _isPublic) = await _unitOfWork.HubUsers.ToggleVisibility(agentId, isPublic);
+
+        if (!status)
+        {
+            return new ApiResponse<bool> { Message = message, StatusCode = StatusEnum.Validation, Status = status };
+        }
+        return new ApiResponse<bool> { Message = message, StatusCode = StatusEnum.Success, Status = status, Data = _isPublic };
+    }
+
     public async Task<ApiResponse> UpdateAgentStatus(AgentStatusRequest request)
     {
         var agent = await _unitOfWork.HubUsers.GetSingleWhereAsync(d => d.id == request.AgentId);

@@ -164,6 +164,10 @@ namespace DaradsHubAPI.Core.Repository
                                               join dp in _context.HubAgentProducts on user.id equals dp.AgentId
                                               select dp).CountAsync();
 
+            var totalWithdrawn = await _context.HubWithdrawalRequests
+                .Where(e => e.Status == WithdrawalRequestStatus.Paid)
+                .Select(w => w.Amount).SumAsync();
+
             var orderQuery = from item in _context.HubOrderItems
                              join order in _context.HubOrders on item.OrderCode equals order.Code
                              join agent in _context.userstb on item.AgentId equals agent.id
@@ -181,7 +185,7 @@ namespace DaradsHubAPI.Core.Repository
         ? Math.Round(((orderdata.TodayOrderAmount - yesterdayOrderAmount) / yesterdayOrderAmount) * 100, 0) : 100;// default if no data yesterday
 
             orderdata.PercentageChange = different;
-
+            metrics.TotalWithdrawn = totalWithdrawn;
             metrics.AgentRevenueBalance = totalWallet;
             metrics.ProductsCount = totalDigitalProduct + totalPhysicalProduct;
             metrics.OrderData = orderdata;
