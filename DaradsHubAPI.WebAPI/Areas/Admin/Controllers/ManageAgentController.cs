@@ -65,4 +65,12 @@ public class ManageAgentController(IManageAgentService _agentService) : ApiBaseC
         }
         return Ok(response);
     }
+
+    [HttpGet("agent-dashboard-metrics")]
+    [ProducesResponseType(200, Type = typeof(ApiResponse<AgentDashboardMetricResponse>))]
+    public async Task<IActionResult> GetDashboardMetrics([FromQuery] int agentId)
+    {
+        var response = await _agentService.GetAgentDashboardMetrics(agentId);
+        return ResponseCode(response);
+    }
 }

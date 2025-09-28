@@ -157,4 +157,10 @@ public class ManageAgentService(IUnitOfWork _unitOfWork, IFileService _fileServi
 
         return new ApiResponse("Success", StatusEnum.Success, true);
     }
+
+    public async Task<ApiResponse<AgentDashboardMetricResponse>> GetAgentDashboardMetrics(int agentId)
+    {
+        var responses = await _unitOfWork.Orders.AgentDashboardMetrics(agentId);
+        return new ApiResponse<AgentDashboardMetricResponse> { Message = "Successful", Status = true, Data = responses, StatusCode = StatusEnum.Success };
+    }
 }

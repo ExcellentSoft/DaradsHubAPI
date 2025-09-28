@@ -11,6 +11,7 @@ public interface IOrderRepository : IGenericRepository<HubOrder>
     void AddOrderItem(HubOrderItem model);
     Task AddShippingAddress(ShippingAddress model);
     Task<AdminDashboardMetricResponse> AdminDashboardMetrics();
+    Task<AgentDashboardMetricResponse> AgentDashboardMetrics(int agentId);
     Task<DailySalesOverviewResponse?> DailySalesOverview();
     Task DeleteCart(int userId, long productId);
     Task DeleteShippingAddress(int userId, long addressId);
