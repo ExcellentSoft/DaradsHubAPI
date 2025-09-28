@@ -6,6 +6,14 @@ using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Model.Request;
 
+public class AgentDashboardMetricResponse
+{
+    public decimal? AgentRevenueBalance { get; set; }
+    public decimal TotalWithdrawn { get; set; }
+    public int OrdersCount { get; set; }
+    public double AverageRating { get; set; }
+    public int TotalReviewCount { get; internal set; }
+}
 public class AdminDashboardMetricResponse
 {
     public decimal? AgentRevenueBalance { get; set; }

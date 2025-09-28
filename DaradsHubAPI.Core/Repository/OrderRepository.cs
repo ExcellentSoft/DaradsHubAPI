@@ -193,6 +193,41 @@ namespace DaradsHubAPI.Core.Repository
 
             return metrics;
         }
+
+        public async Task<AgentDashboardMetricResponse> AgentDashboardMetrics(int agentId)
+        {
+            var metrics = new AgentDashboardMetricResponse();
+
+            var totalWallet = await (from user in _context.userstb
+                                     where user.IsAgent == true && user.id == agentId
+                                     join wallet in _context.wallettb on user.email equals wallet.UserId
+                                     select wallet).SumAsync(e => e.Balance);
+
+            var totalWithdrawn = await _context.HubWithdrawalRequests
+                .Where(e => e.Status == WithdrawalRequestStatus.Paid && e.AgentId == agentId)
+                .Select(w => w.Amount).SumAsync();
+
+            var orderQuery = from item in _context.HubOrderItems
+                             where item.AgentId == agentId
+                             join order in _context.HubOrders on item.OrderCode equals order.Code
+                             join agent in _context.userstb on item.AgentId equals agent.id
+                             select new { order };
+
+            var query = from user in _context.userstb
+                        where user.IsAgent == true && user.id == agentId
+                        join r in _context.HubAgentReviews on user.id equals r.AgentId
+                        join u in _context.userstb on r.ReviewById equals u.id
+                        select new { r, u };
+
+            metrics.TotalReviewCount = await query.CountAsync();
+            metrics.AverageRating = query.Select(r => r.r.Rating).Average();
+            metrics.TotalWithdrawn = totalWithdrawn;
+            metrics.AgentRevenueBalance = totalWallet;
+            metrics.OrdersCount = await orderQuery.Select(x => x.order.Code).Distinct().CountAsync();
+
+
+            return metrics;
+        }
         #endregion
 
         public IQueryable<OrderListResponse> GetOrders(string email, OrderListRequest request)
