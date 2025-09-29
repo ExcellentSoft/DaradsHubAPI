@@ -545,6 +545,50 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         return res;
     }
 
+    public async Task<List<AgentOrderListResponse>> GetAgentProductOrders(AgentProductOrderListRequest request)
+    {
+        var qOrder = from item in _context.HubOrderItems
+                     where item.AgentId == request.AgentId
+                     join order in _context.HubOrders on item.OrderCode equals order.Code
+                     where (request.StartDate == null || order.OrderDate.Date >= request.StartDate.Value.Date) &&
+                        (request.EndDate == null || order.OrderDate.Date <= request.EndDate.Value.Date)
+                     select new { order };
+        var res = new List<AgentOrderListResponse>();
+        if (qOrder.Any())
+        {
+            var qq = qOrder.GroupBy(d => d.order.Code).Select(q => new AgentOrderListResponse
+            {
+                OrderId = q.Select(r => r.order.Id).FirstOrDefault(),
+                Code = q.Select(r => r.order.Code).FirstOrDefault(),
+                OrderDate = q.Select(r => r.order.OrderDate).FirstOrDefault(),
+                OrderStatus = q.Select(r => r.order.Status).FirstOrDefault(),
+                ProductType = q.Select(r => r.order.ProductType).FirstOrDefault(),
+                TotalPrice = q.Select(r => r.order.TotalCost).FirstOrDefault(),
+                CustomerDetails = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => new CustomerData
+                {
+                    Email = d.email,
+                    Name = d.fullname,
+                    PhoneNumber = d.phone
+                }).FirstOrDefault()
+
+            });
+
+            if (!string.IsNullOrEmpty(request.SearchText))
+            {
+                var searchText = request.SearchText.Trim().ToLower();
+
+                qOrder = qOrder.Where(d => d.order.Code.Contains(request.SearchText));
+            }
+
+            if (request.Status is not null)
+            {
+                qOrder = qOrder.Where(d => d.order.Status == request.Status);
+            }
+
+            res = await qq.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).OrderByDescending(d => d.OrderDate).ToListAsync();
+        }
+        return res;
+    }
 
     public async Task<AgentProductProfileResponse> GetAgentProductProfile(int agentId)
     {

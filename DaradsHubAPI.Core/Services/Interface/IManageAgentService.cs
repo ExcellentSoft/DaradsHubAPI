@@ -12,6 +12,7 @@ public interface IManageAgentService
 {
     Task<ApiResponse<string>> CreateAgent(AddAgentRequest request);
     Task<ApiResponse<AgentDashboardMetricResponse>> GetAgentDashboardMetrics(int agentId);
+    Task<ApiResponse<List<AgentOrderListResponse>>> GetAgentProductOrders(AgentProductOrderListRequest request);
     Task<ApiResponse<ShortAgentProfileResponse>> GetAgentProfile(int agentId);
     Task<ApiResponse<IEnumerable<AgentsListResponse>>> GetAgents(AgentsListRequest request);
     Task<ApiResponse<bool>> ToggleVisibility(int agentId, bool isPublic);

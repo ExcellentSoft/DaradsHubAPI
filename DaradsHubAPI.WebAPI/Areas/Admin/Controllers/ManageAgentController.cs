@@ -11,7 +11,7 @@ using System.Net;
 namespace DaradsHubAPI.WebAPI.Areas.Admin.Controllers;
 
 [Tags("Admin")]
-public class ManageAgentController(IManageAgentService _agentService) : ApiBaseController
+public class ManageAgentController(IManageAgentService _agentService, IProductService _productService) : ApiBaseController
 {
     [HttpGet("view-agent-profile")]
     [ProducesResponseType(typeof(ApiResponse<ShortAgentProfileResponse>), (int)HttpStatusCode.OK)]
@@ -71,6 +71,38 @@ public class ManageAgentController(IManageAgentService _agentService) : ApiBaseC
     public async Task<IActionResult> GetDashboardMetrics([FromQuery] int agentId)
     {
         var response = await _agentService.GetAgentDashboardMetrics(agentId);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("agent-products")]
+    [ProducesResponseType(200, Type = typeof(ApiResponse<IEnumerable<AgentProductsResponse>>))]
+    public async Task<IActionResult> GetProducts([FromQuery] AgentProductsRequest request, [FromQuery] int agentId)
+    {
+        var result = await _productService.GetProducts(request, agentId);
+        return ResponseCode(result);
+    }
+
+    [HttpDelete("delete-agent-product")]
+    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> DeleteProduct(int productId, bool isDigital, int agentId)
+    {
+        var response = await _productService.DeleteProduct(productId, isDigital, agentId);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("agent-product-orders")]
+    [ProducesResponseType(200, Type = typeof(ApiResponse<IEnumerable<AgentOrderListResponse>>))]
+    public async Task<IActionResult> GetProductOrders([FromQuery] AgentProductOrderListRequest request)
+    {
+        var result = await _agentService.GetAgentProductOrders(request);
+        return ResponseCode(result);
+    }
+
+    [HttpGet("agent-reviews")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<AgentReview>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAgentReviews([FromQuery] AgentReviewRequest request, [FromQuery] int agentId)
+    {
+        var response = await _productService.GetAgentReviews(request, agentId);
         return ResponseCode(response);
     }
 }
