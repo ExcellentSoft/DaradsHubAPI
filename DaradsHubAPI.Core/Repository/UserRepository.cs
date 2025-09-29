@@ -13,8 +13,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Repository;
@@ -614,6 +616,13 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
     public async Task<User?> GetAppUser(string email)
     {
         return await _userManager.Users.FirstOrDefaultAsync(s => s.Email == email);
+    }
+
+    public async Task<List<string?>> GetAppUsersEmails(bool isCustomer, bool isAgent)
+    {
+        int _agent = isAgent ? 1 : 0;
+        int _customer = isCustomer ? 1 : 0;
+        return await _userManager.Users.AsNoTracking().Where(e => e.Is_agent == _agent || e.Is_customer == _customer).Select(d => d.Email).Take(50).ToListAsync();
     }
 
     public async Task AddAgentReview(HubAgentReview model)

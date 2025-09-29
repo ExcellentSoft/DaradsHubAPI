@@ -39,4 +39,12 @@ public class DashboardController(IAdminService _adminService) : ApiBaseControlle
         var response = await _adminService.PendingCustomerRequests();
         return ResponseCode(response);
     }
+
+    [HttpPost("send-bulk-messages")]
+    [ProducesResponseType(200, Type = typeof(ApiResponse))]
+    public async Task<IActionResult> SendBulkMessages([FromBody] SendBulkMessageRequest request)
+    {
+        var response = await _adminService.SendBulkMessages(request);
+        return ResponseCode(response);
+    }
 }

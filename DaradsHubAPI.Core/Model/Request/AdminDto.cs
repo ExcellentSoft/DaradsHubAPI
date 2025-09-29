@@ -83,6 +83,15 @@ public record AgentStatusRequest
 
 }
 
+public record SendBulkMessageRequest
+{
+    public bool IsCustomer { get; set; }
+    public bool IsAgent { get; set; }
+    public string Subject { get; set; } = default!;
+    public string Message { get; set; } = default!;
+
+}
+
 public record AgentsListRequest
 {
     public int PageSize { get; set; } = 10;

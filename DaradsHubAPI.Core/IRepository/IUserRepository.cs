@@ -16,6 +16,7 @@ public interface IUserRepository : IGenericRepository<userstb>
     Task<(bool status, string message, AgentProfileResponse? res)> GetAgentProfile(string email);
     Task<List<MessagesSent>> GetAllSentMessages();
     Task<User?> GetAppUser(string email);
+    Task<List<string?>> GetAppUsersEmails(bool isCustomer, bool isAgent);
     Task<MessageAudiences> GetAudiences(string audienceType);
     Task<List<userstb>> GetCustomers(string audienceType, int pageSize, int pageIndex);
     Task<MessageEmailTemplates> GetEmailTemplates(int Id);
