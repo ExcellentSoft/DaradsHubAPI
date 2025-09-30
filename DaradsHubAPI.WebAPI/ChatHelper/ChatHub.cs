@@ -12,7 +12,7 @@ public class ChatHub(IChatService _chatService) : Hub
         await _chatService.AddMessageAsync(long.Parse(conversationId), int.Parse(senderId), message);
 
         await Clients.Group(conversationId)
-            .SendAsync("ReceiveMessage", senderId, message, today);
+            .SendAsync("ReceiveMessage", senderId, message, today.ToString());
     }
 
     public async Task JoinConversation(int conversationId)
