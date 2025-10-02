@@ -87,6 +87,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public virtual DbSet<CategoryMapping> CategoryMappings { get; set; }
     public virtual DbSet<HubDigitalProduct> HubDigitalProducts { get; set; }
     public virtual DbSet<DigitalProductImages> DigitalProductImages { get; set; }
+    public virtual DbSet<SuspendedAgent> SuspendedAgents { get; set; }
+    public virtual DbSet<BlockedAgent> BlockedAgents { get; set; }
     public virtual DbSet<ProductRequestImages> ProductRequestImages { get; set; }
     public virtual DbSet<HubReview> HubReviews { get; set; }
     public virtual DbSet<HubAgentReview> HubAgentReviews { get; set; }

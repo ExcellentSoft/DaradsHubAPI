@@ -80,6 +80,9 @@ public record AgentStatusRequest
 {
     public int AgentId { get; set; }
     public EntityStatusEnum EntityStatus { get; set; }
+    public string? Reason { get; set; }
+    public string? OptionalNote { get; set; }
+    public string? Duration { get; set; }
 
 }
 

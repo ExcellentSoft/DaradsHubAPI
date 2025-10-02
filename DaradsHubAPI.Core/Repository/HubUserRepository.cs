@@ -74,7 +74,8 @@ public class HubUserRepository(AppDbContext _context) : GenericRepository<userst
             FullName = customerUser.fullname,
             PhoneNumber = customerUser.phone,
             JoinedDate = customerUser.regdate,
-
+            Email = customerUser.email,
+            Experience = customerUser.AgentExperience,
             Photo = customerUser.Photo,
             Code = $"AGT-{customerUser.id}",
             Address = _context.ShippingAddresses.Where(d => d.CustomerId == customerUser.id).Select(d => new AgentAddress

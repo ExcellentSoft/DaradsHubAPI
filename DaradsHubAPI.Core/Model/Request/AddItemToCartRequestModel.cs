@@ -56,6 +56,12 @@ namespace DaradsHubAPI.Core.Model.Request
         public OrderStatus? Status { get; set; }
     }
 
+    public record AgentCustomerRequest : ListRequest
+    {
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+    }
+
     public record CustomerRequestsRequest : ListRequest
     {
         public DateTime? StartDate { get; set; }
@@ -98,6 +104,33 @@ namespace DaradsHubAPI.Core.Model.Request
         public string? ProductType { get; set; }
 
     }
+    public record AgentCustomerOrderResponse
+    {
+        public long ConversationId { get; set; }
+        public LastCustomerMessage? LastMessage { get; set; }
+        public CustomerOrderDetail? CustomerOrderDetail { get; set; }
+    }
+
+    public record LastCustomerMessage
+    {
+        public string? Content { get; set; }
+        public string? LastInteractions { get; set; }
+        public CustomerDetail? Customer { get; set; }
+        public DateTime SentAt { get; internal set; }
+    }
+    public record CustomerDetail
+    {
+        public string? FullName { get; set; }
+        public string? Photo { get; set; }
+        public bool? isOnline { get; internal set; }
+    }
+    public record CustomerOrderDetail
+    {
+        public long OrderId { get; set; }
+        public string? OrderCode { get; set; }
+        public int OrderCount { get; internal set; }
+    }
+
     public record CustomerData
     {
         public string? Name { get; set; }
