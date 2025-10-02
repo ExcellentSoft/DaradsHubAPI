@@ -156,6 +156,7 @@ public record ShortAgentProfileResponse
     public int MaxRating { get; internal set; }
     public string Email { get; internal set; }
     public string Experience { get; internal set; }
+    public bool? IsPublic { get; internal set; }
 }
 
 public record AgentAddress

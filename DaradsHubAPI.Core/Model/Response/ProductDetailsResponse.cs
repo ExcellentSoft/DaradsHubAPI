@@ -159,4 +159,18 @@ namespace DaradsHubAPI.Core.Model.Response
         public int PendingCount { get; internal set; }
 
     }
+
+    public class CustomerMetricsResponse
+    {
+        public int TotalCustomerCount { get; set; }
+        public int TotalActiveChatCount { get; set; }
+        public int TotalInActiveCount { get; set; }
+        public NewCustomerModel? NewCustomerModel { get; set; }
+
+    }
+    public class NewCustomerModel
+    {
+        public int TotalNewCustomerCount { get; set; }
+        public string Month { get; set; } = default!;
+    }
 }

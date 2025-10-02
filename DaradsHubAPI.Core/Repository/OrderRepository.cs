@@ -470,6 +470,7 @@ namespace DaradsHubAPI.Core.Repository
                                                Content = r.m.Content,
                                                LastInteractions = CustomizeCodes.GetPeriodDifference(r.m.SentAt, today),
                                                SentAt = r.m.SentAt,
+                                               CustomerId = r.c.CustomerId,
                                                Customer = _context.userstb.Where(e => e.id == r.c.CustomerId).Select(e => new CustomerDetail
                                                {
                                                    FullName = e.fullname,

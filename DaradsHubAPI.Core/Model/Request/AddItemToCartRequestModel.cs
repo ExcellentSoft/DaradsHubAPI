@@ -117,6 +117,7 @@ namespace DaradsHubAPI.Core.Model.Request
         public string? LastInteractions { get; set; }
         public CustomerDetail? Customer { get; set; }
         public DateTime SentAt { get; internal set; }
+        public int CustomerId { get; internal set; }
     }
     public record CustomerDetail
     {

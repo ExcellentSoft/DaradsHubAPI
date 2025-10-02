@@ -27,6 +27,14 @@ public class ManageCustomerController(IManageCustomerService _manageCustomer) : 
         return ResponseCode(response);
     }
 
+    [HttpGet("customers-metrics")]
+    [ProducesResponseType(200, Type = typeof(ApiResponse<CustomerMetricsResponse>))]
+    public async Task<IActionResult> GetCustomerMetrics()
+    {
+        var response = await _manageCustomer.GetCustomerMetrics();
+        return ResponseCode(response);
+    }
+
     //[HttpGet("top-performing-agents")]
     //[ProducesResponseType(200, Type = typeof(ApiResponse<IEnumerable<TopPerformingAgentResponse>>))]
     //public async Task<IActionResult> TopPerformingAgents()
