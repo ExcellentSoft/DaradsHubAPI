@@ -4,10 +4,12 @@ using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
 using DaradsHubAPI.Shared.Customs;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Repository;
-public class HubUserRepository(AppDbContext _context) : GenericRepository<userstb>(_context), IHubUserRepository
+public class HubUserRepository(AppDbContext _context, UserManager<User> _userManager) : GenericRepository<userstb>(_context), IHubUserRepository
 {
     public IQueryable<AgentsListResponse> GetAgents(AgentsListRequest request)
     {
@@ -75,6 +77,7 @@ public class HubUserRepository(AppDbContext _context) : GenericRepository<userst
             PhoneNumber = customerUser.phone,
             JoinedDate = customerUser.regdate,
             Email = customerUser.email,
+            IsPublic = customerUser.IsPublicAgent,
             Experience = customerUser.AgentExperience,
             Photo = customerUser.Photo,
             Code = $"AGT-{customerUser.id}",
@@ -197,5 +200,42 @@ public class HubUserRepository(AppDbContext _context) : GenericRepository<userst
 
         await _context.SaveChangesAsync();
         return new(true, $"Successful", agent.IsPublicAgent.GetValueOrDefault());
+    }
+
+    public async Task<CustomerMetricsResponse> GetCustomerMetrics()
+    {
+        var currentDate = GetLocalDateTime.CurrentDateTime();
+        var last30Days = GetLocalDateTime.CurrentDateTime().AddDays(-30);
+        var user = _context.AspNetUsers.Where(c => c.Is_customer == 1).AsNoTracking();
+
+        var metrics = new CustomerMetricsResponse();
+        if (user.Any())
+        {
+            var newCustomerCount = (from u in user
+                                    join c in _context.userstb on u.Id equals c.userid
+                                    where c.regdate != null && c.regdate.Value.Year == currentDate.Year && c.regdate.Value.Month == currentDate.Month
+                                    select c).Count();
+
+            var activeChat = await (from u in user
+                                    join c in _context.userstb on u.Id equals c.userid
+                                    join m in _context.HubChatMessages on c.id equals m.SenderId
+                                    where m.SentAt >= last30Days
+                                    select m).GroupBy(g => g.SenderId).CountAsync();
+
+            metrics = new CustomerMetricsResponse
+            {
+                TotalCustomerCount = await user.CountAsync(),
+                TotalInActiveCount = user.Where(e => e.Status == EntityStatusEnum.InActive).Count(),
+                NewCustomerModel = new NewCustomerModel
+                {
+                    TotalNewCustomerCount = newCustomerCount,
+                    Month = currentDate.ToString("MMM")
+                },
+                TotalActiveChatCount = activeChat
+            };
+
+            return metrics;
+        }
+        return metrics;
     }
 }

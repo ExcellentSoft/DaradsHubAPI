@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 namespace DaradsHubAPI.Core.Services.Interface;
 public interface IManageCustomerService
 {
+    Task<ApiResponse<CustomerMetricsResponse>> GetCustomerMetrics();
     Task<ApiResponse<CustomerRequestMetricResponse>> GetCustomerRequestMetricsForAdmin();
     Task<ApiResponse<IEnumerable<CustomerRequestResponse>>> GetCustomerRequestsForAdmin(CustomerRequestsRequest request);
 }

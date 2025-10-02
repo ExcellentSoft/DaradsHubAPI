@@ -27,4 +27,17 @@ public class ManageCustomerService(IUnitOfWork _unitOfWork) : IManageCustomerSer
 
         };
     }
+
+    public async Task<ApiResponse<CustomerMetricsResponse>> GetCustomerMetrics()
+    {
+        var responses = await _unitOfWork.HubUsers.GetCustomerMetrics();
+        return new ApiResponse<CustomerMetricsResponse>
+        {
+            Message = "Successful",
+            Status = true,
+            Data = responses,
+            StatusCode = StatusEnum.Success
+
+        };
+    }
 }

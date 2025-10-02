@@ -12,6 +12,7 @@ public interface IHubUserRepository : IGenericRepository<userstb>
 {
     Task<(bool status, string message, ShortAgentProfileResponse? res)> GetAgentProductProfile(int agentId);
     IQueryable<AgentsListResponse> GetAgents(AgentsListRequest request);
+    Task<CustomerMetricsResponse> GetCustomerMetrics();
     Task<(bool status, string message, bool IsPublic)> ToggleVisibility(int agentId, bool IsPublic);
     Task<(bool status, string message)> UpdateAgentVisibility(AgentVisibilityRequest request);
 }
