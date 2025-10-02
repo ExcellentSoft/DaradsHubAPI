@@ -453,6 +453,46 @@ namespace DaradsHubAPI.Core.Repository
             return res;
         }
 
+        public async Task<List<AgentCustomerOrderResponse>> GetAgentCustomersOrders(AgentCustomerRequest request, int agentId)
+        {
+            var today = GetLocalDateTime.CurrentDateTime();
+            var agentCustomerOrders = (from c in _context.HubChatConversations
+                                       where c.AgentId == agentId
+                                       join m in _context.HubChatMessages on c.Id equals m.ConversationId
+                                       orderby m.SentAt descending
+                                       where (request.StartDate == null || m.SentAt.Date >= request.StartDate.Value.Date) &&
+                                      (request.EndDate == null || m.SentAt.Date <= request.EndDate.Value.Date)
+                                       select new { m, c }).GroupBy(g => g.c.Id).Select(w => new AgentCustomerOrderResponse
+                                       {
+                                           ConversationId = w.Key,
+                                           LastMessage = w.Select(r => new LastCustomerMessage
+                                           {
+                                               Content = r.m.Content,
+                                               LastInteractions = CustomizeCodes.GetPeriodDifference(r.m.SentAt, today),
+                                               SentAt = r.m.SentAt,
+                                               Customer = _context.userstb.Where(e => e.id == r.c.CustomerId).Select(e => new CustomerDetail
+                                               {
+                                                   FullName = e.fullname,
+                                                   Photo = e.Photo,
+                                                   isOnline = e.IsOnline
+                                               }).FirstOrDefault()
+                                           }).OrderBy(e => e.SentAt).LastOrDefault(),
+                                           CustomerOrderDetail = (from user in _context.userstb
+                                                                  where user.id == w.Select(e => e.c.CustomerId).FirstOrDefault()
+                                                                  join order in _context.HubOrders on user.email equals order.UserEmail
+                                                                  select order).GroupBy(x => new { x.Code, x.Id }).Select(c => new CustomerOrderDetail
+                                                                  {
+                                                                      OrderCode = c.Key.Code,
+                                                                      OrderCount = c.Count(),
+                                                                      OrderId = c.Key.Id
+                                                                  }).FirstOrDefault()
+                                       });
+
+            var res = await agentCustomerOrders.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).ToListAsync();
+
+            return res;
+        }
+
         public async Task<SingleOrderResponse?> GetAgentOrder(string orderCode)
         {
             var response = await (from order in _context.HubOrders

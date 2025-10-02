@@ -45,4 +45,13 @@ public class ManageOrderController(IOrderService _orderService) : ApiBaseControl
         var result = await _orderService.GetOrder(orderCode);
         return ResponseCode(result);
     }
+
+    [HttpGet("agent-customers")]
+    [ProducesResponseType(200, Type = typeof(ApiResponse<IEnumerable<AgentCustomerOrderResponse>>))]
+    public async Task<IActionResult> GetAgentCustomersOrders([FromQuery] AgentCustomerRequest request)
+    {
+        var agentId = int.Parse(User.Identity?.GetUserId() ?? "");
+        var result = await _orderService.GetAgentCustomersOrders(request, agentId);
+        return ResponseCode(result);
+    }
 }

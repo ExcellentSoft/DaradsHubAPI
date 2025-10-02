@@ -676,6 +676,23 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
             return new(false, "Unable to register, please try again later.", null);
         }
     }
+    public async Task BlockAgent(BlockedAgent model)
+    {
+        _context.BlockedAgents.Add(model);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task ClearSuspendBlockRecord(int agentId)
+    {
+        await _context.SuspendedAgents.Where(s => s.AgentId == agentId).ExecuteDeleteAsync();
+        await _context.BlockedAgents.Where(s => s.AgentId == agentId).ExecuteDeleteAsync();
+    }
+
+    public async Task SuspendedAgent(SuspendedAgent model)
+    {
+        _context.SuspendedAgents.Add(model);
+        await _context.SaveChangesAsync();
+    }
 
     public async Task<(bool status, string message)> AddAgentByAdmin(AddAgentRequest request, string photoUrl)
     {
@@ -795,6 +812,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
                            .SetProperty(s => s.fullname, request.FullName)
                            .SetProperty(s => s.BusinessName, request.BusinessName)
                            .SetProperty(s => s.BusinessEmail, request.BusinessEmail)
+                           .SetProperty(s => s.AgentExperience, request.Experience)
                            .SetProperty(s => s.Photo, string.IsNullOrEmpty(imagePath) ? agentUser.Photo : imagePath)
                            .SetProperty(s => s.ModifiedDate, DateTime.Now));
         var address = await _context.ShippingAddresses.FirstOrDefaultAsync(d => d.CustomerId == agentUser.id);

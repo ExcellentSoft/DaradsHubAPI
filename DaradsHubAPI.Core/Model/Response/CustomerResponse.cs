@@ -154,6 +154,8 @@ public record ShortAgentProfileResponse
     public List<string> AnotherSellingProducts { get; internal set; }
     public int ReviewCount { get; internal set; }
     public int MaxRating { get; internal set; }
+    public string Email { get; internal set; }
+    public string Experience { get; internal set; }
 }
 
 public record AgentAddress
@@ -192,6 +194,7 @@ public record AgentProfileRequest
     public string Address { get; set; } = default!;
     public string? BusinessName { get; set; }
     public string? BusinessEmail { get; set; }
+    public string? Experience { get; set; }
     public IFormFile? Photo { get; set; }
 }
 public record ChangePasswordRequest

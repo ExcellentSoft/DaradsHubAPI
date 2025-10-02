@@ -155,6 +155,29 @@ public class ManageAgentService(IUnitOfWork _unitOfWork, IFileService _fileServi
 
         await _unitOfWork.Users.SaveAsync();
 
+        if (request.EntityStatus == EntityStatusEnum.Suspended)
+        {
+            var suspended = _unitOfWork.Users.SuspendedAgent(new SuspendedAgent
+            {
+                AgentId = request.AgentId,
+                Duration = request.Duration,
+                OptionalNote = request.OptionalNote,
+                Reason = request.Reason ?? ""
+            });
+        }
+        if (request.EntityStatus == EntityStatusEnum.Blocked)
+        {
+            var block = _unitOfWork.Users.BlockAgent(new BlockedAgent
+            {
+                AgentId = request.AgentId,
+                Reason = request.Reason ?? ""
+            });
+        }
+        if (request.EntityStatus == EntityStatusEnum.Active)
+        {
+            await _unitOfWork.Users.ClearSuspendBlockRecord(request.AgentId);
+        }
+
         return new ApiResponse("Success", StatusEnum.Success, true);
     }
 

@@ -7,7 +7,9 @@ public interface IUserRepository : IGenericRepository<userstb>
 {
     Task<(bool status, string message)> AddAgentByAdmin(AddAgentRequest request, string photoUrl);
     Task AddAgentReview(HubAgentReview model);
+    Task BlockAgent(BlockedAgent model);
     Task<(bool status, string message)> ChangePassword(ChangePasswordRequest request, string email);
+    Task ClearSuspendBlockRecord(int agentId);
     Task<int> CountCustomers(string audienceType);
     Task<(bool status, string message, string? userId)> CreateAgent(CreateAgentRequest request);
     Task<(bool status, string message, string? userId)> CreateCustomer(CreateCustomerRequest request);
@@ -30,6 +32,7 @@ public interface IUserRepository : IGenericRepository<userstb>
     Task SaveMessageSentLog(MessagesSentLogs entity);
     Task SaveMessagesLogs(List<MessagesSentLogs> entities);
     Task SaveSentMessageDetails(MessagesSent entity);
+    Task SuspendedAgent(SuspendedAgent model);
     Task<(bool status, string message)> UpdateAgentProfile(AgentProfileRequest request, string email, string imagePath);
     Task<(bool status, string message)> UpdateProfile(CustomerProfileRequest request, string email, string imagePath);
     Task<(bool status, string message, CustomerLoginResponse? cresponse)> VerifyUserAccount(string code);
