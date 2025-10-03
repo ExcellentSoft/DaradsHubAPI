@@ -15,6 +15,7 @@ public interface IUserRepository : IGenericRepository<userstb>
     Task<(bool status, string message, string? userId)> CreateCustomer(CreateCustomerRequest request);
     Task<DashboardMetricsResponse> DashboardMetrics(string email);
     Task<(bool status, string message, string? userId)> ForgetPassword(ForgetPasswordRequest request);
+    Task<(bool status, string message, CustomerProfileResponse? res)> GetAdminProfile(string email);
     Task<(bool status, string message, AgentProfileResponse? res)> GetAgentProfile(string email);
     Task<List<MessagesSent>> GetAllSentMessages();
     Task<User?> GetAppUser(string email);

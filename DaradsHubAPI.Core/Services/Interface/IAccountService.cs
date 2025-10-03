@@ -11,6 +11,7 @@ public interface IAccountService
 {
     Task<ApiResponse> ChangePassword(ChangePasswordRequest request, string email);
     Task<ApiResponse<DashboardMetricsResponse>> DashboardMetrics(string email);
+    Task<ApiResponse<CustomerProfileResponse>> GetAdminProfile(string email);
     Task<ApiResponse<AgentProfileResponse>> GetAgentProfile(string email);
     Task<ApiResponse<CustomerProfileResponse>> GetCustomerProfile(string email);
     Task<ApiResponse> UpdateAgentProfile(AgentProfileRequest request, string email);

@@ -85,6 +85,14 @@ public record AgentStatusRequest
     public string? Duration { get; set; }
 
 }
+public record CustomerStatusRequest
+{
+    public int CustomerId { get; set; }
+    public EntityStatusEnum EntityStatus { get; set; }
+    public string? Reason { get; set; }
+    public string? OptionalNote { get; set; }
+    public string? Duration { get; set; }
+}
 
 public record SendBulkMessageRequest
 {
@@ -105,6 +113,16 @@ public record AgentsListRequest
     public string? ProductType { get; set; }
     public bool? CanSellPhysicalProducts { get; set; }
     public bool? CanSellDigitalProducts { get; set; }
+}
+
+public record CustomersListRequest
+{
+    public int PageSize { get; set; } = 10;
+    public int PageNumber { get; set; } = 1;
+    public string? SearchText { get; set; }
+    public EntityStatusEnum? Status { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 }
 
 public class AgentsListResponse
@@ -131,6 +149,17 @@ public class AgentsListResponse
             return types;
         }
     }
+}
+
+public class CustomersListResponse
+{
+    public int CustomerId { get; set; }
+    public string? FullName { get; set; }
+    public EntityStatusEnum Status { get; set; }
+    public decimal? Balance { get; set; }
+    public string? Photo { get; set; }
+    public string? Email { get; set; }
+    public DateTime? JoinDate { get; set; }
 }
 
 public class ProductTypeData

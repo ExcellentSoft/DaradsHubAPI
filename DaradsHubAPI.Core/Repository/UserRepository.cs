@@ -462,6 +462,62 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
 
         return new(true, "Customer profile fetched successfully.", response);
     }
+    public async Task<(bool status, string message, CustomerProfileResponse? res)> GetAdminProfile(string email)
+    {
+        var customerUser = await _context.userstb.FirstOrDefaultAsync(us => us.email == email);
+        if (customerUser is null)
+            return new(false, "Admin record not found.", null);
+
+        var boldd = await _context.CustomerVirtualAccounts.Where(c => c.UserId == customerUser.id).FirstOrDefaultAsync();
+
+        decimal walletBalance = await _context.wallettb.Where(cw => cw.UserId == email).Select(bl => bl.Balance).FirstOrDefaultAsync() ?? 0m;
+
+        var virtualAccts = new List<VirtualAccountDetails>();
+        if (string.IsNullOrEmpty(customerUser.VpayAccountName) && boldd is null)
+        {
+            virtualAccts = [];
+        }
+        else
+        {
+            var vboldd = new VirtualAccountDetails();
+            var vpay = new VirtualAccountDetails();
+            if (boldd is not null)
+            {
+                vboldd = new VirtualAccountDetails
+                {
+                    AccountName = boldd.AcctountName,
+                    AccountNumber = boldd.AcctountNumber,
+                    BankName = boldd.BankName
+                };
+                virtualAccts.Add(vboldd);
+            }
+            if (!string.IsNullOrEmpty(customerUser.VpayAccountName))
+            {
+                vpay = new VirtualAccountDetails
+                {
+                    AccountName = customerUser.VpayAccountName,
+                    AccountNumber = customerUser.VpayAccountNumber,
+                    BankName = customerUser.VpayBankName
+                };
+                virtualAccts.Add(vpay);
+            }
+        }
+
+        var response = new CustomerProfileResponse
+        {
+            Email = email,
+            FullName = customerUser.fullname,
+            PhoneNumber = customerUser.phone,
+            Photo = customerUser.Photo,
+            VirtualAccountDetails = virtualAccts,
+            WalletBalance = walletBalance,
+            UserIdInt = customerUser.id,
+            UserId = customerUser.userid,
+            Address = _context.ShippingAddresses.Where(d => d.CustomerId == customerUser.id).Select(d => d.Address).FirstOrDefault()
+        };
+
+        return new(true, "Admin profile fetched successfully.", response);
+    }
     public async Task<(bool status, string message, AgentProfileResponse? res)> GetAgentProfile(string email)
     {
         var customerUser = await _context.userstb.FirstOrDefaultAsync(us => us.email == email);
@@ -684,7 +740,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
 
     public async Task ClearSuspendBlockRecord(int agentId)
     {
-        await _context.SuspendedAgents.Where(s => s.AgentId == agentId).ExecuteDeleteAsync();
+        await _context.SuspendedAgents.Where(s => s.UserId == agentId).ExecuteDeleteAsync();
         await _context.BlockedAgents.Where(s => s.AgentId == agentId).ExecuteDeleteAsync();
     }
 

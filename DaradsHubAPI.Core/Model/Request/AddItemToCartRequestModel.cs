@@ -104,6 +104,15 @@ namespace DaradsHubAPI.Core.Model.Request
         public string? ProductType { get; set; }
 
     }
+
+    public record AgentCustomerMetricsResponse
+    {
+        public int TotalCustomer { get; set; }
+        public int TotalActiveChat { get; set; }
+        public int TotalPendingReplies { get; set; }
+        public int TotalNewCustomer { get; set; }
+    }
+
     public record AgentCustomerOrderResponse
     {
         public long ConversationId { get; set; }

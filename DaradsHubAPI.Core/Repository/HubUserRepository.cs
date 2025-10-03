@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Repository;
-public class HubUserRepository(AppDbContext _context, UserManager<User> _userManager) : GenericRepository<userstb>(_context), IHubUserRepository
+public class HubUserRepository(AppDbContext _context) : GenericRepository<userstb>(_context), IHubUserRepository
 {
     public IQueryable<AgentsListResponse> GetAgents(AgentsListRequest request)
     {
@@ -17,6 +17,7 @@ public class HubUserRepository(AppDbContext _context, UserManager<User> _userMan
         var uquery = from user in _context.userstb.Where(d => d.IsAgent == true)
                      let cansellPhysical = _context.HubAgentProductSettings.Where(s => s.AgentId == user.id).Select(e => e.CanSellPhysicalProduct).FirstOrDefault()
                      let cansellDigital = _context.HubAgentProductSettings.Where(s => s.AgentId == user.id).Select(e => e.CanSellDigitalProduct).FirstOrDefault()
+                     orderby user.regdate descending
                      select new AgentsListResponse
                      {
                          FullName = user.fullname,
@@ -57,6 +58,37 @@ public class HubUserRepository(AppDbContext _context, UserManager<User> _userMan
         if (request.IsPublic is not null)
         {
             uquery = uquery.Where(e => e.IsPublic == request.IsPublic);
+        }
+        if (!string.IsNullOrWhiteSpace(request.SearchText))
+        {
+            uquery = uquery.Where(e => e.FullName != null && e.FullName.ToLower().Contains(request.SearchText.ToLower()));
+        }
+        return uquery;
+    }
+    public IQueryable<CustomersListResponse> GetCustomers(CustomersListRequest request)
+    {
+        var uquery = from user in _context.AspNetUsers
+                     where user.Is_customer == 1
+                     join u in _context.userstb on user.Id equals u.userid
+
+                     where u.regdate != null && (request.StartDate == null || u.regdate.Value.Date >= request.StartDate.Value.Date) &&
+                                     (request.EndDate == null || u.regdate.Value.Date <= request.EndDate.Value.Date)
+                     orderby u.regdate descending
+
+                     select new CustomersListResponse
+                     {
+                         FullName = u.fullname,
+                         JoinDate = u.regdate,
+                         Status = user.Status,
+                         Email = user.Email,
+                         CustomerId = u.id,
+                         Photo = u.Photo,
+                         Balance = _context.wallettb.Where(s => s.UserId == user.Email).Select(d => d.Balance).FirstOrDefault(),
+                     };
+
+        if (request.Status is not null)
+        {
+            uquery = uquery.Where(e => e.Status == request.Status);
         }
         if (!string.IsNullOrWhiteSpace(request.SearchText))
         {
@@ -110,6 +142,40 @@ public class HubUserRepository(AppDbContext _context, UserManager<User> _userMan
         var digitalProduct = await _context.HubDigitalProducts.Where(e => e.AgentId == agentId).CountAsync();
 
         response.TotalProductCount = physicalProduct + digitalProduct;
+
+        return new(true, "Successful.", response);
+    }
+
+    public async Task<(bool status, string message, ShortCustomerProfileResponse? res)> GetCustomerProfile(int customerId)
+    {
+        var customerUser = await _context.userstb.FirstOrDefaultAsync(us => us.id == customerId);
+        if (customerUser is null)
+            return new(false, "Customer record not found.", null);
+
+        var response = new ShortCustomerProfileResponse
+        {
+            FullName = customerUser.fullname,
+            PhoneNumber = customerUser.phone,
+            JoinedDate = customerUser.regdate,
+            Email = customerUser.email,
+            IsOnline = customerUser.IsOnline,
+            Photo = customerUser.Photo,
+            Code = $"CUS-{customerUser.id}",
+            Address = _context.ShippingAddresses.Where(d => d.CustomerId == customerUser.id).Select(d => new AgentAddress
+            {
+                Address = d.Address,
+                Country = d.Country,
+                State = d.State,
+                City = d.City,
+            }).FirstOrDefault(),
+            Status = customerUser.status,
+            CustomerId = customerUser.id,
+            WalletBalance = _context.wallettb.Where(s => s.UserId == customerUser.email).Select(x => x.Balance).FirstOrDefault(),
+            TotalOrderMade = _context.HubOrders.Where(c => c.UserEmail == customerUser.email).Count(),
+            TotalSpending = _context.GwalletTrans.Where(x => x.DR > 0 && x.userName == customerUser.email).Select(w => w.amt).Sum()
+
+
+        };
 
         return new(true, "Successful.", response);
     }

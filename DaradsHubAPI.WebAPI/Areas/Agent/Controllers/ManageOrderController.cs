@@ -1,7 +1,6 @@
 ﻿using DaradsHubAPI.Core.Model;
 using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Services.Interface;
-using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.WebAPI.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -52,6 +51,15 @@ public class ManageOrderController(IOrderService _orderService) : ApiBaseControl
     {
         var agentId = int.Parse(User.Identity?.GetUserId() ?? "");
         var result = await _orderService.GetAgentCustomersOrders(request, agentId);
+        return ResponseCode(result);
+    }
+
+    [HttpGet("agent-customers-metrics")]
+    [ProducesResponseType(200, Type = typeof(ApiResponse<AgentCustomerMetricsResponse>))]
+    public async Task<IActionResult> GetAgentCustomerMetrics()
+    {
+        var agentId = int.Parse(User.Identity?.GetUserId() ?? "");
+        var result = await _orderService.GetAgentCustomerMetrics(agentId);
         return ResponseCode(result);
     }
 }

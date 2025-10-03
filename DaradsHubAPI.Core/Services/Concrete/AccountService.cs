@@ -34,6 +34,22 @@ public class AccountService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         return new ApiResponse<CustomerProfileResponse> { Status = profileResponse.status, Message = profileResponse.message, StatusCode = StatusEnum.Success, Data = profileResponse.res ?? new CustomerProfileResponse { } };
     }
 
+    public async Task<ApiResponse<CustomerProfileResponse>> GetAdminProfile(string email)
+    {
+        var profileResponse = await _unitOfWork.Users.GetProfile(email);
+
+        if (!profileResponse.status)
+        {
+            if (!profileResponse.status)
+            {
+
+                return new ApiResponse<CustomerProfileResponse> { Status = profileResponse.status, Message = profileResponse.message, StatusCode = StatusEnum.Validation };
+            }
+        }
+
+        return new ApiResponse<CustomerProfileResponse> { Status = profileResponse.status, Message = profileResponse.message, StatusCode = StatusEnum.Success, Data = profileResponse.res ?? new CustomerProfileResponse { } };
+    }
+
     public async Task<ApiResponse<AgentProfileResponse>> GetAgentProfile(string email)
     {
         var profileResponse = await _unitOfWork.Users.GetAgentProfile(email);
