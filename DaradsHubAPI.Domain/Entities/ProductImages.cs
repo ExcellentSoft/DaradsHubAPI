@@ -33,7 +33,7 @@ public class SuspendedAgent
 {
     [Key]
     public long Id { get; set; }
-    public int AgentId { get; set; }
+    public int UserId { get; set; }
     public string Reason { get; set; } = default!;
     public string? OptionalNote { get; set; }
     public string? Duration { get; set; }

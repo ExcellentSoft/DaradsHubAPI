@@ -158,6 +158,22 @@ public record ShortAgentProfileResponse
     public string Experience { get; internal set; }
     public bool? IsPublic { get; internal set; }
 }
+public record ShortCustomerProfileResponse
+{
+    public string FullName { get; set; } = default!;
+    public string PhoneNumber { get; set; } = default!;
+    public string? Photo { get; set; }
+    public string? Email { get; set; }
+    public int CustomerId { get; set; }
+    public decimal? TotalSpending { get; set; }
+    public decimal? WalletBalance { get; set; }
+    public int? Status { get; set; }
+    public bool? IsOnline { get; set; }
+    public AgentAddress? Address { get; set; }
+    public DateTime? JoinedDate { get; internal set; }
+    public int TotalOrderMade { get; internal set; }
+    public string Code { get; internal set; }
+}
 
 public record AgentAddress
 {

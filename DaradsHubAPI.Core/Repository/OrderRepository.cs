@@ -453,6 +453,42 @@ namespace DaradsHubAPI.Core.Repository
             return res;
         }
 
+        public async Task<AgentCustomerMetricsResponse> GetAgentCustomerMetrics(int agentId)
+        {
+            var currentDate = GetLocalDateTime.CurrentDateTime();
+
+            var qOrder = (from item in _context.HubOrderItems
+                          where item.AgentId == agentId
+                          join order in _context.HubOrders on item.OrderCode equals order.Code
+                          select new { order.UserEmail }).Distinct();
+
+            var metrics = new AgentCustomerMetricsResponse();
+            if (qOrder.Any())
+            {
+                metrics = new AgentCustomerMetricsResponse
+                {
+                    TotalCustomer = await qOrder.CountAsync(),
+                    TotalNewCustomer = (from e in qOrder
+                                        join c in _context.userstb on e.UserEmail equals c.email
+                                        where c.regdate != null && c.regdate.Value.Year == currentDate.Year && c.regdate.Value.Month == currentDate.Month
+                                        select c).Count()
+
+                };
+
+
+            }
+
+            var activeChat = (from c in _context.userstb
+                              where c.id == agentId
+                              join m in _context.HubChatMessages on c.id equals m.SenderId
+                              select m).GroupBy(g => g.SenderId);
+
+            metrics.TotalActiveChat = await activeChat.CountAsync();
+            metrics.TotalPendingReplies = activeChat.Where(e => e.Select(w => w.IsRead).FirstOrDefault() == false).Count();
+
+            return metrics;
+        }
+
         public async Task<List<AgentCustomerOrderResponse>> GetAgentCustomersOrders(AgentCustomerRequest request, int agentId)
         {
             var today = GetLocalDateTime.CurrentDateTime();

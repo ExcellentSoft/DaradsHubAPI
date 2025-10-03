@@ -15,6 +15,7 @@ public interface IOrderRepository : IGenericRepository<HubOrder>
     Task<DailySalesOverviewResponse?> DailySalesOverview();
     Task DeleteCart(int userId, long productId);
     Task DeleteShippingAddress(int userId, long addressId);
+    Task<AgentCustomerMetricsResponse> GetAgentCustomerMetrics(int agentId);
     Task<List<AgentCustomerOrderResponse>> GetAgentCustomersOrders(AgentCustomerRequest request, int agentId);
     Task<SingleOrderResponse?> GetAgentOrder(string orderCode);
     Task<List<AgentOrderListResponse>> GetAgentOrders(AgentOrderListRequest request, int agentId);

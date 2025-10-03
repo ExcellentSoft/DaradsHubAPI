@@ -159,7 +159,7 @@ public class ManageAgentService(IUnitOfWork _unitOfWork, IFileService _fileServi
         {
             var suspended = _unitOfWork.Users.SuspendedAgent(new SuspendedAgent
             {
-                AgentId = request.AgentId,
+                UserId = request.AgentId,
                 Duration = request.Duration,
                 OptionalNote = request.OptionalNote,
                 Reason = request.Reason ?? ""

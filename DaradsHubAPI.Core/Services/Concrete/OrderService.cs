@@ -348,6 +348,13 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
         return new ApiResponse<List<AgentCustomerOrderResponse>> { StatusCode = StatusEnum.Success, Message = "Success.", Status = true, Data = orderResponse, Pages = request.PageSize, TotalRecord = totalRecordsCount, CurrentPage = request.PageNumber };
     }
 
+    public async Task<ApiResponse<AgentCustomerMetricsResponse>> GetAgentCustomerMetrics(int agentId)
+    {
+        var metricsResponse = await _unitOfWork.Orders.GetAgentCustomerMetrics(agentId);
+
+        return new ApiResponse<AgentCustomerMetricsResponse> { StatusCode = StatusEnum.Success, Message = "Success.", Status = true, Data = metricsResponse };
+    }
+
     public async Task<ApiResponse<SingleOrderResponse>> GetOrder(string orderCode)
     {
         var response = await _unitOfWork.Orders.GetAgentOrder(orderCode);
