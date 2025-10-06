@@ -11,7 +11,7 @@ using System.Net;
 namespace DaradsHubAPI.WebAPI.Areas.Admin.Controllers;
 
 [Tags("Admin")]
-public class ManageAgentController(IManageAgentService _agentService, IProductService _productService) : ApiBaseController
+public class ManageAgentController(IManageAgentService _agentService, IProductService _productService, IWalletTransactionService _walletTransactionService) : ApiBaseController
 {
     [HttpGet("view-agent-profile")]
     [ProducesResponseType(typeof(ApiResponse<ShortAgentProfileResponse>), (int)HttpStatusCode.OK)]
@@ -103,6 +103,30 @@ public class ManageAgentController(IManageAgentService _agentService, IProductSe
     public async Task<IActionResult> GetAgentReviews([FromQuery] AgentReviewRequest request, [FromQuery] int agentId)
     {
         var response = await _productService.GetAgentReviews(request, agentId);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("withdrawal-requests")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<WithdrawalRequestResponse>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAllWithdrawalRequests([FromQuery] WithdrawalRequest request)
+    {
+        var response = await _walletTransactionService.GetAllWithdrawalRequests(request);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("withdrawal-request")]
+    [ProducesResponseType(typeof(ApiResponse<SingleWithdrawalRequestResponse>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetWithdrawalRequest([FromQuery] long requestId)
+    {
+        var response = await _walletTransactionService.GetWithdrawalRequest(requestId);
+        return ResponseCode(response);
+    }
+
+    [HttpPatch("update-withdrawal-request-status")]
+    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> ChangeWithdrawRequestStatus([FromBody] ChangeWithdrawalRequestStatus request)
+    {
+        var response = await _walletTransactionService.ChangeWithdrawRequestStatus(request);
         return ResponseCode(response);
     }
 }

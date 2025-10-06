@@ -93,6 +93,13 @@ namespace DaradsHubAPI.Core.Model.Request
         public DateTime? EndDate { get; set; }
     }
 
+    public record WithdrawalRequest : ListRequest
+    {
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public WithdrawalRequestStatus? Status { get; set; }
+    }
+
     public record AgentOrderListResponse
     {
         public long OrderId { get; set; }

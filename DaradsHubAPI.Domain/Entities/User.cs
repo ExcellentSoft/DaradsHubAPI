@@ -42,6 +42,7 @@ public sealed record CustomerLoginResponse
     public string PhoneNumber { get; set; }
     public bool IsVerify { get; set; }
     public bool Is2FA { get; set; }
+    public bool IsVerifyCodeRequire { get; set; }
     public string Photo { get; set; }
     public string Token { get; set; }
     public long Expires { get; set; }
