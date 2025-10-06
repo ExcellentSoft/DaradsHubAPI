@@ -146,10 +146,6 @@ public class WalletRepository(AppDbContext _context) : GenericRepository<wallett
             };
 
             _context.GwalletTrans.Add(walletTransaction);
-
-            request.Status = WithdrawalRequestStatus.Paid;
-            request.DateUpdated = today;
-            await _context.SaveChangesAsync();
         }
 
         request.Status = requestStatus.Status;
