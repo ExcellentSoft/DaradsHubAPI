@@ -216,7 +216,7 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
 
         var scope = _serviceProvider.GetRequiredService<IEmailService>();
         string smessage = $"Hello {email}! Thank you for purchasing {products} from Darads. Your order {orderCode} has been confirmed. We will provide a tracking link once your order has shipped.";
-        scope.SendMail(email!, "Product purchased", smessage, "Darads");
+        await scope.SendMail(email!, "Product purchased", smessage, "Darads");
 
         foreach (var prod in request.ProductDetails)
         {
@@ -399,7 +399,7 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
         await _unitOfWork.Notifications.Insert(newNotification);
 
         string body = $"Hello {order.UserEmail},<br/> Your order with code #{order.Code} has been updated to status: {request.Status.GetDescription()}<br/><br/>";
-        _emailService.SendMail(order.UserEmail ?? "", "Change Order status", body, "Darad");
+        await _emailService.SendMail(order.UserEmail ?? "", "Change Order status", body, "Darad");
 
         return new ApiResponse("Success.", StatusEnum.Success, true);
     }

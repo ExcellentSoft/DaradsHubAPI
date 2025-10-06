@@ -61,7 +61,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
 
             var scope = _serviceProvider.GetRequiredService<IEmailService>();
             string message = $"Hello {request.FullName}, kindly utilize the code {otp} to finalize the registration process. We're excited to welcome you onboard!<br/><br/>";
-            scope.SendMail(request.Email, "Email Verification", message, "Darads", useTemplate: true);
+            await scope.SendMail(request.Email, "Email Verification", message, "Darads", useTemplate: true);
 
             return new(true, message = $"Success! Kindly check your email and use the provided code to finalize your registration.", uCustomer.Id);
         }
@@ -89,13 +89,32 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         if (!await _userManager.CheckPasswordAsync(user, request.Password))
             return new(false, "Unauthorized.", null);
 
+        var customer = await _context.userstb.AsNoTracking().Where(us => us.userid == user.Id).FirstOrDefaultAsync();
+        if (customer is null)
+            return new(false, "User record not found.", null);
+
         if (!user.EmailConfirmed)
-            return new(false, "Your email address has not been verified. Please verify it.", new CustomerLoginResponse { UserId = user.Id });
+        {
+            var otp = CustomizeCodes.GenerateOTP(6);
+            await SendOTPCodeAsync(new SendOtpRequest
+            {
+                Code = otp,
+                UserId = customer.userid,
+                UserEmail = customer.email,
+                Purpose = OtpVerificationPurposeEnum.EmailVerification
+            });
+            var scope = _serviceProvider.GetRequiredService<IEmailService>();
+            string message = $"Hello {customer.username}, kindly utilize the code {otp} to finalize the registration process. We're excited to welcome you onboard!" +
+                "<br/><br/>If you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.<br/><br/>";
+            await scope.SendMail(customer.email, "Email Verification", message, $"Darads", useTemplate: true);
+
+            return new(false, "Your email address has not been verified. Please verify it.", new CustomerLoginResponse { UserId = user.Id, IsVerifyCodeRequire = true });
+        }
 
         if (user.Status == EntityStatusEnum.InActive || user.Status == EntityStatusEnum.Delete)
             return new(false, "Your has been deactivated. Kindly contact admin.", null);
 
-        var customer = await _context.userstb.AsNoTracking().Where(us => us.userid == user.Id).FirstOrDefaultAsync();
+
         if (user.Is_customer.GetValueOrDefault() != 1 && user.Is_admin.GetValueOrDefault() != 1)
         {
             //is a agent
@@ -261,7 +280,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         var scope = _serviceProvider.GetRequiredService<IEmailService>();
         string message = $"Hello {model.customer.username}, kindly utilize the code {otp} to finalize the registration process. We're excited to welcome you onboard!" +
             "<br/><br/>If you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.<br/><br/>";
-        scope.SendMail(model.customer.email, "Email Verification", message, $"Darads", useTemplate: true);
+        await scope.SendMail(model.customer.email, "Email Verification", message, $"Darads", useTemplate: true);
 
         return new(true, "Success! Please check your email and use the provided code.");
     }
@@ -340,7 +359,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         string message = $"Hello {customer!.username}, kindly utilize the code {otp} to reset your password." +
             "<br/><br/>If you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.";
 
-        scope.SendMail(user.Email!, "Forget password code Verification", message, "Darads");
+        await scope.SendMail(user.Email!, "Forget password code Verification", message, "Darads");
 
         return new(true, $"Success! Kindly check your email and use the provided code to finalize your reset password.", user.Id);
     }
@@ -402,7 +421,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         var scope = _serviceProvider.GetRequiredService<IEmailService>();
         string message = $"Hello {model.customer.username}, kindly utilize the code {otp} to finalize your reset password." +
             "<br/><br/>If you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.<br/><br/>";
-        scope.SendMail(model.customer.email, "Email Verification", message, $"Darads", useTemplate: true);
+        await scope.SendMail(model.customer.email, "Email Verification", message, $"Darads", useTemplate: true);
 
         return new(true, "Success! Kindly check your email and use the provided code to finalize your reset password.");
     }
@@ -723,7 +742,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
 
             var scope = _serviceProvider.GetRequiredService<IEmailService>();
             string message = $"Hello {request.FullName}, kindly utilize the code {otp} to finalize the registration process. We're excited to welcome you onboard!<br/><br/>";
-            scope.SendMail(request.Email, "Email Verification", message, "Darads", useTemplate: true);
+            await scope.SendMail(request.Email, "Email Verification", message, "Darads", useTemplate: true);
 
             return new(true, message = $"Success! Kindly check your email and use the provided code to finalize your registration.", uCustomer.Id);
         }
@@ -833,7 +852,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
                 $"Email : {request.Email}" +
                 $"Password : {request.Password}";
 
-            scope.SendMail(request.Email, "Account Creation", message, "Darads", useTemplate: true);
+            await scope.SendMail(request.Email, "Account Creation", message, "Darads", useTemplate: true);
 
             return new(true, message = $"Success! Agent created successfully.");
         }

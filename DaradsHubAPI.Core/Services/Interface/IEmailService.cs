@@ -6,7 +6,7 @@ namespace DaradsHubAPI.Core.Services.Interface
 {
     public interface IEmailService
     {
-        bool SendMail(string mailTo, string subject, string body, string displayName, bool useTemplate = true);
+        Task<bool> SendMail(string mailTo, string subject, string body, string displayName, bool useTemplate = true);
         bool SendMail_VendorWeb(string mailTo, string subject, string body, string displayName, bool useTemplate = true);
         bool SendMail_Attachment(string mailTo, string subject, string body, string displayName, byte[] attachment_file, string ReceiverName);
         bool SendMail_Attachment_XLSFile(string mailTo, string subject, string body, string displayName, byte[] attachment_file, string ReceiverName);

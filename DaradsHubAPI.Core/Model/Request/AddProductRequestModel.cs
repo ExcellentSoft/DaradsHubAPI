@@ -92,8 +92,27 @@ public class WithdrawalRequestResponse
     public DateTime DateCreated { get; set; }
     public string RefNumber { get; set; } = default!;
     public string Status { get; set; } = default!;
+    public string? AgentName { get; internal set; }
+    public WithdrawalRequestStatus StatusEnum { get; internal set; }
 }
 
+public class SingleWithdrawalRequestResponse
+{
+    public long Id { get; set; }
+    public decimal Amount { get; set; }
+    public DateTime DateCreated { get; set; }
+    public string RefNumber { get; set; } = default!;
+    public string Status { get; set; } = default!;
+    public string? AgentName { get; internal set; }
+    public string? BankName { get; internal set; }
+    public string? AccountName { get; internal set; }
+    public string? AccountNumber { get; internal set; }
+}
+public record ChangeWithdrawalRequestStatus
+{
+    public long WithdrawalRequestId { get; set; }
+    public WithdrawalRequestStatus Status { get; set; }
+}
 public class UpdateAgentHubProductRequest : AddAgentHubProductRequest
 {
     public long Id { get; set; }

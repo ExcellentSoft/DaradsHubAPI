@@ -6,7 +6,9 @@ using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Shared.Customs;
 using DaradsHubAPI.Shared.Interface;
+using DaradsHubAPI.Shared.Static;
 using Microsoft.EntityFrameworkCore;
+using SendGrid;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Services.Concrete;
@@ -93,5 +95,32 @@ public class WalletTransactionService(IUnitOfWork _unitOfWork, IFileService _fil
         var requests = await _unitOfWork.Wallets.GetWithdrawalRequests(agentId);
 
         return new ApiResponse<IEnumerable<WithdrawalRequestResponse>> { Message = "Wallet requests fetched successfully.", Status = true, Data = requests, StatusCode = StatusEnum.Success };
+    }
+
+    public async Task<ApiResponse<IEnumerable<WithdrawalRequestResponse>>> GetAllWithdrawalRequests(WithdrawalRequest request)
+    {
+        var response = await _unitOfWork.Wallets.GetAllWithdrawalRequests(request);
+        var totalRecordsCount = response.Count;
+
+        return new ApiResponse<IEnumerable<WithdrawalRequestResponse>> { StatusCode = StatusEnum.Success, Message = "All withdrawal requests fetched successfully.", Status = true, Data = response, Pages = request.PageSize, TotalRecord = totalRecordsCount, CurrentPage = request.PageNumber };
+    }
+
+    public async Task<ApiResponse<SingleWithdrawalRequestResponse>> GetWithdrawalRequest(long requestId)
+    {
+        var requests = await _unitOfWork.Wallets.GetWithdrawalRequest(requestId);
+
+
+        return new ApiResponse<SingleWithdrawalRequestResponse> { Message = "Withdrawal request fetched successfully.", Status = true, Data = requests, StatusCode = StatusEnum.Success };
+    }
+
+    public async Task<ApiResponse> ChangeWithdrawRequestStatus(ChangeWithdrawalRequestStatus request)
+    {
+        var (status, message) = await _unitOfWork.Wallets.ChangeWithdrawalRequests(request);
+        if (!status)
+        {
+            return new ApiResponse(message, StatusEnum.Validation, false);
+        }
+
+        return new ApiResponse("Success.", StatusEnum.Success, true);
     }
 }
