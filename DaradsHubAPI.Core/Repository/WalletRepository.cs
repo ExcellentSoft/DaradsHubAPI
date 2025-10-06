@@ -150,8 +150,11 @@ public class WalletRepository(AppDbContext _context) : GenericRepository<wallett
             request.Status = WithdrawalRequestStatus.Paid;
             request.DateUpdated = today;
             await _context.SaveChangesAsync();
-
         }
+
+        request.Status = requestStatus.Status;
+        request.DateUpdated = today;
+        await _context.SaveChangesAsync();
         return new(true, "Successful.");
     }
 }
