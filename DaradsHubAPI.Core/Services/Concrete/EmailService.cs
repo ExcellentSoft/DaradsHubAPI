@@ -30,7 +30,7 @@ namespace DaradsHubAPI.Core.Services.Concrete
             _unitOfWork = unitOfWork;
             _appSettings = appSettings.Value;
             SendGridAPIKEY =
-            ConvertersHelper.ConvertByteToString(ConvertersHelper.ConvertStringToByte(_appSettings.SendGridKey));
+            ConvertersHelper.ConvertByteToString(ConvertersHelper.ConvertStringToByte(_appSettings.SendGridEncryptedKey));
 
         }
         public bool SendHtmlMail(string mailTo, string subject, string body)
@@ -54,8 +54,9 @@ social media accounts, selling of all social media account, boosting of WhatsApp
                 body += adsEm;
             try
             {
+                var decryptKey = StringExtensions.Decrypt(SendGridAPIKEY);
 
-                var client = new SendGridClient(SendGridAPIKEY);
+                var client = new SendGridClient(decryptKey);
 
                 string[] Emails = mailTo.Split(',');
                 int le = Emails.Length;

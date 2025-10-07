@@ -1,6 +1,7 @@
 ﻿using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
 using DaradsHubAPI.Shared.Concrete;
+using DaradsHubAPI.Shared.Extentions;
 using DaradsHubAPI.Shared.Interface;
 using DaradsHubAPI.Shared.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -37,8 +38,10 @@ public static class CollectionServices
         var appConnectionSection = configuration.GetConnectionString("mycon");
         var appSettingsSection = configuration.GetSection("AppSettings");
         var appSettings = appSettingsSection.Get<AppSettings>();
-        var jt = appSettings!.SendGridKey;
-        services.AddSendGrid(options => options.ApiKey = jt);
+
+        var jt = appSettings!.SendGridEncryptedKey;
+        var decryptKey = StringExtensions.Decrypt(jt);
+        services.AddSendGrid(options => options.ApiKey = decryptKey);
 
         services.AddDbContext<AuthDataContext>(opt =>
         {
