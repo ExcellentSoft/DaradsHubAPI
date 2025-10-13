@@ -102,6 +102,7 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                                Sender = _context.userstb.Where(e => e.id == r.m.SenderId).Select(e => new SenderDetails
                                {
                                    FullName = e.fullname,
+                                   PhoneNumber = e.phone,
                                    Photo = e.Photo,
                                    userId = e.id,
                                    IsAgent = e.IsAgent
