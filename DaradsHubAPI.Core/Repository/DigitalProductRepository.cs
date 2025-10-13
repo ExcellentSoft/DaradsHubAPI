@@ -88,6 +88,7 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         {
             response.BusinessName = user.BusinessName;
             response.FullName = user.fullname;
+            response.PhoneNumber = user.phone;
             response.IsOnline = true;
             response.IsVerify = true;
             response.AgentId = user.id;
@@ -136,6 +137,7 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         {
             response.BusinessName = user.BusinessName;
             response.FullName = user.fullname;
+            response.PhoneNumber = user.phone;
             response.IsOnline = true;
             response.IsVerify = true;
             response.AgentId = user.id;
