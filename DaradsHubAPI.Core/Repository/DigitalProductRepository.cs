@@ -31,10 +31,21 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         return catalogue ?? new Catalogue();
     }
 
+    public async Task<HubDigitalProductValueLog> GetDigitalProductValue(long catalogueId, int agentId)
+    {
+        var value = await _context.HubDigitalProductValueLogs.Where(r => r.CatalogueId == catalogueId && r.AgentId == agentId && r.IsAvailable == true).FirstOrDefaultAsync();
+
+        return value ?? new HubDigitalProductValueLog();
+    }
+
     public async Task AddHubDigitalProductImages(DigitalProductImages productImages)
     {
         _context.DigitalProductImages.Add(productImages);
         await SaveAsync();
+    }
+    public void AddHubDigitalProductValue(HubDigitalProductValueLog value)
+    {
+        _context.HubDigitalProductValueLogs.Add(value);
     }
 
     public IQueryable<LandingPageDigitalProductResponse> GetLandPageProducts()
@@ -278,9 +289,11 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
     public IQueryable<DigitalProductDetailsResponse> GetAgentDigitalProducts(int catalogueId, int agentId)
     {
         var query = (from ph in _context.HubDigitalProducts.Where(d => d.AgentId == agentId)
+                     join v in _context.HubDigitalProductValueLogs on ph.CatalogueId equals v.CatalogueId
+                     where v.AgentId == agentId && v.IsAvailable == true
                      join img in _context.DigitalProductImages on ph.Id equals img.ProductId
                      join c in _context.Catalogues on ph.CatalogueId equals c.Id
-                     where ph.CatalogueId == catalogueId || catalogueId == 0 && ph.IsSold == false
+                     where ph.CatalogueId == catalogueId || catalogueId == 0
                      orderby ph.DateCreated descending
                      select new { ph, img, c }).GroupBy(d => d.img.ProductId).Select(f => new DigitalProductDetailsResponse
                      {
@@ -304,7 +317,7 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
                      join ph in _context.HubDigitalProducts on user.id equals ph.AgentId
                      join img in _context.DigitalProductImages on ph.Id equals img.ProductId
                      join c in _context.Catalogues on ph.CatalogueId equals c.Id
-                     where ph.CatalogueId == catalogueId || catalogueId == 0 && ph.IsSold == false
+                     where ph.CatalogueId == catalogueId || catalogueId == 0
                      orderby ph.DateCreated descending
                      select new { ph, img, c }).GroupBy(d => d.img.ProductId).Select(f => new DigitalProductDetailsResponse
                      {

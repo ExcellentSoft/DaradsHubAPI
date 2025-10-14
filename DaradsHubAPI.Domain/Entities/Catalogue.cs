@@ -45,3 +45,16 @@ public partial class HubDigitalProduct
     public DateTime DateCreated { get; set; }
     public DateTime DateUpdated { get; set; }
 }
+
+public partial class HubDigitalProductValueLog
+{
+    [Key]
+    public long Id { get; set; }
+    [StringLength(3250)]
+    public string ProductValue { get; set; } = default!;
+    public int AgentId { get; set; }
+    public long CatalogueId { get; set; }
+    public bool IsAvailable { get; set; }
+    public DateTime DateCreated { get; set; }
+    public DateTime DateUpdated { get; set; }
+}
