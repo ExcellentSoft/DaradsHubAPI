@@ -19,7 +19,7 @@ using static DaradsHubAPI.Domain.Enums.Enum;
 namespace DaradsHubAPI.Core.Repository;
 public class UserRepository(AppDbContext _context, UserManager<User> _userManager, SignInManager<User> _signInManager, IServiceProvider _serviceProvider, IOptionsSnapshot<AppSettings> optionsSnapshot) : GenericRepository<userstb>(_context), IUserRepository
 {
-    public AppSettings _optionsSnapshot { get; } = optionsSnapshot.Value;
+    public AppSettings _optionsSnapshot { get; } = optionsSnapshot.Value; 
     private User? _user;
 
     public async Task<(bool status, string message, string? userId)> CreateCustomer(CreateCustomerRequest request)
@@ -96,7 +96,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         if (user.Is_customer.GetValueOrDefault() != 1 && user.Is_admin.GetValueOrDefault() != 1)
         {
             //is a agent
-            if (!customer!.IsAgent.GetValueOrDefault())
+            if (!customer!.IsAgent)
             {
                 return new(false, "Your onboarding registration is still pending. Kindly contact admin.", null);
             }
@@ -151,7 +151,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
                 ExpiresTime = expires,
                 Name = customer.fullname,
                 Token = token,
-                Photo = customer.Photo,
+                Photo = "",
                 Is2FA = user.TwoFactorEnabled,
                 IsVerify = customer.status == 1,
                 PhoneNumber = customer.phone
@@ -371,7 +371,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         var response = new CustomerProfileResponse
         {
             Email = email,
-            FullName = customerUser.fullname,
+            UserName = customerUser.username,
             PhoneNumber = customerUser.phone,
             Photo = customerUser.Photo,
             VirtualAccountDetails = virtualAccts,
@@ -523,22 +523,6 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
             return new(false, errorMessage ?? "");
         }
     }
-    public async Task<DashboardMetricsResponse> DashboardMetrics(string email)
-    {
-        var response = new DashboardMetricsResponse
-        {
-            ActiveOrderCount = await _context.HubOrders.Where(r => r.UserEmail == email).CountAsync(),
-            WalletBalance = await _context.wallettb.Where(e => e.UserId == email).Select(r => r.Balance).FirstOrDefaultAsync()
-        };
-
-        return response;
-    }
-    public async Task AddAgentReview(HubAgentReview model)
-    {
-        _context.HubAgentReviews.Add(model);
-        await _context.SaveChangesAsync();
-    }
-
     public async Task<(bool status, string message, string? userId)> CreateAgent(CreateAgentRequest request)
     {
         try
@@ -578,6 +562,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
             scope.SendMail(request.Email, "Email Verification", message, "Darads", useTemplate: true);
 
             return new(true, message = $"Success! Kindly check your email and use the provided code to finalize your registration.", uCustomer.Id);
+       
         }
         catch (Exception)
         {
