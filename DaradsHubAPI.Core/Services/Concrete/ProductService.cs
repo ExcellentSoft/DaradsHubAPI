@@ -383,6 +383,13 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         return new ApiResponse<IEnumerable<ProductDetailsResponse>> { Message = "Successful", Status = true, Data = paginatedProducts, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
     }
 
+    public async Task<ApiResponse<IEnumerable<SimilarProductResponse>>> GetSimilarProducts(long productId)
+    {
+        var response = await _unitOfWork.Products.GetSimilarProducts(productId).Take(20).ToListAsync();
+
+        return new ApiResponse<IEnumerable<SimilarProductResponse>> { Message = "Successful", Status = true, Data = response, StatusCode = StatusEnum.Success };
+    }
+
     public async Task<ApiResponse<IEnumerable<AgentReview>>> GetAgentReviews(AgentReviewRequest request, int agentId)
     {
         var query = _unitOfWork.Products.GetAgentReviews(request, agentId);

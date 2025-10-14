@@ -912,6 +912,35 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         return query;
     }
 
+    public IQueryable<SimilarProductResponse> GetSimilarProducts(long productId)
+    {
+        // Get the category of the current product
+        var currentProductCategoryId = _context.HubAgentProducts
+            .Where(p => p.Id == productId)
+            .Select(p => p.CategoryId)
+            .FirstOrDefault();
+
+        // Query similar products within the same category
+        var query = from ph in _context.HubAgentProducts
+                    join img in _context.ProductImages on ph.Id equals img.ProductId
+                    join p in _context.HubProducts on ph.ProductId equals p.Id
+                    join c in _context.categories on ph.CategoryId equals c.id
+                    where ph.CategoryId == currentProductCategoryId && ph.Id != productId
+                    orderby ph.DateCreated descending
+                    group new { ph, img, p } by ph.Id into g
+                    select new SimilarProductResponse
+                    {
+                        Id = g.Key,
+                        Caption = g.Select(e => e.ph.Caption).FirstOrDefault(),
+                        Name = g.Select(e => e.p.Name).FirstOrDefault(),
+                        Price = g.Select(e => e.ph.Price).FirstOrDefault(),
+                        Description = g.Select(e => e.ph.Description).FirstOrDefault(),
+                        ImageUrls = g.Select(e => e.img.ImageUrl).Distinct().ToList()
+                    };
+
+        return query;
+    }
+
     public IQueryable<ProductDetailsResponse> GetPublicAgentProducts(int categoryId, int agentId)
     {
         var query = (from user in _context.userstb

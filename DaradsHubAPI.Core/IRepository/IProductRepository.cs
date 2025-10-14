@@ -44,4 +44,5 @@ public interface IProductRepository : IGenericRepository<HubAgentProduct>
     Task<CustomerRequestMetricResponse> GetCustomerRequestMetricsForAdmin();
     IQueryable<category> GetAgentCategories(string? searchText, int agentId);
     Task<List<AgentOrderListResponse>> GetAgentProductOrders(AgentProductOrderListRequest request);
+    IQueryable<SimilarProductResponse> GetSimilarProducts(long productId);
 }
