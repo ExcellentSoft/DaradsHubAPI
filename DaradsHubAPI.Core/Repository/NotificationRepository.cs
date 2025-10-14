@@ -72,9 +72,17 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                            {
                                Content = r.m.Content,
                                SentAt = r.m.SentAt,
-                               Sender = _context.userstb.Where(e => e.id == r.m.SenderId).Select(e => new SenderDetails
+                               CustomerDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.CustomerId).FirstOrDefault()).Select(e => new SenderDetails
                                {
                                    FullName = e.fullname,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
+                               }).FirstOrDefault(),
+                               AgentDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AgentId).FirstOrDefault()).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   PhoneNumber = e.phone,
                                    Photo = e.Photo,
                                    userId = e.id,
                                    IsAgent = e.IsAgent
@@ -99,7 +107,15 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                            {
                                Content = r.m.Content,
                                SentAt = r.m.SentAt,
-                               Sender = _context.userstb.Where(e => e.id == r.m.SenderId).Select(e => new SenderDetails
+                               CustomerDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.CustomerId).FirstOrDefault()).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   PhoneNumber = e.phone,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
+                               }).FirstOrDefault(),
+                               AgentDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AgentId).FirstOrDefault()).Select(e => new SenderDetails
                                {
                                    FullName = e.fullname,
                                    PhoneNumber = e.phone,
