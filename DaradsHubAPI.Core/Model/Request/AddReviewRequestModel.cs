@@ -100,7 +100,8 @@ namespace DaradsHubAPI.Core.Model.Request
     {
         public string? Content { get; set; }
         public DateTime SentAt { get; set; }
-        public SenderDetails? Sender { get; set; }
+        public SenderDetails? CustomerDetails { get; set; }
+        public SenderDetails? AgentDetails { get; internal set; }
     }
     public record SenderDetails
     {
