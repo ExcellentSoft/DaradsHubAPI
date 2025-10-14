@@ -112,6 +112,15 @@ public class ProductController(IProductService _productService) : ApiBaseControl
     }
 
     [AllowAnonymous]
+    [HttpGet("similar-products")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<SimilarProductResponse>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAgentProducts([FromQuery] long productId)
+    {
+        var response = await _productService.GetSimilarProducts(productId);
+        return ResponseCode(response);
+    }
+
+    [AllowAnonymous]
     [HttpGet("agent-product")]
     [ProducesResponseType(typeof(ApiResponse<ProductDetailResponse>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetAgentProduct([FromQuery] int productId)

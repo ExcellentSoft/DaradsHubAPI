@@ -42,4 +42,5 @@ public interface IProductService
     Task<ApiResponse<AgentHubProductResponse>> GetPhysicalProduct(long productId);
     Task<ApiResponse<CustomerRequestMetricResponse>> GetCustomerRequestMetrics(long agentId);
     Task<ApiResponse<IEnumerable<IdNameRecord>>> GetAgentCategories(string? searchText, int agentId);
+    Task<ApiResponse<IEnumerable<SimilarProductResponse>>> GetSimilarProducts(long productId);
 }
