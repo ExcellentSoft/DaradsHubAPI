@@ -126,7 +126,7 @@ public class AddDigitalHubProductRequest
     public decimal DiscountPrice { get; set; }
     public string? Description { get; set; }
     public IEnumerable<IFormFile>? Images { get; set; }
-    public string? Value { get; set; }
+    public IEnumerable<string> Values { get; set; } = default!;
 }
 
 public class DigitalHubProductResponse
