@@ -280,7 +280,7 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         var query = (from ph in _context.HubDigitalProducts.Where(d => d.AgentId == agentId)
                      join img in _context.DigitalProductImages on ph.Id equals img.ProductId
                      join c in _context.Catalogues on ph.CatalogueId equals c.Id
-                     where ph.CatalogueId == catalogueId || catalogueId == 0
+                     where ph.CatalogueId == catalogueId || catalogueId == 0 && ph.IsSold == false
                      orderby ph.DateCreated descending
                      select new { ph, img, c }).GroupBy(d => d.img.ProductId).Select(f => new DigitalProductDetailsResponse
                      {
@@ -304,7 +304,7 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
                      join ph in _context.HubDigitalProducts on user.id equals ph.AgentId
                      join img in _context.DigitalProductImages on ph.Id equals img.ProductId
                      join c in _context.Catalogues on ph.CatalogueId equals c.Id
-                     where ph.CatalogueId == catalogueId || catalogueId == 0
+                     where ph.CatalogueId == catalogueId || catalogueId == 0 && ph.IsSold == false
                      orderby ph.DateCreated descending
                      select new { ph, img, c }).GroupBy(d => d.img.ProductId).Select(f => new DigitalProductDetailsResponse
                      {
