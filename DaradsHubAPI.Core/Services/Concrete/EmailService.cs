@@ -10,6 +10,7 @@ using DaradsHubAPI.Shared.Static;
 using DaradsHubAPI.Shared.Customs;
 using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.Core.Model.Request;
+using System.Threading.Tasks;
 
 namespace DaradsHubAPI.Core.Services.Concrete
 {
@@ -29,7 +30,7 @@ namespace DaradsHubAPI.Core.Services.Concrete
             _unitOfWork = unitOfWork;
             _appSettings = appSettings.Value;
             SendGridAPIKEY =
-            ConvertersHelper.ConvertByteToString(ConvertersHelper.ConvertStringToByte(_appSettings.SendGridKey));
+            ConvertersHelper.ConvertByteToString(ConvertersHelper.ConvertStringToByte(_appSettings.SendGridEncryptedKey));
 
         }
         public bool SendHtmlMail(string mailTo, string subject, string body)
@@ -37,7 +38,7 @@ namespace DaradsHubAPI.Core.Services.Concrete
             throw new NotImplementedException();
         }
 
-        public bool SendMail(string mailTo, string subject, string body, string displayName, bool useTemplate = true)
+        public async Task<bool> SendMail(string mailTo, string subject, string body, string displayName, bool useTemplate = true)
         {
             if (!mailTo.IsValidEmail() && !mailTo.Contains(','))
             {
@@ -53,8 +54,9 @@ social media accounts, selling of all social media account, boosting of WhatsApp
                 body += adsEm;
             try
             {
+                var decryptKey = StringExtensions.Decrypt(SendGridAPIKEY);
 
-                var client = new SendGridClient(SendGridAPIKEY);
+                var client = new SendGridClient(decryptKey);
 
                 string[] Emails = mailTo.Split(',');
                 int le = Emails.Length;
@@ -73,13 +75,13 @@ social media accounts, selling of all social media account, boosting of WhatsApp
                 {
                     var msg = MailHelper.CreateSingleEmail(from, to, subject, "", body);
 
-                    var response = client.SendEmailAsync(msg);
+                    var response = await client.SendEmailAsync(msg);
                     isSent = true;
                 }
                 else
                 {
                     var msg = MailHelper.CreateSingleEmailToMultipleRecipients(from, emailAddresses, subject, "", body);
-                    var response = client.SendEmailAsync(msg);
+                    var response = await client.SendEmailAsync(msg);
                     isSent = true;
                 }
             }

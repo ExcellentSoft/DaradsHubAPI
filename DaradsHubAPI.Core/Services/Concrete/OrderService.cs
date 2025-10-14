@@ -216,7 +216,7 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
 
         var scope = _serviceProvider.GetRequiredService<IEmailService>();
         string smessage = $"Hello {email}! Thank you for purchasing {products} from Darads. Your order {orderCode} has been confirmed. We will provide a tracking link once your order has shipped.";
-        scope.SendMail(email!, "Product purchased", smessage, "Darads");
+        await scope.SendMail(email!, "Product purchased", smessage, "Darads");
 
         foreach (var prod in request.ProductDetails)
         {
@@ -232,14 +232,12 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
         });
         return new ApiResponse<string> { Status = true, Message = $"Product(s) has been purchased successfully.", StatusCode = StatusEnum.Success, Data = orderCode };
     }
+
     public async Task<ApiResponse<DigitalCheckoutResponse>> CheckOutDigital(CheckoutDigitalRequest request, string email)
     {
-        var product = await _unitOfWork.DigitalProducts.GetSingleWhereAsync(r => r.IsSold == false && r.Id == request.ProductId);
-        if (product is null)
-        {
-            return new ApiResponse<DigitalCheckoutResponse> { Status = false, Message = "Selected product is not available, please try again later.", StatusCode = StatusEnum.NoRecordFound };
-        }
-        var catalogue = await _unitOfWork.DigitalProducts.GetCatalogue(product.CatalogueId);
+        var product = await _unitOfWork.DigitalProducts.GetSingleWhereAsync(r => r.Id == request.ProductId);
+
+        var catalogue = await _unitOfWork.DigitalProducts.GetCatalogue(product!.CatalogueId);
         if (catalogue is null)
         {
             return new ApiResponse<DigitalCheckoutResponse> { Status = false, Message = "Invalid catalogue", StatusCode = StatusEnum.NoRecordFound };
@@ -304,14 +302,16 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
             orderItem = products
         };
 
-        product.IsSold = true;
         await _unitOfWork.WalletTransactions.Insert(walletTransaction);
+        var value = await _unitOfWork.DigitalProducts.GetDigitalProductValue(product!.CatalogueId, product.AgentId);
 
         var response = new DigitalCheckoutResponse
         {
-            Value = product.Value,
+            Value = value.ProductValue,
             OrderCode = orderCode,
         };
+        value.IsAvailable = false;
+
         await _unitOfWork.Notifications.SaveNotification(new HubNotification
         {
             TimeCreated = GetLocalDateTime.CurrentDateTime(),
@@ -337,6 +337,22 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
         var totalRecordsCount = orderResponse.Count;
 
         return new ApiResponse<List<AgentOrderListResponse>> { StatusCode = StatusEnum.Success, Message = "Orders fetched successfully.", Status = true, Data = orderResponse, Pages = request.PageSize, TotalRecord = totalRecordsCount, CurrentPage = request.PageNumber };
+    }
+
+    public async Task<ApiResponse<List<AgentCustomerOrderResponse>>> GetAgentCustomersOrders(AgentCustomerRequest request, int agentId)
+    {
+        var orderResponse = await _unitOfWork.Orders.GetAgentCustomersOrders(request, agentId);
+
+        var totalRecordsCount = orderResponse.Count;
+
+        return new ApiResponse<List<AgentCustomerOrderResponse>> { StatusCode = StatusEnum.Success, Message = "Success.", Status = true, Data = orderResponse, Pages = request.PageSize, TotalRecord = totalRecordsCount, CurrentPage = request.PageNumber };
+    }
+
+    public async Task<ApiResponse<AgentCustomerMetricsResponse>> GetAgentCustomerMetrics(int agentId)
+    {
+        var metricsResponse = await _unitOfWork.Orders.GetAgentCustomerMetrics(agentId);
+
+        return new ApiResponse<AgentCustomerMetricsResponse> { StatusCode = StatusEnum.Success, Message = "Success.", Status = true, Data = metricsResponse };
     }
 
     public async Task<ApiResponse<SingleOrderResponse>> GetOrder(string orderCode)
@@ -383,7 +399,7 @@ public class OrderService(IUnitOfWork _unitOfWork, IServiceProvider _serviceProv
         await _unitOfWork.Notifications.Insert(newNotification);
 
         string body = $"Hello {order.UserEmail},<br/> Your order with code #{order.Code} has been updated to status: {request.Status.GetDescription()}<br/><br/>";
-        _emailService.SendMail(order.UserEmail ?? "", "Change Order status", body, "Darad");
+        await _emailService.SendMail(order.UserEmail ?? "", "Change Order status", body, "Darad");
 
         return new ApiResponse("Success.", StatusEnum.Success, true);
     }

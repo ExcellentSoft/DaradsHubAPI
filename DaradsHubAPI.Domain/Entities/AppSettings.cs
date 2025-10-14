@@ -5,7 +5,7 @@ public class AppSettings
     public string E_Key { get; set; }
     public string E_IV { get; set; }
     public string EncryptionKey { get; set; }
-    public string SendGridKey { get; set; }
+    public string SendGridEncryptedKey { get; set; }
     public string EmailFrom { get; set; }
     public string MailDisplayName { get; set; }
     public string ReplyTo { get; set; }

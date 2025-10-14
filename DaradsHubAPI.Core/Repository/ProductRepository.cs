@@ -5,12 +5,83 @@ using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
 using DaradsHubAPI.Shared.Static;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Repository;
 public class ProductRepository(AppDbContext _context) : GenericRepository<HubAgentProduct>(_context), IProductRepository
 {
+    #region Admin Queries
+
+    public async Task<List<CustomerRequestResponse>> GetCustomerRequestsForAdmin(CustomerRequestsRequest request)
+    {
+        var qOrder = from req in _context.HubProductRequests
+                     where (request.StartDate == null || req.DateCreated >= request.StartDate.Value.Date) &&
+                        (request.EndDate == null || req.DateCreated <= request.EndDate.Value.Date)
+                     orderby req.DateCreated descending
+                     select new CustomerRequestResponse
+                     {
+                         IsUrgent = req.IsUrgent,
+                         DateCreated = req.DateCreated,
+                         Location = req.Location,
+                         PreferredDate = req.PreferredDate,
+                         ProductService = req.CustomerNeed,
+                         Quantity = req.Quantity,
+                         Reference = $"#REQ-{req.Id}",
+                         RequestId = req.Id,
+                         ProductServiceImageUrl = _context.ProductRequestImages.Where(d => d.RequestId == req.Id).Select(u => u.ImageUrl).FirstOrDefault(),
+                         Customer = _context.userstb.Where(r => r.id == req.CustomerId).Select(e => new RequestedUser
+                         {
+                             FullName = e.fullname,
+                             Photo = e.Photo
+                         }).FirstOrDefault(),
+                         Status = req.Status,
+                     };
+
+        var res = new List<CustomerRequestResponse>();
+        if (qOrder.Any())
+        {
+            if (!string.IsNullOrEmpty(request.SearchText))
+            {
+                var searchText = request.SearchText.Trim().ToLower();
+
+                qOrder = qOrder.Where(d => d.ProductService.ToLower().Contains(request.SearchText));
+            }
+
+            if (request.Status is not null)
+            {
+                qOrder = qOrder.Where(d => d.Status == request.Status);
+            }
+
+            res = await qOrder.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).OrderByDescending(d => d.DateCreated).ToListAsync();
+        }
+        return res;
+
+
+    }
+    public async Task<CustomerRequestMetricResponse> GetCustomerRequestMetricsForAdmin()
+    {
+        var query = from req in _context.HubProductRequests
+                    select req;
+
+        var metrics = new CustomerRequestMetricResponse();
+        if (query.Any())
+        {
+            metrics = new CustomerRequestMetricResponse
+            {
+                TotalCount = query.Count(),
+                PendingCount = query.Where(r => r.Status == RequestStatus.Pending).Count(),
+                ApproveCount = query.Where(r => r.Status == RequestStatus.Approved).Count(),
+                RejectCount = query.Where(r => r.Status == RequestStatus.Rejected).Count()
+            };
+        }
+
+        return await Task.FromResult(metrics);
+    }
+
+    #endregion
+
     #region Physical Product    
     public IQueryable<HubProduct> GetHubProducts(string? searchText)
     {
@@ -28,6 +99,7 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         _context.ProductImages.Add(productImages);
         await Task.CompletedTask;
     }
+
     public async Task AddHubProductRequestImages(ProductRequestImages productImages)
     {
         _context.ProductRequestImages.Add(productImages);
@@ -78,11 +150,33 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         return query;
     }
 
+    public async Task<CustomerRequestMetricResponse> GetCustomerRequestMetrics(long agentId)
+    {
+        var query = from req in _context.HubProductRequests
+                    where req.AgentId == agentId
+                    select req;
+
+        var metrics = new CustomerRequestMetricResponse();
+        if (query.Any())
+        {
+            metrics = new CustomerRequestMetricResponse
+            {
+                TotalCount = query.Count(),
+                PendingCount = query.Where(r => r.Status == RequestStatus.Pending).Count(),
+                ApproveCount = query.Where(r => r.Status == RequestStatus.Approved).Count(),
+                RejectCount = query.Where(r => r.Status == RequestStatus.Rejected).Count()
+            };
+        }
+
+        return await Task.FromResult(metrics);
+    }
+
     public async Task<List<CustomerRequestResponse>> GetCustomerRequests(CustomerRequestsRequest request, int agentId)
     {
         var qOrder = from req in _context.HubProductRequests
                      where req.AgentId == agentId && (request.StartDate == null || req.DateCreated >= request.StartDate.Value.Date) &&
                         (request.EndDate == null || req.DateCreated <= request.EndDate.Value.Date)
+                     orderby req.DateCreated descending
                      select new CustomerRequestResponse
                      {
                          IsUrgent = req.IsUrgent,
@@ -134,6 +228,7 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                                  PreferredDate = req.PreferredDate,
                                  ProductService = req.CustomerNeed,
                                  Quantity = req.Quantity,
+                                 Budget = req.Budget,
                                  Reference = $"#REQ-{req.Id}",
                                  RequestId = req.Id,
                                  ProductServiceImageUrls = _context.ProductRequestImages.Where(d => d.RequestId == req.Id).Select(u => u.ImageUrl).ToList(),
@@ -147,6 +242,100 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                                  Status = req.Status,
                              }).FirstOrDefaultAsync();
         return request;
+    }
+
+    public IQueryable<AgentProductsResponse> GetDigiatlProducts(AgentProductsRequest request, int agentId)
+    {
+        var query = (from ph in _context.HubDigitalProducts
+                     where ph.AgentId == agentId
+                     join p in _context.Catalogues on ph.CatalogueId equals p.Id
+                     join img in _context.DigitalProductImages on ph.Id equals img.ProductId
+                     orderby ph.DateCreated descending
+                     select new { ph, img, p }).GroupBy(d => d.ph.Id).Select(f => new AgentProductsResponse
+                     {
+                         ProductId = f.Key,
+                         Name = f.Select(e => e.p.Name).FirstOrDefault() ?? "",
+                         Caption = f.Select(e => e.ph.Title).FirstOrDefault() ?? "",
+                         Price = f.Select(e => e.ph.Price).FirstOrDefault(),
+                         ProductType = "Digital",
+                         Orders = (from item in _context.HubOrderItems
+                                   where item.ProductId == f.Key
+                                   join order in _context.HubOrders on item.OrderCode equals order.Code
+                                   where order.ProductType == "Digital"
+                                   select new { order }).Count(),
+                         Stock = 1,
+                         UpdatedDate = f.Select(e => e.ph.DateUpdated).FirstOrDefault(),
+                         Description = f.Select(e => e.ph.Description).FirstOrDefault(),
+                         ImageUrls = f.Select(e => e.img.ImageUrl).ToList()
+                     });
+
+        if (!string.IsNullOrEmpty(request.ProductType))
+        {
+            request.ProductType = request.ProductType.Trim().ToLower();
+            query = query.Where(x => x.ProductType.ToLower() == request.ProductType);
+        }
+        if (!string.IsNullOrEmpty(request.SearchText))
+        {
+            request.SearchText = request.SearchText.Trim().ToLower();
+            query = query.Where(x => x.Name.ToLower().Contains(request.SearchText) || x.Caption.ToLower().Contains(request.SearchText));
+        }
+
+        return query;
+    }
+
+    public IQueryable<AgentProductsResponse> GetPhysicalProducts(AgentProductsRequest request, int agentId)
+    {
+        var query = (from ph in _context.HubAgentProducts
+                     where ph.AgentId == agentId
+                     join p in _context.HubProducts on ph.ProductId equals p.Id
+                     join img in _context.ProductImages on ph.Id equals img.ProductId
+                     orderby ph.DateCreated descending
+                     select new { ph, img, p }).GroupBy(d => d.ph.Id).Select(f => new AgentProductsResponse
+                     {
+                         ProductId = f.Key,
+                         Name = f.Select(e => e.p.Name).FirstOrDefault() ?? "",
+                         Caption = f.Select(e => e.ph.Caption).FirstOrDefault() ?? "",
+                         Price = f.Select(e => e.ph.Price).FirstOrDefault(),
+                         Stock = f.Select(e => e.ph.Stock).FirstOrDefault(),
+                         ProductType = "Physical",
+                         Orders = (from item in _context.HubOrderItems
+                                   where item.ProductId == f.Key
+                                   join order in _context.HubOrders on item.OrderCode equals order.Code
+                                   where order.ProductType == "Physical"
+                                   select new { order }).Count(),
+                         UpdatedDate = f.Select(e => e.ph.DateUpdated).FirstOrDefault(),
+                         Description = f.Select(e => e.ph.Description).FirstOrDefault(),
+                         ImageUrls = f.Select(e => e.img.ImageUrl).ToList()
+                     });
+
+        if (!string.IsNullOrEmpty(request.ProductType))
+        {
+            request.ProductType = request.ProductType.Trim().ToLower();
+            query = query.Where(x => x.ProductType.ToLower() == request.ProductType);
+        }
+        if (!string.IsNullOrEmpty(request.SearchText))
+        {
+            request.SearchText = request.SearchText.Trim().ToLower();
+            query = query.Where(x => x.Name.ToLower().Contains(request.SearchText) || x.Caption.ToLower().Contains(request.SearchText));
+        }
+
+        return query;
+    }
+
+    public IQueryable<category> GetAgentCategories(string? searchText, int agentId)
+    {
+        searchText = searchText?.Trim().ToLower();
+
+        var query = from mapping in _context.CategoryMappings
+                    where mapping.AgentId == agentId
+                    join cate in _context.categories on mapping.CategoryId equals cate.id
+                    select cate;
+
+        if (!string.IsNullOrEmpty(searchText))
+        {
+            query = query.Where(d => d.name.ToLower().Contains(searchText));
+        }
+        return query;
     }
 
     public IQueryable<AgentProductsResponse> GetProducts(AgentProductsRequest request, int agentId)
@@ -171,7 +360,7 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                                            select new { order }).Count(),
                                  UpdatedDate = f.Select(e => e.ph.DateUpdated).FirstOrDefault(),
                                  Description = f.Select(e => e.ph.Description).FirstOrDefault(),
-                                 ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault()
+                                 // TempImageUrl = string.Join(',', f.Select(e => e.img.ImageUrl))
                              });
 
         var digitalQuery = (from ph in _context.HubDigitalProducts
@@ -194,7 +383,7 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                                 Stock = 1,
                                 UpdatedDate = f.Select(e => e.ph.DateUpdated).FirstOrDefault(),
                                 Description = f.Select(e => e.ph.Description).FirstOrDefault(),
-                                ImageUrl = f.Select(e => e.img.ImageUrl).FirstOrDefault()
+                                //TempImageUrl = string.Join(',', f.Select(e => e.img.ImageUrl))
                             });
 
 
@@ -285,7 +474,12 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                 OrderStatus = q.Select(r => r.order.Status).FirstOrDefault(),
                 ProductType = q.Select(r => r.order.ProductType).FirstOrDefault(),
                 TotalPrice = q.Select(r => r.order.TotalCost).FirstOrDefault(),
-                CustomerName = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => d.fullname).FirstOrDefault()
+                CustomerDetails = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => new CustomerData
+                {
+                    Email = d.email,
+                    Name = d.fullname,
+                    PhoneNumber = d.phone
+                }).FirstOrDefault()
 
             });
 
@@ -326,7 +520,12 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
                 OrderStatus = q.Select(r => r.order.Status).FirstOrDefault(),
                 ProductType = q.Select(r => r.order.ProductType).FirstOrDefault(),
                 TotalPrice = q.Select(r => r.order.TotalCost).FirstOrDefault(),
-                CustomerName = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => d.fullname).FirstOrDefault()
+                CustomerDetails = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => new CustomerData
+                {
+                    Email = d.email,
+                    Name = d.fullname,
+                    PhoneNumber = d.phone
+                }).FirstOrDefault()
 
             });
 
@@ -347,6 +546,50 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         return res;
     }
 
+    public async Task<List<AgentOrderListResponse>> GetAgentProductOrders(AgentProductOrderListRequest request)
+    {
+        var qOrder = from item in _context.HubOrderItems
+                     where item.AgentId == request.AgentId
+                     join order in _context.HubOrders on item.OrderCode equals order.Code
+                     where (request.StartDate == null || order.OrderDate.Date >= request.StartDate.Value.Date) &&
+                        (request.EndDate == null || order.OrderDate.Date <= request.EndDate.Value.Date)
+                     select new { order };
+        var res = new List<AgentOrderListResponse>();
+        if (qOrder.Any())
+        {
+            var qq = qOrder.GroupBy(d => d.order.Code).Select(q => new AgentOrderListResponse
+            {
+                OrderId = q.Select(r => r.order.Id).FirstOrDefault(),
+                Code = q.Select(r => r.order.Code).FirstOrDefault(),
+                OrderDate = q.Select(r => r.order.OrderDate).FirstOrDefault(),
+                OrderStatus = q.Select(r => r.order.Status).FirstOrDefault(),
+                ProductType = q.Select(r => r.order.ProductType).FirstOrDefault(),
+                TotalPrice = q.Select(r => r.order.TotalCost).FirstOrDefault(),
+                CustomerDetails = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => new CustomerData
+                {
+                    Email = d.email,
+                    Name = d.fullname,
+                    PhoneNumber = d.phone
+                }).FirstOrDefault()
+
+            });
+
+            if (!string.IsNullOrEmpty(request.SearchText))
+            {
+                var searchText = request.SearchText.Trim().ToLower();
+
+                qOrder = qOrder.Where(d => d.order.Code.Contains(request.SearchText));
+            }
+
+            if (request.Status is not null)
+            {
+                qOrder = qOrder.Where(d => d.order.Status == request.Status);
+            }
+
+            res = await qq.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).OrderByDescending(d => d.OrderDate).ToListAsync();
+        }
+        return res;
+    }
 
     public async Task<AgentProductProfileResponse> GetAgentProductProfile(int agentId)
     {
@@ -363,15 +606,20 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
             response.Photo = user.Photo;
 
             var query = from hp in _context.HubAgentProducts.Where(s => s.AgentId == agentId)
-                        join p in _context.HubProducts on hp.ProductId equals p.Id
+                        join p in _context.categories on hp.CategoryId equals p.id
                         select new { hp, p };
+
+            var dquery = from hp in _context.HubDigitalProducts.Where(s => s.AgentId == agentId)
+                         join p in _context.Catalogues on hp.CatalogueId equals p.Id
+                         select new { p };
 
             var rQuery = from hp in _context.HubAgentProducts.Where(s => s.AgentId == agentId)
                          join r in _context.HubReviews on hp.Id equals r.ProductId
                          where r.IsDigital == false
                          select new { r };
 
-            response.SellingProducts = await query.Select(d => d.p.Name).Distinct().Take(10).ToListAsync();
+            response.SellingProducts = await query.Select(d => d.p.name).Distinct().Take(10).ToListAsync();
+            response.AnotherSellingProducts = await dquery.Select(d => d.p.Name).Distinct().Take(10).ToListAsync();
             response.ReviewCount = rQuery.Select(r => r.r.ProductId).Count();
             response.MaxRating = rQuery.Sum(r => r.r.Rating) / 100;
 
@@ -502,6 +750,12 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
         }
 
         return response;
+    }
+
+    public async Task<IEnumerable<string>> GetPhysicalProductImages(long productId)
+    {
+        var images = await _context.ProductImages.Where(s => s.ProductId == productId).Select(d => d.ImageUrl).ToListAsync();
+        return images;
     }
 
     public async Task<ProductReviewResponse> GetReviewByProductId(int productId)

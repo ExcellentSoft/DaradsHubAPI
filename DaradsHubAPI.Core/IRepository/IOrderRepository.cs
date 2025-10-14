@@ -10,16 +10,24 @@ public interface IOrderRepository : IGenericRepository<HubOrder>
     Task AddHubOrderTracking(HubOrderTracking model);
     void AddOrderItem(HubOrderItem model);
     Task AddShippingAddress(ShippingAddress model);
+    Task<AdminDashboardMetricResponse> AdminDashboardMetrics();
+    Task<AgentDashboardMetricResponse> AgentDashboardMetrics(int agentId);
+    Task<DailySalesOverviewResponse?> DailySalesOverview();
     Task DeleteCart(int userId, long productId);
     Task DeleteShippingAddress(int userId, long addressId);
+    Task<AgentCustomerMetricsResponse> GetAgentCustomerMetrics(int agentId);
+    Task<List<AgentCustomerOrderResponse>> GetAgentCustomersOrders(AgentCustomerRequest request, int agentId);
     Task<SingleOrderResponse?> GetAgentOrder(string orderCode);
     Task<List<AgentOrderListResponse>> GetAgentOrders(AgentOrderListRequest request, int agentId);
     Task<shopCat?> GetCart(int userId, long productId);
     IQueryable<CartResponse> GetCartsListByUserId(int userId);
     Task<CatalogueInsightResponse> GetCatalogueInsight(int agentId);
+    Task<List<LastFourCustomerRequest>> GetLastCustomerRequests();
     Task<AgentOrderMetricResponse> GetOrderMetrics(int agentId);
     IQueryable<OrderListResponse> GetOrders(string email, OrderListRequest request);
     Task<HubOrderTracking?> GetOrderTracking(string orderCode);
     IQueryable<ShippingAddress> GetShippingAddresses(int userId);
+    Task<IEnumerable<TopPerformingAgentResponse>> TopPerformingAgents();
+    Task<IEnumerable<TopPerformingAgentResponse>> TopPerformingAgents2();
     Task UpdateCart(shopCat model);
 }

@@ -55,7 +55,9 @@ public class Enum
     {
         Active = 1,
         InActive,
-        Delete
+        Delete,
+        Suspended,
+        Blocked
     }
 
     public enum TransactionTypeEnum
@@ -110,6 +112,15 @@ public class Enum
         Approved,
         [Description("Rejected")]
         Rejected
+    }
+    public enum WithdrawalRequestStatus
+    {
+        [Description("Processing")]
+        Processing = 1,
+        [Description("Paid")]
+        Paid,
+        [Description("Failed")]
+        Failed
     }
     public enum ProductRequestTypeEnum
     {

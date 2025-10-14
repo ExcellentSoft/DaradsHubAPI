@@ -4,6 +4,7 @@ using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.Domain.Entities;
+using DaradsHubAPI.Shared.Customs;
 using DaradsHubAPI.Shared.Interface;
 using DaradsHubAPI.Shared.Static;
 using Microsoft.AspNetCore.Http;
@@ -23,6 +24,29 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
         }).ToListAsync();
         return new ApiResponse<IEnumerable<IdNameRecord>> { Data = iProducts, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
     }
+
+    public async Task<ApiResponse<DigitalHubProductResponse>> GetDigitalProduct(long productId)
+    {
+        var product = await _unitOfWork.DigitalProducts.GetSingleWhereAsync(e => e.Id == productId);
+        if (product is null)
+        {
+            return new ApiResponse<DigitalHubProductResponse> { Message = "Product record not found", Status = false, StatusCode = StatusEnum.NoRecordFound };
+        }
+        var response = new DigitalHubProductResponse
+        {
+            Title = product.Title,
+            CatalogueId = product.CatalogueId,
+            Value = product.Value,
+            Description = product.Description,
+            DiscountPrice = product.DiscountPrice,
+            Price = product.Price
+        };
+
+        response.Images = await _unitOfWork.DigitalProducts.GetDigitalProductImages(productId);
+
+        return new ApiResponse<DigitalHubProductResponse> { Data = response, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
+    }
+
     public async Task<ApiResponse> AddDigitalProduct(AddDigitalHubProductRequest model, string email)
     {
         var user = await _unitOfWork.Users.GetSingleWhereAsync(d => d.email == email && d.IsAgent == true);
@@ -35,12 +59,11 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
             Price = model.Price,
             DiscountPrice = model.DiscountPrice,
             DateUpdated = DateTime.Now,
-            AgentId = user!.id,
-            Value = model.Value
+            AgentId = user!.id
         };
         await _unitOfWork.DigitalProducts.Insert(prod);
 
-        if (model.Images.Any())
+        if (model.Images is not null)
         {
             foreach (var image in model.Images)
             {
@@ -58,6 +81,23 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
             }
 
         }
+        if (model.Values.Any())
+        {
+            foreach (var item in model.Values)
+            {
+                var value = new HubDigitalProductValueLog
+                {
+                    ProductValue = item,
+                    AgentId = user!.id,
+                    CatalogueId = model.CatalogueId,
+                    IsAvailable = true,
+                    DateCreated = GetLocalDateTime.CurrentDateTime(),
+                    DateUpdated = GetLocalDateTime.CurrentDateTime(),
+                };
+                _unitOfWork.DigitalProducts.AddHubDigitalProductValue(value);
+            }
+            await _unitOfWork.DigitalProducts.SaveAsync();
+        }
 
         return new ApiResponse("Digital product created successfully.", StatusEnum.Success, true);
     }
@@ -74,10 +114,9 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
         product.Description = model.Description;
         product.Price = model.Price;
         product.DiscountPrice = model.DiscountPrice;
-        product.Value = model.Value;
         product.DateUpdated = DateTime.Now;
 
-        if (model.Images.Any())
+        if (model.Images is not null)
         {
             foreach (var image in model.Images)
             {
@@ -94,9 +133,27 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
                 }
             }
         }
+        if (model.Values.Any())
+        {
+            foreach (var item in model.Values)
+            {
+                var value = new HubDigitalProductValueLog
+                {
+                    ProductValue = item,
+                    AgentId = user!.id,
+                    CatalogueId = model.CatalogueId,
+                    IsAvailable = true,
+                    DateCreated = GetLocalDateTime.CurrentDateTime(),
+                    DateUpdated = GetLocalDateTime.CurrentDateTime(),
+                };
+                _unitOfWork.DigitalProducts.AddHubDigitalProductValue(value);
+            }
+            await _unitOfWork.DigitalProducts.SaveAsync();
+        }
 
         return new ApiResponse("Digital product updated successfully.", StatusEnum.Success, true);
     }
+
     public async Task<ApiResponse<IEnumerable<LandingPageDigitalProductResponse>>> GetLandPageProducts()
     {
         var responses = await _unitOfWork.DigitalProducts.GetLandPageProducts().Take(30).ToListAsync();

@@ -129,7 +129,7 @@ public record CustomerProfileResponse
 
 public record AgentProfileResponse
 {
-    public string UserName { get; set; } = default!;
+    public string FullName { get; set; } = default!;
     public string Email { get; set; } = default!;
     public string PhoneNumber { get; set; } = default!;
     public string Photo { get; set; } = default!;
@@ -140,6 +140,39 @@ public record AgentProfileResponse
     public IEnumerable<VirtualAccountDetails> VirtualAccountDetails { get; set; } = default!;
     public string? BusinessEmail { get; internal set; }
     public string? BusinessName { get; internal set; }
+}
+public record ShortAgentProfileResponse
+{
+    public string FullName { get; set; } = default!;
+    public string PhoneNumber { get; set; } = default!;
+    public string Photo { get; set; } = default!;
+    public string Code { get; set; } = default!;
+    public int TotalProductCount { get; set; }
+    public AgentAddress? Address { get; set; }
+    public DateTime? JoinedDate { get; internal set; }
+    public List<string> SellingProducts { get; internal set; }
+    public List<string> AnotherSellingProducts { get; internal set; }
+    public int ReviewCount { get; internal set; }
+    public int MaxRating { get; internal set; }
+    public string Email { get; internal set; }
+    public string Experience { get; internal set; }
+    public bool? IsPublic { get; internal set; }
+}
+public record ShortCustomerProfileResponse
+{
+    public string FullName { get; set; } = default!;
+    public string PhoneNumber { get; set; } = default!;
+    public string? Photo { get; set; }
+    public string? Email { get; set; }
+    public int CustomerId { get; set; }
+    public decimal? TotalSpending { get; set; }
+    public decimal? WalletBalance { get; set; }
+    public int? Status { get; set; }
+    public bool? IsOnline { get; set; }
+    public AgentAddress? Address { get; set; }
+    public DateTime? JoinedDate { get; internal set; }
+    public int TotalOrderMade { get; internal set; }
+    public string Code { get; internal set; }
 }
 
 public record AgentAddress
@@ -178,6 +211,7 @@ public record AgentProfileRequest
     public string Address { get; set; } = default!;
     public string? BusinessName { get; set; }
     public string? BusinessEmail { get; set; }
+    public string? Experience { get; set; }
     public IFormFile? Photo { get; set; }
 }
 public record ChangePasswordRequest

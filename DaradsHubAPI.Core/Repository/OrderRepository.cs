@@ -3,16 +3,233 @@ using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
+using DaradsHubAPI.Shared.Customs;
+using DaradsHubAPI.Shared.Static;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
 using static DaradsHubAPI.Domain.Enums.Enum;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace DaradsHubAPI.Core.Repository
 {
     public class OrderRepository(AppDbContext _context) : GenericRepository<HubOrder>(_context), IOrderRepository
     {
+        #region Admin Queries
+        public async Task<List<LastFourCustomerRequest>> GetLastCustomerRequests()
+        {
+            var response = await (from req in _context.HubProductRequests
+                                  where req.Status == RequestStatus.Pending
+                                  orderby req.DateCreated descending
+                                  select new LastFourCustomerRequest
+                                  {
+                                      DateCreated = req.DateCreated,
+                                      ProductService = req.CustomerNeed,
+                                      Location = req.Location,
+                                      PreferredDate = req.PreferredDate,
+                                      Quantity = req.Quantity,
+                                      Reference = $"#REQ-{req.Id}",
+                                      RequestId = req.Id,
+                                      Customer = _context.userstb.Where(r => r.id == req.CustomerId).Select(e => new RequestedUser
+                                      {
+                                          FullName = e.fullname,
+                                          Photo = e.Photo
+                                      }).FirstOrDefault(),
+                                      Status = req.Status,
+                                  }).Take(4).ToListAsync();
+            return response;
+        }
+
+        public async Task<IEnumerable<TopPerformingAgentResponse>> TopPerformingAgents2()
+        {
+            var today = DateTime.Now.Date;
+            var yesterday = today.AddDays(-1);
+
+            var query = from item in _context.HubOrderItems
+                        join order in _context.HubOrders on item.OrderCode equals order.Code
+                        join agent in _context.userstb on item.AgentId equals agent.id
+                        where order.OrderDate.Date == today || order.OrderDate.Date == yesterday
+                        select new
+                        {
+                            AgentId = agent.id,
+                            AgentName = agent.fullname,
+                            agent.Photo,
+                            OrderDate = order.OrderDate.Date,
+                            Amount = item.Price * item.Quantity,
+                            order
+                        };
+
+            var agentTrend = await query
+                .GroupBy(x => new { x.AgentId, x.AgentName, x.OrderDate })
+                .Select(g => new
+                {
+                    g.Key.AgentId,
+                    g.Key.AgentName,
+                    g.Key.OrderDate,
+                    Revenue = g.Sum(x => x.Amount),
+                    Orders = g.Select(x => x.order.Code).Distinct().Count(),
+                    Photo = g.Select(r => r.Photo).FirstOrDefault()
+                }).OrderByDescending(w => w.Revenue)
+                .ToListAsync();
+
+            var result = agentTrend
+                .GroupBy(a => new { a.AgentId, a.AgentName })
+                .Select(g => new TopPerformingAgentResponse
+                {
+                    AgentId = g.Key.AgentId,
+                    AgentName = g.Key.AgentName,
+                    OrdersCount = g.Select(d => d.Orders).LastOrDefault(),
+                    Photo = g.Select(d => d.Photo).FirstOrDefault(),
+                    Revenue = g.Where(d => d.OrderDate == today).Sum(d => d.Revenue),
+                    TrendPercentage = g.Where(d => d.OrderDate == yesterday).Sum(d => d.Revenue) > 0
+                        ? Math.Round(((g.Where(d => d.OrderDate == today).Sum(d => d.Revenue) -
+                                      g.Where(d => d.OrderDate == yesterday).Sum(d => d.Revenue)) /
+                                      g.Where(d => d.OrderDate == yesterday).Sum(d => d.Revenue)) * 100, 2)
+                        : 100
+                })
+                .Take(4)
+                .ToList();
+
+            return result;
+
+        }
+
+        public async Task<IEnumerable<TopPerformingAgentResponse>> TopPerformingAgents()
+        {
+            var today = DateTime.UtcNow.Date;
+            var yesterday = today.AddDays(-1);
+
+            var query = await (from item in _context.HubOrderItems
+                               join order in _context.HubOrders on item.OrderCode equals order.Code
+                               join agent in _context.userstb on item.AgentId equals agent.id
+                               where order.OrderDate.Date == today || order.OrderDate.Date == yesterday
+                               group new { item, order } by new { agent.fullname, agent.Photo, agent.id } into g
+                               orderby g.Sum(x => x.item.Quantity) descending
+                               select new TopPerformingAgentResponse
+                               {
+                                   AgentId = g.Key.id,
+                                   AgentName = g.Key.fullname,
+                                   Photo = g.Key.Photo,
+                                   Revenue = g.Sum(x => x.item.Price * x.item.Quantity),
+                                   OrdersCount = g.Select(x => x.order.Code).Distinct().Count(),
+                                   TrendPercentage = g.Where(d => d.order.OrderDate == yesterday).Sum(x => x.item.Price * x.item.Quantity) > 0
+            ? Math.Round(((g.Where(d => d.order.OrderDate == today).Sum(x => x.item.Price * x.item.Quantity) -
+                          g.Where(d => d.order.OrderDate == yesterday).Sum(x => x.item.Price * x.item.Quantity)) /
+                          g.Where(d => d.order.OrderDate == yesterday).Sum(x => x.item.Price * x.item.Quantity)) * 100, 2) : 100
+
+                               }).Take(10).ToListAsync();
+            return query;
+        }
+
+        public async Task<DailySalesOverviewResponse?> DailySalesOverview()
+        {
+            var today = GetLocalDateTime.CurrentDateTime();
+            var query = from item in _context.HubOrderItems
+                        join order in _context.HubOrders on item.OrderCode equals order.Code
+                        join agent in _context.userstb on item.AgentId equals agent.id
+                        where order.OrderDate.Date == today.Date
+                        select new { item, order, agent };
+
+            var response = new DailySalesOverviewResponse
+            {
+
+                DailySalesOverviews = await query.GroupBy(r => new { r.agent.id, r.agent.fullname }).Select(e => new DailySalesOverview
+                {
+                    AgentId = e.Key.id,
+                    AgentName = e.Key.fullname,
+                    // Revenue = Sum of item.Price * item.Quantity
+                    Revenue = e.Sum(x => x.item.Price * x.item.Quantity),
+                    // Orders = number of unique order codes
+                    Orders = e.Select(x => x.order.Code).Distinct().Count()
+                }).ToListAsync(),
+                Date = await query.Select(e => e.order.OrderDate).FirstOrDefaultAsync(),
+                TotalOrderAmount = await query.SumAsync(x => x.item.Price * x.item.Quantity)
+            };
+            return response;
+        }
+
+        public async Task<AdminDashboardMetricResponse> AdminDashboardMetrics()
+        {
+            var metrics = new AdminDashboardMetricResponse();
+
+            var totalWallet = await (from user in _context.userstb
+                                     where user.IsAgent == true
+                                     join wallet in _context.wallettb on user.email equals wallet.UserId
+                                     select wallet).SumAsync(e => e.Balance);
+
+            var totalDigitalProduct = await (from user in _context.userstb
+                                             where user.IsAgent == true
+                                             join dp in _context.HubDigitalProducts on user.id equals dp.AgentId
+                                             select dp).CountAsync();
+
+            var totalPhysicalProduct = await (from user in _context.userstb
+                                              where user.IsAgent == true
+                                              join dp in _context.HubAgentProducts on user.id equals dp.AgentId
+                                              select dp).CountAsync();
+
+            var totalWithdrawn = await _context.HubWithdrawalRequests
+                .Where(e => e.Status == WithdrawalRequestStatus.Paid)
+                .Select(w => w.Amount).SumAsync();
+
+            var orderQuery = from item in _context.HubOrderItems
+                             join order in _context.HubOrders on item.OrderCode equals order.Code
+                             join agent in _context.userstb on item.AgentId equals agent.id
+                             select new { item, order, agent };
+            var today = GetLocalDateTime.CurrentDateTime();
+            var orderdata = new OrderData
+            {
+                TodayOrderAmount = await orderQuery.Where(d => d.order.OrderDate.Date == today.Date).SumAsync(x => x.item.Price * x.item.Quantity),
+                TodayOrdersCount = await orderQuery.Where(d => d.order.OrderDate.Date == today.Date).Select(x => x.order.Code).Distinct().CountAsync()
+            };
+
+            var yesterdayOrderAmount = await orderQuery.Where(d => d.order.OrderDate.Date == today.AddDays(-1).Date).SumAsync(x => x.item.Price * x.item.Quantity);
+
+            var different = yesterdayOrderAmount > 0
+        ? Math.Round(((orderdata.TodayOrderAmount - yesterdayOrderAmount) / yesterdayOrderAmount) * 100, 0) : 100;// default if no data yesterday
+
+            orderdata.PercentageChange = different;
+            metrics.TotalWithdrawn = totalWithdrawn;
+            metrics.AgentRevenueBalance = totalWallet;
+            metrics.ProductsCount = totalDigitalProduct + totalPhysicalProduct;
+            metrics.OrderData = orderdata;
+
+
+            return metrics;
+        }
+
+        public async Task<AgentDashboardMetricResponse> AgentDashboardMetrics(int agentId)
+        {
+            var metrics = new AgentDashboardMetricResponse();
+
+            var totalWallet = await (from user in _context.userstb
+                                     where user.IsAgent == true && user.id == agentId
+                                     join wallet in _context.wallettb on user.email equals wallet.UserId
+                                     select wallet).SumAsync(e => e.Balance);
+
+            var totalWithdrawn = await _context.HubWithdrawalRequests
+                .Where(e => e.Status == WithdrawalRequestStatus.Paid && e.AgentId == agentId)
+                .Select(w => w.Amount).SumAsync();
+
+            var orderQuery = from item in _context.HubOrderItems
+                             where item.AgentId == agentId
+                             join order in _context.HubOrders on item.OrderCode equals order.Code
+                             join agent in _context.userstb on item.AgentId equals agent.id
+                             select new { order };
+
+            var query = from user in _context.userstb
+                        where user.IsAgent == true && user.id == agentId
+                        join r in _context.HubAgentReviews on user.id equals r.AgentId
+                        join u in _context.userstb on r.ReviewById equals u.id
+                        select new { r, u };
+
+            metrics.TotalReviewCount = await query.CountAsync();
+            metrics.AverageRating = query.Select(r => r.r.Rating).Average();
+            metrics.TotalWithdrawn = totalWithdrawn;
+            metrics.AgentRevenueBalance = totalWallet;
+            metrics.OrdersCount = await orderQuery.Select(x => x.order.Code).Distinct().CountAsync();
+
+
+            return metrics;
+        }
+        #endregion
+
         public IQueryable<OrderListResponse> GetOrders(string email, OrderListRequest request)
         {
             var qOrder = from order in _context.HubOrders.Where(e => e.UserEmail == email)
@@ -210,7 +427,12 @@ namespace DaradsHubAPI.Core.Repository
                     OrderStatus = q.Select(r => r.order.Status).FirstOrDefault(),
                     ProductType = q.Select(r => r.order.ProductType).FirstOrDefault(),
                     TotalPrice = q.Select(r => r.order.TotalCost).FirstOrDefault(),
-                    CustomerName = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => d.fullname).FirstOrDefault()
+                    CustomerDetails = _context.userstb.Where(e => e.email == q.Select(r => r.order.UserEmail).FirstOrDefault()).Select(d => new CustomerData
+                    {
+                        Email = d.email,
+                        Name = d.fullname,
+                        PhoneNumber = d.phone
+                    }).FirstOrDefault()
 
                 });
 
@@ -231,6 +453,83 @@ namespace DaradsHubAPI.Core.Repository
             return res;
         }
 
+        public async Task<AgentCustomerMetricsResponse> GetAgentCustomerMetrics(int agentId)
+        {
+            var currentDate = GetLocalDateTime.CurrentDateTime();
+
+            var qOrder = (from item in _context.HubOrderItems
+                          where item.AgentId == agentId
+                          join order in _context.HubOrders on item.OrderCode equals order.Code
+                          select new { order.UserEmail }).Distinct();
+
+            var metrics = new AgentCustomerMetricsResponse();
+            if (qOrder.Any())
+            {
+                metrics = new AgentCustomerMetricsResponse
+                {
+                    TotalCustomer = await qOrder.CountAsync(),
+                    TotalNewCustomer = (from e in qOrder
+                                        join c in _context.userstb on e.UserEmail equals c.email
+                                        where c.regdate != null && c.regdate.Value.Year == currentDate.Year && c.regdate.Value.Month == currentDate.Month
+                                        select c).Count()
+
+                };
+
+
+            }
+
+            var activeChat = (from c in _context.userstb
+                              where c.id == agentId
+                              join m in _context.HubChatMessages on c.id equals m.SenderId
+                              select m).GroupBy(g => g.SenderId);
+
+            metrics.TotalActiveChat = await activeChat.CountAsync();
+            metrics.TotalPendingReplies = activeChat.Where(e => e.Select(w => w.IsRead).FirstOrDefault() == false).Count();
+
+            return metrics;
+        }
+
+        public async Task<List<AgentCustomerOrderResponse>> GetAgentCustomersOrders(AgentCustomerRequest request, int agentId)
+        {
+            var today = GetLocalDateTime.CurrentDateTime();
+            var agentCustomerOrders = (from c in _context.HubChatConversations
+                                       where c.AgentId == agentId
+                                       join m in _context.HubChatMessages on c.Id equals m.ConversationId
+                                       orderby m.SentAt descending
+                                       where (request.StartDate == null || m.SentAt.Date >= request.StartDate.Value.Date) &&
+                                      (request.EndDate == null || m.SentAt.Date <= request.EndDate.Value.Date)
+                                       select new { m, c }).GroupBy(g => g.c.Id).Select(w => new AgentCustomerOrderResponse
+                                       {
+                                           ConversationId = w.Key,
+                                           LastMessage = w.Select(r => new LastCustomerMessage
+                                           {
+                                               Content = r.m.Content,
+                                               LastInteractions = CustomizeCodes.GetPeriodDifference(r.m.SentAt, today),
+                                               SentAt = r.m.SentAt,
+                                               CustomerId = r.c.CustomerId,
+                                               Customer = _context.userstb.Where(e => e.id == r.c.CustomerId).Select(e => new CustomerDetail
+                                               {
+                                                   FullName = e.fullname,
+                                                   Photo = e.Photo,
+                                                   isOnline = e.IsOnline
+                                               }).FirstOrDefault()
+                                           }).OrderBy(e => e.SentAt).LastOrDefault(),
+                                           CustomerOrderDetail = (from user in _context.userstb
+                                                                  where user.id == w.Select(e => e.c.CustomerId).FirstOrDefault()
+                                                                  join order in _context.HubOrders on user.email equals order.UserEmail
+                                                                  select order).GroupBy(x => new { x.Code, x.Id }).Select(c => new CustomerOrderDetail
+                                                                  {
+                                                                      OrderCode = c.Key.Code,
+                                                                      OrderCount = c.Count(),
+                                                                      OrderId = c.Key.Id
+                                                                  }).FirstOrDefault()
+                                       });
+
+            var res = await agentCustomerOrders.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).ToListAsync();
+
+            return res;
+        }
+
         public async Task<SingleOrderResponse?> GetAgentOrder(string orderCode)
         {
             var response = await (from order in _context.HubOrders
@@ -241,6 +540,7 @@ namespace DaradsHubAPI.Core.Repository
                                       OrderDate = order.OrderDate,
                                       OrderId = order.Id,
                                       OrderStatus = order.Status,
+                                      DeliveryMethod = order.DeliveryMethodType.GetDescription(),
                                       TotalPrice = order.TotalCost,
                                       ProductDetails = order.ProductType == "Digital" ? (from item in _context.HubOrderItems.Where(d => d.OrderCode == order.Code)
                                                                                          join product in _context.HubDigitalProducts on item.ProductId equals product.Id
@@ -262,10 +562,30 @@ namespace DaradsHubAPI.Core.Repository
                                                               Price = item.Price,
                                                               Quantity = item.Quantity
 
-                                                          }).ToList()
+                                                          }).ToList(),
 
-
+                                      CustomerOrderRecord = (from user in _context.userstb
+                                                             where order.UserEmail == user.email
+                                                             from address in _context.ShippingAddresses
+                                                             where address.Id == order.ShippingAddressId
+                                                             select new CustomerOrderRecord
+                                                             {
+                                                                 Address = address.Address,
+                                                                 City = address.City,
+                                                                 Email = user.email,
+                                                                 PhoneNumber = user.phone
+                                                             }).FirstOrDefault(),
+                                      OrderActivitiesRecords = (from track in _context.HubOrderTracking
+                                                                where track.OrderCode == order.Code
+                                                                select new OrderActivitiesRecord
+                                                                {
+                                                                    DateCreated = track.DateCreated,
+                                                                    Description = track.Description,
+                                                                    Status = track.Status
+                                                                }).ToList()
                                   }).FirstOrDefaultAsync();
+
+
             return response;
         }
     }

@@ -74,4 +74,40 @@ namespace DaradsHubAPI.Core.Model.Request
         public int PageNumber { get; set; } = 1;
         public NotificationType? NotificationType { get; set; }
     }
+
+    public record MessageListRequest
+    {
+        public int PageSize { get; set; } = 10;
+        public int PageNumber { get; set; } = 1;
+        public long ConversationId { get; set; }
+    }
+    public record ChatMessageResponse
+    {
+        public long ConversationId { get; set; }
+        public SenderDetails Sender { get; set; } = default!;
+        public string Content { get; set; } = default!;
+        public DateTime SentAt { get; set; }
+        public bool IsRead { get; set; }
+        public long MessageId { get; internal set; }
+    }
+    public record ViewChatMessagesResponse
+    {
+        public long ConversationId { get; set; }
+        public int TotalPendingCount { get; set; }
+        public LastMessage? LastMessage { get; set; }
+    }
+    public record LastMessage
+    {
+        public string? Content { get; set; }
+        public DateTime SentAt { get; set; }
+        public SenderDetails? Sender { get; set; }
+    }
+    public record SenderDetails
+    {
+        public string? FullName { get; set; }
+        public string? Photo { get; set; }
+        public int userId { get; set; }
+        public bool? IsAgent { get; internal set; }
+        public string? PhoneNumber { get; internal set; }
+    }
 }

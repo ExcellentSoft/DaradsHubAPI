@@ -47,9 +47,11 @@ public class userstb
     public string VpayBankName { get; set; }
     public string BusinessName { get; set; }
     public string BusinessEmail { get; set; }
+    public string AgentExperience { get; set; }
     public bool? IsVPayCreated { get; set; }
     public DateTime? VpayCreatedDate { get; set; }
     public bool? IsAgent { get; set; }
+    public bool? IsOnline { get; set; }
     public bool? IsPublicAgent { get; set; }
 }
 

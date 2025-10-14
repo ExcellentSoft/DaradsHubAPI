@@ -41,7 +41,24 @@ public class AddAgentHubProductRequest
     public decimal DiscountPrice { get; set; }
     public bool IsFreeShipping { get; set; }
     public string? EstimateDeliveryTime { get; set; }
-    public IEnumerable<IFormFile> Images { get; set; } = default!;
+    public IEnumerable<IFormFile>? Images { get; set; }
+    public int Stock { get; set; }
+}
+
+public class AgentHubProductResponse
+{
+    public string? Caption { get; set; }
+    public long ProductId { get; set; }
+    public int CategoryId { get; set; }
+    public long SubCategoryId { get; set; }
+    public string? Description { get; set; }
+    public string? SKU { get; set; }
+    public decimal Price { get; set; }
+    public decimal DeliveryPrice { get; set; }
+    public decimal DiscountPrice { get; set; }
+    public bool IsFreeShipping { get; set; }
+    public string? EstimateDeliveryTime { get; set; }
+    public IEnumerable<string> Images { get; set; } = default!;
     public int Stock { get; set; }
 }
 
@@ -60,6 +77,42 @@ public class CreateHubProductRequest
     public int CategoryId { get; set; }
 }
 
+public class CreateWithdrawalRequest
+{
+    public decimal Amount { get; set; }
+    public string Bank { get; set; } = default!;
+    public string AccountNumber { get; set; } = default!;
+    public string AccountName { get; set; } = default!;
+}
+
+public class WithdrawalRequestResponse
+{
+    public long Id { get; set; }
+    public decimal Amount { get; set; }
+    public DateTime DateCreated { get; set; }
+    public string RefNumber { get; set; } = default!;
+    public string Status { get; set; } = default!;
+    public string? AgentName { get; internal set; }
+    public WithdrawalRequestStatus StatusEnum { get; internal set; }
+}
+
+public class SingleWithdrawalRequestResponse
+{
+    public long Id { get; set; }
+    public decimal Amount { get; set; }
+    public DateTime DateCreated { get; set; }
+    public string RefNumber { get; set; } = default!;
+    public string Status { get; set; } = default!;
+    public string? AgentName { get; internal set; }
+    public string? BankName { get; internal set; }
+    public string? AccountName { get; internal set; }
+    public string? AccountNumber { get; internal set; }
+}
+public record ChangeWithdrawalRequestStatus
+{
+    public long WithdrawalRequestId { get; set; }
+    public WithdrawalRequestStatus Status { get; set; }
+}
 public class UpdateAgentHubProductRequest : AddAgentHubProductRequest
 {
     public long Id { get; set; }
@@ -72,7 +125,18 @@ public class AddDigitalHubProductRequest
     public decimal Price { get; set; }
     public decimal DiscountPrice { get; set; }
     public string? Description { get; set; }
-    public IEnumerable<IFormFile> Images { get; set; } = default!;
+    public IEnumerable<IFormFile>? Images { get; set; }
+    public IEnumerable<string> Values { get; set; } = default!;
+}
+
+public class DigitalHubProductResponse
+{
+    public string Title { get; set; } = default!;
+    public long CatalogueId { get; set; }
+    public decimal Price { get; set; }
+    public decimal DiscountPrice { get; set; }
+    public string? Description { get; set; }
+    public IEnumerable<string> Images { get; set; } = default!;
     public string? Value { get; set; }
 }
 
@@ -95,9 +159,9 @@ public record AgentProductsResponse
     public int Orders { get; set; }
     public DateTime UpdatedDate { get; set; }
     public int Stock { get; set; }
-    public string? ImageUrl { get; set; }
     public string Caption { get; set; } = default!;
     public string? Description { get; internal set; }
+    public IEnumerable<string> ImageUrls { get; set; } = Enumerable.Empty<string>();
 }
 
 

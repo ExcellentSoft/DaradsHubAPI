@@ -23,7 +23,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public virtual DbSet<subscriptionplan> subscriptionplan { get; set; }
     public virtual DbSet<GiftCardOrders> GiftCardOrders { get; set; }
     public virtual DbSet<userstb> userstb { get; set; }
-    public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<User> AspNetUsers { get; set; }
     public virtual DbSet<wallettb> wallettb { get; set; }
     public virtual DbSet<Withdrawtb> Withdrawtb { get; set; }
     public virtual DbSet<Logapp_error> Logapp_error { get; set; }
@@ -85,8 +85,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public virtual DbSet<HubAgentProfile> HubAgentProfiles { get; set; }
     public virtual DbSet<Catalogue> Catalogues { get; set; }
     public virtual DbSet<CatalogueMapping> CatalogueMappings { get; set; }
+    public virtual DbSet<CategoryMapping> CategoryMappings { get; set; }
     public virtual DbSet<HubDigitalProduct> HubDigitalProducts { get; set; }
+    public virtual DbSet<HubDigitalProductValueLog> HubDigitalProductValueLogs { get; set; }
     public virtual DbSet<DigitalProductImages> DigitalProductImages { get; set; }
+    public virtual DbSet<SuspendedAgent> SuspendedAgents { get; set; }
+    public virtual DbSet<BlockedAgent> BlockedAgents { get; set; }
     public virtual DbSet<ProductRequestImages> ProductRequestImages { get; set; }
     public virtual DbSet<HubReview> HubReviews { get; set; }
     public virtual DbSet<HubAgentReview> HubAgentReviews { get; set; }
@@ -94,7 +98,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public virtual DbSet<HubOrderItem> HubOrderItems { get; set; }
     public virtual DbSet<HubOrderTracking> HubOrderTracking { get; set; }
     public virtual DbSet<HubProductRequest> HubProductRequests { get; set; }
+    public virtual DbSet<HubWithdrawalRequest> HubWithdrawalRequests { get; set; }
     public virtual DbSet<HubNotification> HubNotifications { get; set; }
     public virtual DbSet<HubFAQ> HubFAQs { get; set; }
+    public virtual DbSet<HubChatConversation> HubChatConversations { get; set; }
+    public virtual DbSet<HubChatMessage> HubChatMessages { get; set; }
+    public virtual DbSet<HubAgentProductSetting> HubAgentProductSettings { get; set; }
 
 }

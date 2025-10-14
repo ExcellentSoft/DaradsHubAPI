@@ -42,6 +42,7 @@ public sealed record CustomerLoginResponse
     public string PhoneNumber { get; set; }
     public bool IsVerify { get; set; }
     public bool Is2FA { get; set; }
+    public bool IsVerifyCodeRequire { get; set; }
     public string Photo { get; set; }
     public string Token { get; set; }
     public long Expires { get; set; }
@@ -66,6 +67,12 @@ public sealed record VendorDetails
 public record LoginRequest : ForgetPasswordRequest
 {
     public string Password { get; set; } = default!;
+}
+
+public record AdminLoginRequest
+{
+    public string PhoneNumber { get; set; } = default!;
+    public string PIN { get; set; } = default!;
 }
 
 public record ForgetPasswordRequest

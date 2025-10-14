@@ -39,4 +39,7 @@ public interface IProductService
     Task<ApiResponse<SingleCustomerRequestResponse>> GetCustomerRequest(long requestId);
     Task<ApiResponse> ChangeRequestStatus(ChangeRequestStatus request);
     Task<ApiResponse<IEnumerable<AgentReview>>> GetAgentReviews(AgentReviewRequest request, int agentId);
+    Task<ApiResponse<AgentHubProductResponse>> GetPhysicalProduct(long productId);
+    Task<ApiResponse<CustomerRequestMetricResponse>> GetCustomerRequestMetrics(long agentId);
+    Task<ApiResponse<IEnumerable<IdNameRecord>>> GetAgentCategories(string? searchText, int agentId);
 }

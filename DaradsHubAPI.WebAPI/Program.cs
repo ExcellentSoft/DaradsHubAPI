@@ -1,6 +1,7 @@
 using DaradsHubAPI.Core;
 using DaradsHubAPI.Infrastructure;
 using DaradsHubAPI.Shared;
+using DaradsHubAPI.WebAPI.ChatHelper;
 using DaradsHubAPI.WebAPI.Extensions;
 using DaradsHubAPI.WebAPI.Middleware;
 using Microsoft.AspNetCore.Mvc;
@@ -11,16 +12,19 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5174",
+            "http://localhost:5175",
+            "http://localhost:5173",
+            "https://darads-hub-web.vercel.app", "https://darad-hub-web-agent.vercel.app")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
 
-    options.AddDefaultPolicy(
-
-           builder => builder.WithOrigins("http://localhost:3000")
-                 .AllowAnyHeader()
-                 .AllowAnyOrigin()
-                 .AllowAnyHeader()
-                 .AllowAnyMethod()
-                 );
+    });
 });
+
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("mycon")!));
 
@@ -39,6 +43,8 @@ builder.Services.AddApiVersioning(Options =>
 
 });
 
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 
@@ -46,13 +52,13 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
 app.UseRouting();
 app.UseMiddleware<ExceptionMiddleware>();
-app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseStatusCodePages();
 app.UseAuthorization();
+
 app.MapAreaControllerRoute(
     name: "AdminArea",
     areaName: "Admin",
@@ -69,5 +75,6 @@ app.MapAreaControllerRoute(
     pattern: "Agent/{controller}/{action}/{id?}");
 
 app.MapControllers();
+app.MapHub<ChatHub>("/chatHub").RequireCors("AllowFrontend");
 
 app.Run();

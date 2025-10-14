@@ -397,3 +397,10 @@ public class SourceDetails
     public string SourceBank { get; set; }
     public string Narration { get; set; }
 }
+
+public class AgentBalanceResponse
+{
+    public decimal? Balance { get; set; }
+    public DateTime? LastUpdate { get; set; }
+}
+

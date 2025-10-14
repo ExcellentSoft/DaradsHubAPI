@@ -1,4 +1,5 @@
 ﻿using DaradsHubAPI.Core.IRepository;
+using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.Domain.Entities;
@@ -12,8 +13,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Repository;
@@ -58,7 +61,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
 
             var scope = _serviceProvider.GetRequiredService<IEmailService>();
             string message = $"Hello {request.FullName}, kindly utilize the code {otp} to finalize the registration process. We're excited to welcome you onboard!<br/><br/>";
-            scope.SendMail(request.Email, "Email Verification", message, "Darads", useTemplate: true);
+            await scope.SendMail(request.Email, "Email Verification", message, "Darads", useTemplate: true);
 
             return new(true, message = $"Success! Kindly check your email and use the provided code to finalize your registration.", uCustomer.Id);
         }
@@ -86,13 +89,32 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         if (!await _userManager.CheckPasswordAsync(user, request.Password))
             return new(false, "Unauthorized.", null);
 
+        var customer = await _context.userstb.AsNoTracking().Where(us => us.userid == user.Id).FirstOrDefaultAsync();
+        if (customer is null)
+            return new(false, "User record not found.", null);
+
         if (!user.EmailConfirmed)
-            return new(false, "Your email address has not been verified. Please verify it.", new CustomerLoginResponse { UserId = user.Id });
+        {
+            var otp = CustomizeCodes.GenerateOTP(6);
+            await SendOTPCodeAsync(new SendOtpRequest
+            {
+                Code = otp,
+                UserId = customer.userid,
+                UserEmail = customer.email,
+                Purpose = OtpVerificationPurposeEnum.EmailVerification
+            });
+            var scope = _serviceProvider.GetRequiredService<IEmailService>();
+            string message = $"Hello {customer.username}, kindly utilize the code {otp} to finalize the registration process. We're excited to welcome you onboard!" +
+                "<br/><br/>If you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.<br/><br/>";
+            await scope.SendMail(customer.email, "Email Verification", message, $"Darads", useTemplate: true);
+
+            return new(false, "Your email address has not been verified. Please verify it.", new CustomerLoginResponse { UserId = user.Id, IsVerifyCodeRequire = true });
+        }
 
         if (user.Status == EntityStatusEnum.InActive || user.Status == EntityStatusEnum.Delete)
             return new(false, "Your has been deactivated. Kindly contact admin.", null);
 
-        var customer = await _context.userstb.AsNoTracking().Where(us => us.userid == user.Id).FirstOrDefaultAsync();
+
         if (user.Is_customer.GetValueOrDefault() != 1 && user.Is_admin.GetValueOrDefault() != 1)
         {
             //is a agent
@@ -164,6 +186,82 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
             return new(false, $"Unable to login, please try again later.", null);
         }
     }
+
+    public async Task<(bool status, string message, CustomerLoginResponse? cresponse)> LoginAdmin(AdminLoginRequest request)
+    {
+        var aUser = await _context.userstb.Where(d => d.phone == request.PhoneNumber).FirstOrDefaultAsync();
+
+        if (aUser is null)
+            return new(false, "User record not found, check and try again.", null);
+        var user = await _userManager.Users.FirstOrDefaultAsync(d => d.UserName == aUser.username);
+        if (user is null)
+            return new(false, "User record not found, check and try again.", null);
+        if (!await _userManager.CheckPasswordAsync(user!, request.PIN))
+            return new(false, "Unauthorized.", null);
+
+        try
+        {
+            var signInResult = await _signInManager.PasswordSignInAsync(user, request.PIN, false, true);
+            if (!signInResult.Succeeded)
+            {
+                if (signInResult.IsLockedOut)
+                {
+                    user.LockoutEnd = DateTime.MaxValue;
+                    await _userManager.UpdateAsync(user);
+                    return new(false, "Your account has been locked. Kindly initiate a password reset to unlock your account.", null);
+                }
+                else
+                {
+                    int maxAttempts = _userManager.Options.Lockout.MaxFailedAccessAttempts;
+                    int failedAttempts = await _userManager.GetAccessFailedCountAsync(user);
+                    if (maxAttempts - failedAttempts == 0)
+                    {
+                        user.LockoutEnabled = true;
+                        user.LockoutEnd = DateTime.MaxValue;
+                        await _userManager.UpdateAsync(user);
+
+                        return new(false, "Your account has been locked. Kindly initiate a password reset to unlock your account.", null);
+                    }
+
+                    return new(false, $"Invalid login credentials.You have {maxAttempts - failedAttempts} attempts left.", null);
+                }
+            }
+
+            user.LockoutEnabled = false;
+            user.LockoutEnd = null;
+            user.AccessFailedCount = 0;
+            var lockoutResponse = await _userManager.UpdateAsync(user);
+            var lifeTime = _optionsSnapshot.Lifetime;
+            var expires = DateTimeOffset.Now.AddMinutes(Convert.ToDouble(lifeTime));
+            var token = await CreateToken(user, aUser!.id);
+
+            var response = new CustomerLoginResponse
+            {
+                UserId = user.Id,
+                IsCustomer = user.Is_customer,
+                IsAgent = user.Is_agent,
+                IsAdmin = user.Is_admin,
+                UserIdInt = aUser.id,
+                Email = user.Email,
+                Expires = expires.ToUnixTimeSeconds(),
+                ExpiresTime = expires,
+                Name = aUser.fullname,
+                Token = token,
+                Photo = aUser.Photo,
+                Is2FA = user.TwoFactorEnabled,
+                IsVerify = aUser.status == 1,
+                PhoneNumber = aUser.phone
+            };
+            //Send Message to Customer: 
+            return new(true, "Login was successful.", response);
+        }
+        catch (Exception)
+        {
+            return new(false, $"Unable to login, please try again later.", null);
+        }
+    }
+
+
     public async Task<(bool status, string message)> ResendEmailVerificationCode(string userId)
     {
         var model = await (from customer in _context.userstb.Where(vc => vc.userid == userId)
@@ -182,7 +280,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         var scope = _serviceProvider.GetRequiredService<IEmailService>();
         string message = $"Hello {model.customer.username}, kindly utilize the code {otp} to finalize the registration process. We're excited to welcome you onboard!" +
             "<br/><br/>If you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.<br/><br/>";
-        scope.SendMail(model.customer.email, "Email Verification", message, $"Darads", useTemplate: true);
+        await scope.SendMail(model.customer.email, "Email Verification", message, $"Darads", useTemplate: true);
 
         return new(true, "Success! Please check your email and use the provided code.");
     }
@@ -261,7 +359,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         string message = $"Hello {customer!.username}, kindly utilize the code {otp} to reset your password." +
             "<br/><br/>If you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.";
 
-        scope.SendMail(user.Email!, "Forget password code Verification", message, "Darads");
+        await scope.SendMail(user.Email!, "Forget password code Verification", message, "Darads");
 
         return new(true, $"Success! Kindly check your email and use the provided code to finalize your reset password.", user.Id);
     }
@@ -323,7 +421,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         var scope = _serviceProvider.GetRequiredService<IEmailService>();
         string message = $"Hello {model.customer.username}, kindly utilize the code {otp} to finalize your reset password." +
             "<br/><br/>If you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.<br/><br/>";
-        scope.SendMail(model.customer.email, "Email Verification", message, $"Darads", useTemplate: true);
+        await scope.SendMail(model.customer.email, "Email Verification", message, $"Darads", useTemplate: true);
 
         return new(true, "Success! Kindly check your email and use the provided code to finalize your reset password.");
     }
@@ -383,6 +481,62 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
 
         return new(true, "Customer profile fetched successfully.", response);
     }
+    public async Task<(bool status, string message, CustomerProfileResponse? res)> GetAdminProfile(string email)
+    {
+        var customerUser = await _context.userstb.FirstOrDefaultAsync(us => us.email == email);
+        if (customerUser is null)
+            return new(false, "Admin record not found.", null);
+
+        var boldd = await _context.CustomerVirtualAccounts.Where(c => c.UserId == customerUser.id).FirstOrDefaultAsync();
+
+        decimal walletBalance = await _context.wallettb.Where(cw => cw.UserId == email).Select(bl => bl.Balance).FirstOrDefaultAsync() ?? 0m;
+
+        var virtualAccts = new List<VirtualAccountDetails>();
+        if (string.IsNullOrEmpty(customerUser.VpayAccountName) && boldd is null)
+        {
+            virtualAccts = [];
+        }
+        else
+        {
+            var vboldd = new VirtualAccountDetails();
+            var vpay = new VirtualAccountDetails();
+            if (boldd is not null)
+            {
+                vboldd = new VirtualAccountDetails
+                {
+                    AccountName = boldd.AcctountName,
+                    AccountNumber = boldd.AcctountNumber,
+                    BankName = boldd.BankName
+                };
+                virtualAccts.Add(vboldd);
+            }
+            if (!string.IsNullOrEmpty(customerUser.VpayAccountName))
+            {
+                vpay = new VirtualAccountDetails
+                {
+                    AccountName = customerUser.VpayAccountName,
+                    AccountNumber = customerUser.VpayAccountNumber,
+                    BankName = customerUser.VpayBankName
+                };
+                virtualAccts.Add(vpay);
+            }
+        }
+
+        var response = new CustomerProfileResponse
+        {
+            Email = email,
+            FullName = customerUser.fullname,
+            PhoneNumber = customerUser.phone,
+            Photo = customerUser.Photo,
+            VirtualAccountDetails = virtualAccts,
+            WalletBalance = walletBalance,
+            UserIdInt = customerUser.id,
+            UserId = customerUser.userid,
+            Address = _context.ShippingAddresses.Where(d => d.CustomerId == customerUser.id).Select(d => d.Address).FirstOrDefault()
+        };
+
+        return new(true, "Admin profile fetched successfully.", response);
+    }
     public async Task<(bool status, string message, AgentProfileResponse? res)> GetAgentProfile(string email)
     {
         var customerUser = await _context.userstb.FirstOrDefaultAsync(us => us.email == email);
@@ -427,7 +581,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         var response = new AgentProfileResponse
         {
             Email = email,
-            UserName = customerUser.username,
+            FullName = customerUser.fullname,
             PhoneNumber = customerUser.phone,
             Photo = customerUser.Photo,
             BusinessEmail = customerUser.BusinessEmail,
@@ -523,6 +677,35 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
             return new(false, errorMessage ?? "");
         }
     }
+    public async Task<DashboardMetricsResponse> DashboardMetrics(string email)
+    {
+        var response = new DashboardMetricsResponse
+        {
+            ActiveOrderCount = await _context.HubOrders.Where(r => r.UserEmail == email).CountAsync(),
+            WalletBalance = await _context.wallettb.Where(e => e.UserId == email).Select(r => r.Balance).FirstOrDefaultAsync()
+        };
+
+        return response;
+    }
+
+    public async Task<User?> GetAppUser(string email)
+    {
+        return await _userManager.Users.FirstOrDefaultAsync(s => s.Email == email);
+    }
+
+    public async Task<List<string?>> GetAppUsersEmails(bool isCustomer, bool isAgent)
+    {
+        int _agent = isAgent ? 1 : 0;
+        int _customer = isCustomer ? 1 : 0;
+        return await _userManager.Users.AsNoTracking().Where(e => e.Is_agent == _agent || e.Is_customer == _customer).Select(d => d.Email).Take(50).ToListAsync();
+    }
+
+    public async Task AddAgentReview(HubAgentReview model)
+    {
+        _context.HubAgentReviews.Add(model);
+        await _context.SaveChangesAsync();
+    }
+
     public async Task<(bool status, string message, string? userId)> CreateAgent(CreateAgentRequest request)
     {
         try
@@ -559,7 +742,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
 
             var scope = _serviceProvider.GetRequiredService<IEmailService>();
             string message = $"Hello {request.FullName}, kindly utilize the code {otp} to finalize the registration process. We're excited to welcome you onboard!<br/><br/>";
-            scope.SendMail(request.Email, "Email Verification", message, "Darads", useTemplate: true);
+            await scope.SendMail(request.Email, "Email Verification", message, "Darads", useTemplate: true);
 
             return new(true, message = $"Success! Kindly check your email and use the provided code to finalize your registration.", uCustomer.Id);
        
@@ -567,6 +750,116 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         catch (Exception)
         {
             return new(false, "Unable to register, please try again later.", null);
+        }
+    }
+    public async Task BlockAgent(BlockedAgent model)
+    {
+        _context.BlockedAgents.Add(model);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task ClearSuspendBlockRecord(int agentId)
+    {
+        await _context.SuspendedAgents.Where(s => s.UserId == agentId).ExecuteDeleteAsync();
+        await _context.BlockedAgents.Where(s => s.AgentId == agentId).ExecuteDeleteAsync();
+    }
+
+    public async Task SuspendedAgent(SuspendedAgent model)
+    {
+        _context.SuspendedAgents.Add(model);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<(bool status, string message)> AddAgentByAdmin(AddAgentRequest request, string photoUrl)
+    {
+        try
+        {
+            var uCustomer = request.ToUser();
+            var createUser = await _userManager.CreateAsync(uCustomer, request.Password);
+            if (!createUser.Succeeded)
+            {
+                var errors = createUser.Errors.Select(x => x.Description);
+                return new(false, $"Unable to register at this time. {string.Join(" ", errors)}");
+            }
+
+            var agent = request.ToAgent(uCustomer.Id, photoUrl);
+            await _context.userstb.AddAsync(agent);
+
+            var walletCode = $"Wal-{CustomizeCodes.GetCode()}";
+            var customerWallet = request.ToCustomerWallet(walletCode);
+            await _context.wallettb.AddAsync(customerWallet);
+
+            await _context.SaveChangesAsync();
+
+            bool canSellDigitalProduct = false;
+            bool canSellPhysicalProduct = false;
+
+            if (request.CataloguesIds is not null)
+            {
+                await _context.CatalogueMappings.Where(e => e.AgentId == agent.id).ExecuteDeleteAsync();
+
+                foreach (var id in request.CataloguesIds)
+                {
+                    var map = new CatalogueMapping
+                    {
+                        AgentId = agent.id,
+                        CatalogueId = id
+                    };
+                    _context.CatalogueMappings.Add(map);
+                }
+                canSellDigitalProduct = true;
+                await _context.SaveChangesAsync();
+            }
+
+            if (request.CategoriesIds is not null)
+            {
+                await _context.CategoryMappings.Where(e => e.AgentId == agent.id).ExecuteDeleteAsync();
+
+                foreach (var id in request.CategoriesIds)
+                {
+                    var map = new CategoryMapping
+                    {
+                        AgentId = agent.id,
+                        CategoryId = id
+                    };
+                    _context.CategoryMappings.Add(map);
+                }
+                canSellPhysicalProduct = true;
+                await _context.SaveChangesAsync();
+            }
+
+            var settings = await _context.HubAgentProductSettings.FirstOrDefaultAsync(s => s.AgentId == agent.id);
+            if (settings is null)
+            {
+                settings = new HubAgentProductSetting
+                {
+                    CanSellDigitalProduct = canSellDigitalProduct,
+                    CanSellPhysicalProduct = canSellPhysicalProduct,
+                    DateCreated = GetLocalDateTime.CurrentDateTime(),
+                    AgentId = agent.id
+                };
+
+                _context.HubAgentProductSettings.Add(settings);
+            }
+            else
+            {
+                settings.CanSellDigitalProduct = canSellDigitalProduct;
+                settings.CanSellPhysicalProduct = canSellPhysicalProduct;
+            }
+            await _context.SaveChangesAsync();
+
+            var scope = _serviceProvider.GetRequiredService<IEmailService>();
+            string message = $"Hello {request.FullName}, Your account has been successfully created. You can log in using the following credentials: <br/><br/>" +
+                $"Email : {request.Email}" +
+                $"Password : {request.Password}";
+
+            await scope.SendMail(request.Email, "Account Creation", message, "Darads", useTemplate: true);
+
+            return new(true, message = $"Success! Agent created successfully.");
+        }
+        catch (Exception)
+        {
+            return new(false, "Unable to register, please try again later.");
         }
     }
 
@@ -595,6 +888,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
                            .SetProperty(s => s.fullname, request.FullName)
                            .SetProperty(s => s.BusinessName, request.BusinessName)
                            .SetProperty(s => s.BusinessEmail, request.BusinessEmail)
+                           .SetProperty(s => s.AgentExperience, request.Experience)
                            .SetProperty(s => s.Photo, string.IsNullOrEmpty(imagePath) ? agentUser.Photo : imagePath)
                            .SetProperty(s => s.ModifiedDate, DateTime.Now));
         var address = await _context.ShippingAddresses.FirstOrDefaultAsync(d => d.CustomerId == agentUser.id);

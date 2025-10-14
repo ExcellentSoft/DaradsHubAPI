@@ -23,6 +23,7 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         }
         return query;
     }
+
     public async Task<Catalogue> GetCatalogue(long catalogueId)
     {
         var catalogue = await _context.Catalogues.Where(r => r.Id == catalogueId).FirstOrDefaultAsync();
@@ -30,10 +31,21 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         return catalogue ?? new Catalogue();
     }
 
+    public async Task<HubDigitalProductValueLog> GetDigitalProductValue(long catalogueId, int agentId)
+    {
+        var value = await _context.HubDigitalProductValueLogs.Where(r => r.CatalogueId == catalogueId && r.AgentId == agentId && r.IsAvailable == true).FirstOrDefaultAsync();
+
+        return value ?? new HubDigitalProductValueLog();
+    }
+
     public async Task AddHubDigitalProductImages(DigitalProductImages productImages)
     {
         _context.DigitalProductImages.Add(productImages);
         await SaveAsync();
+    }
+    public void AddHubDigitalProductValue(HubDigitalProductValueLog value)
+    {
+        _context.HubDigitalProductValueLogs.Add(value);
     }
 
     public IQueryable<LandingPageDigitalProductResponse> GetLandPageProducts()
@@ -52,6 +64,12 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
                      });
         return query;
     }
+    public async Task<IEnumerable<string>> GetDigitalProductImages(long productId)
+    {
+        var images = await _context.DigitalProductImages.Where(s => s.ProductId == productId).Select(d => d.ImageUrl).ToListAsync();
+        return images;
+    }
+
 
     public IQueryable<LandingPageDigitalProductResponse> GetPublicLandPageProducts()
     {
@@ -81,6 +99,7 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         {
             response.BusinessName = user.BusinessName;
             response.FullName = user.fullname;
+            response.PhoneNumber = user.phone;
             response.IsOnline = true;
             response.IsVerify = true;
             response.AgentId = user.id;
@@ -89,12 +108,16 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
             var query = from hp in _context.HubDigitalProducts.Where(s => s.AgentId == agentId)
                         join p in _context.Catalogues on hp.CatalogueId equals p.Id
                         select new { p };
+            var dquery = from hp in _context.HubAgentProducts.Where(s => s.AgentId == agentId)
+                         join p in _context.categories on hp.CategoryId equals p.id
+                         select new { hp, p };
+
 
             var rQuery = from hp in _context.HubDigitalProducts.Where(s => s.AgentId == agentId)
                          join r in _context.HubReviews on hp.Id equals r.ProductId
                          where r.IsDigital == true
                          select new { r };
-
+            response.AnotherSellingProducts = await dquery.Select(d => d.p.name).Distinct().Take(10).ToListAsync();
             response.SellingProducts = await query.Select(d => d.p.Name).Distinct().Take(10).ToListAsync();
             response.ReviewCount = await rQuery.Select(r => r.r).CountAsync();
             response.MaxRating = await rQuery.SumAsync(r => r.r.Rating) / 100;
@@ -125,6 +148,7 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         {
             response.BusinessName = user.BusinessName;
             response.FullName = user.fullname;
+            response.PhoneNumber = user.phone;
             response.IsOnline = true;
             response.IsVerify = true;
             response.AgentId = user.id;
@@ -134,11 +158,17 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
                         join p in _context.Catalogues on hp.CatalogueId equals p.Id
                         select new { p };
 
+            var dquery = from hp in _context.HubAgentProducts.Where(s => s.AgentId == agentId)
+                         join p in _context.categories on hp.CategoryId equals p.id
+                         select new { hp, p };
+
+
             var rQuery = from hp in _context.HubDigitalProducts.Where(s => s.AgentId == agentId)
                          join r in _context.HubReviews on hp.Id equals r.ProductId
                          where r.IsDigital == true
                          select new { r };
 
+            response.AnotherSellingProducts = await dquery.Select(d => d.p.name).Distinct().Take(10).ToListAsync();
             response.SellingProducts = await query.Select(d => d.p.Name).Distinct().Take(10).ToListAsync();
             response.ReviewCount = await rQuery.Select(r => r.r).CountAsync();
             response.MaxRating = await rQuery.SumAsync(r => r.r.Rating) / 100;
@@ -259,6 +289,8 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
     public IQueryable<DigitalProductDetailsResponse> GetAgentDigitalProducts(int catalogueId, int agentId)
     {
         var query = (from ph in _context.HubDigitalProducts.Where(d => d.AgentId == agentId)
+                     join v in _context.HubDigitalProductValueLogs on ph.CatalogueId equals v.CatalogueId
+                     where v.AgentId == agentId && v.IsAvailable == true
                      join img in _context.DigitalProductImages on ph.Id equals img.ProductId
                      join c in _context.Catalogues on ph.CatalogueId equals c.Id
                      where ph.CatalogueId == catalogueId || catalogueId == 0

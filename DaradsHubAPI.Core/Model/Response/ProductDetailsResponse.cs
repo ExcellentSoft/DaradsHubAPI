@@ -83,6 +83,8 @@ namespace DaradsHubAPI.Core.Model.Response
         public bool IsVerify { get; set; }
         public bool IsOnline { get; set; }
         public string? Photo { get; set; }
+        public List<string> AnotherSellingProducts { get; internal set; }
+        public string PhoneNumber { get; internal set; }
     }
     public class AgentsProfileResponse
     {
@@ -122,6 +124,8 @@ namespace DaradsHubAPI.Core.Model.Response
         public int TotalProduct { get; set; }
         public int TotalDigitalProductCount { get; set; }
         public int TotalPhysicalProduct { get; set; }
+        public int TotalActiveChats { get; set; }
+        public int TotalPendingReplies { get; set; }
     }
 
     public class DashboardMetricResponse
@@ -147,5 +151,27 @@ namespace DaradsHubAPI.Core.Model.Response
         public int CompletedOrderCount { get; set; }
         public int PendingOrderCount { get; internal set; }
         public int ProcessingOrderCount { get; internal set; }
+    }
+    public class CustomerRequestMetricResponse
+    {
+        public int TotalCount { get; set; }
+        public int RejectCount { get; set; }
+        public int ApproveCount { get; set; }
+        public int PendingCount { get; internal set; }
+
+    }
+
+    public class CustomerMetricsResponse
+    {
+        public int TotalCustomerCount { get; set; }
+        public int TotalActiveChatCount { get; set; }
+        public int TotalInActiveCount { get; set; }
+        public NewCustomerModel? NewCustomerModel { get; set; }
+
+    }
+    public class NewCustomerModel
+    {
+        public int TotalNewCustomerCount { get; set; }
+        public string Month { get; set; } = default!;
     }
 }

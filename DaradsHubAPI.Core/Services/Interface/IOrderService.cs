@@ -16,6 +16,8 @@ public interface IOrderService
     Task<ApiResponse> ChangeOrderStatus(ChangeStatusRequest request);
     Task<ApiResponse<string>> CheckOut(CheckoutRequest request, string email, int userId);
     Task<ApiResponse<DigitalCheckoutResponse>> CheckOutDigital(CheckoutDigitalRequest request, string email);
+    Task<ApiResponse<AgentCustomerMetricsResponse>> GetAgentCustomerMetrics(int agentId);
+    Task<ApiResponse<List<AgentCustomerOrderResponse>>> GetAgentCustomersOrders(AgentCustomerRequest request, int agentId);
     Task<ApiResponse<IEnumerable<CartResponse>>> GetCart(int userId);
     Task<ApiResponse<SingleOrderResponse>> GetOrder(string orderCode);
     Task<ApiResponse<IEnumerable<OrderListResponse>>> GetOrders(string email, OrderListRequest request);
