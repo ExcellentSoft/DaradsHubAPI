@@ -310,6 +310,34 @@ public class DigitalProductRepository(AppDbContext _context) : GenericRepository
         return query;
     }
 
+    public IQueryable<SimilarProductResponse> GetSimilarDigitalProducts(long productId)
+    {
+        // Get the category of the current product
+        var currentProductCatalogueId = _context.HubDigitalProducts
+            .Where(p => p.Id == productId)
+            .Select(p => p.CatalogueId)
+            .FirstOrDefault();
+
+        // Query similar products within the same category
+        var query = from ph in _context.HubDigitalProducts
+                    join img in _context.ProductImages on ph.Id equals img.ProductId
+                    join c in _context.Catalogues on ph.CatalogueId equals c.Id
+                    where ph.CatalogueId == currentProductCatalogueId && ph.Id != productId
+                    orderby ph.DateCreated descending
+                    group new { ph, img, c } by ph.Id into g
+                    select new SimilarProductResponse
+                    {
+                        Id = g.Key,
+                        Caption = g.Select(e => e.c.Name).FirstOrDefault(),
+                        Name = g.Select(e => e.ph.Title).FirstOrDefault(),
+                        Price = g.Select(e => e.ph.Price).FirstOrDefault(),
+                        Description = g.Select(e => e.ph.Description).FirstOrDefault(),
+                        ImageUrls = g.Select(e => e.img.ImageUrl).Distinct().ToList()
+                    };
+
+        return query;
+    }
+
     public IQueryable<DigitalProductDetailsResponse> GetPublicAgentDigitalProducts(int catalogueId, int agentId)
     {
         var query = (from user in _context.userstb

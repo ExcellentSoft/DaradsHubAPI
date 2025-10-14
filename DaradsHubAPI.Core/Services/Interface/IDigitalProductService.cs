@@ -23,5 +23,6 @@ public interface IDigitalProductService
     Task<ApiResponse<AgentProductProfileResponse>> GetPublicAgentDigitalProductProfile(int agentId);
     Task<ApiResponse<IEnumerable<DigitalProductDetailsResponse>>> GetPublicAgentProducts(AgentDigitalProductListRequest request);
     Task<ApiResponse<IEnumerable<LandingPageDigitalProductResponse>>> GetPublicLandPageProducts();
+    Task<ApiResponse<IEnumerable<SimilarProductResponse>>> GetSimilarDigitalProducts(long productId);
     Task<ApiResponse> UpdateDigitalProduct(UpdateDigitalHubProductRequest model, string email);
 }

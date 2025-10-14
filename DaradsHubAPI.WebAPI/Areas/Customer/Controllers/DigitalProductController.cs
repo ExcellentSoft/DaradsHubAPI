@@ -98,6 +98,15 @@ public class DigitalProductController(IDigitalProductService _digitalProductServ
     }
 
     [AllowAnonymous]
+    [HttpGet("similar-digital-products")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<SimilarProductResponse>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetSimilarDigitalProducts([FromQuery] long productId)
+    {
+        var response = await _digitalProductService.GetSimilarDigitalProducts(productId);
+        return ResponseCode(response);
+    }
+
+    [AllowAnonymous]
     [HttpGet("agent-digital-products")]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<DigitalProductDetailsResponse>>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetAgentProducts([FromQuery] AgentDigitalProductListRequest request)
