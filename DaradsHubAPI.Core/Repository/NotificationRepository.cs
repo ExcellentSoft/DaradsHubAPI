@@ -153,10 +153,11 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
 
     public async Task MarkAllNotificationAsRead(string email)
     {
+        var today = GetLocalDateTime.CurrentDateTime();
         await _context.HubNotifications.Where(n => n.NoteToEmail == email && n.IsRead == false)
              .ExecuteUpdateAsync(s =>
              s.SetProperty(c => c.IsRead, true)
-             .SetProperty(c => c.TimeCreated, GetLocalDateTime.CurrentDateTime()));
+             .SetProperty(c => c.TimeCreated, today));
     }
 
     public async Task MarkAllMessageAsRead(long conversationId)
