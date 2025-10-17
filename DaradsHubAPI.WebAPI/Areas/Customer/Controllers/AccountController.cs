@@ -1,13 +1,14 @@
-﻿using DaradsHubAPI.Core.Model;
+﻿using Darads.CoreInfrastruture.Persistence.IIntegration;
+using DaradsHubAPI.Core.Model;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.WebAPI.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
-
+// private readonly IPaymentIOService _paymentIoService;
 namespace DaradsHubAPI.WebAPI.Areas.Customer.Controllers;
 [Tags("Customer")]
-public class AccountController(IAccountService _accountService) : ApiBaseController
+public class AccountController(IAccountService _accountService, IPaymentIOService _paymentIoService) : ApiBaseController
 {
     [HttpGet("dashboard-metrics")]
     [ProducesResponseType(typeof(ApiResponse<DashboardMetricsResponse>), (int)HttpStatusCode.OK)]
@@ -44,4 +45,26 @@ public class AccountController(IAccountService _accountService) : ApiBaseControl
         var response = await _accountService.ChangePassword(request, email);
         return ResponseCode(response);
     }
+
+    [HttpPatch("Submit-PaymentDetails")]
+    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> SubmitPayD([FromBody] SubmitCashPayRequest request)
+    {
+        var email = User.Identity?.GetUserEmail() ?? "";
+        request.UserId = email;
+        var response = await _accountService.SubmitCashPay(request);
+        return ResponseCode(response);
+    }
+    
+    [HttpPatch("Create-New-VIA")]
+    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> CreateNewVirtualAccount(CreateVirtualParam param)
+    {
+        var email = User.Identity?.GetUserEmail() ?? "";
+
+        var res = await _paymentIoService.CreateVirtualAccount(param.userEmail, "WB");
+        return ResponseCode(res);
+    }
+
+     
 }
