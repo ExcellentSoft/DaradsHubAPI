@@ -18,6 +18,7 @@ public class userstb
 
     [StringLength(100)]
     public string email { get; set; }
+    public string AlertEmail { get; set; }
 
     public DateTime? regdate { get; set; }
     public string NewPassword { get; set; }
@@ -50,7 +51,7 @@ public class userstb
     public string AgentExperience { get; set; }
     public bool? IsVPayCreated { get; set; }
     public DateTime? VpayCreatedDate { get; set; }
-    public bool? IsAgent { get; set; }
+    public bool IsAgent { get; set; }
     public bool? IsOnline { get; set; }
     public bool? IsPublicAgent { get; set; }
 }

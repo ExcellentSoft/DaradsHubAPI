@@ -80,4 +80,6 @@ public class CustomerVirtualAccount
     public string BankName { get; set; }
     public DateTime TimeCreated { get; set; }
     public int Status { get; set; }
+    public string Gateway { get; set; }
+    public string CreatedFrom { get; set; }
 }

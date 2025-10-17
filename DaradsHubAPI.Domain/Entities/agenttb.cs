@@ -52,3 +52,29 @@ public partial class agenttb
     [StringLength(6)]
     public string PIN { get; set; }
 }
+
+public class CashPayment
+{
+    /*
+     cmd.Parameters.AddWithValue("@WalletUserId", txtUserWalletID.Text);
+                    cmd.Parameters.AddWithValue("@PhoneNumber", txtPhoneNumber.Text);
+                    cmd.Parameters.AddWithValue("@Amount", PaidAmount);
+                    cmd.Parameters.AddWithValue("@BankName", txtbankName.Text);
+                    cmd.Parameters.AddWithValue("@DepositorName", txtDname.Text);
+                    cmd.Parameters.AddWithValue("@PaidFromAccountName", txtPayfromAccount.Text);
+                    cmd.Parameters.AddWithValue("@PayDate", dt);
+                    cmd.Parameters.AddWithValue("@Status", "Submitted");* 
+     */
+    [Key]
+    public int Id { get; set; }
+    public string WalletUserId { get; set; }
+    public string PhoneNumber { get; set; }
+    public decimal Amount { get; set; }
+    public string BankName { get; set; }
+    public string DepositorName { get; set; }
+    public string PaidFromAccountName { get; set; }
+    public DateTime PayDate { get; set; }
+    public string? Status { get; set; }
+    public DateTime? UpdateDate { get; set; }
+
+}

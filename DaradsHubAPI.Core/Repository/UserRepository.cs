@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq.Expressions;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -1202,4 +1203,29 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         throw new AppException("Invalid request");
     }
 
+    public async Task SubmitCashPayment(CashPayment entity)
+    {
+        //To continue 
+        await _context.CashPayment.AddAsync(entity);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<CashPayment>> SubmittedCashPayment(string userEmail)
+    {
+        return await _context.CashPayment.Where(d => d.WalletUserId == userEmail).ToListAsync();
+    }
+
+    public async Task<IEnumerable<CashPayment>> AllSubmittedCashPayment()
+    {
+        return await _context.CashPayment.ToListAsync();
+    }
+    public async Task SaveNewTransaction(GwalletTran entity)
+    {
+        await _context.GwalletTrans.AddAsync(entity);
+    }
+    public async Task<wallettb> GetWallet(string UserId)
+    {
+
+        return await _context.wallettb.Where(x => x.UserId == UserId).FirstOrDefaultAsync();
+    }
 }
