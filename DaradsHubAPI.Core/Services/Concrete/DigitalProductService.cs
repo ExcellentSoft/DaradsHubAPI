@@ -206,6 +206,13 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
         return new ApiResponse<IEnumerable<AgentsProfileResponse>> { Message = "Successful", Status = true, Data = paginatedAgents, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
     }
 
+    public async Task<ApiResponse<IEnumerable<SimilarProductResponse>>> GetSimilarDigitalProducts(long productId)
+    {
+        var response = await _unitOfWork.DigitalProducts.GetSimilarDigitalProducts(productId).Take(20).ToListAsync();
+
+        return new ApiResponse<IEnumerable<SimilarProductResponse>> { Message = "Successful", Status = true, Data = response, StatusCode = StatusEnum.Success };
+    }
+
     public async Task<ApiResponse<IEnumerable<DigitalProductDetailsResponse>>> GetAgentProducts(AgentDigitalProductListRequest request)
     {
         var query = _unitOfWork.DigitalProducts.GetAgentDigitalProducts(request.CatalogueId, request.AgentId);

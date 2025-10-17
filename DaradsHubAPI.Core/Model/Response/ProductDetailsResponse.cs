@@ -59,6 +59,16 @@ namespace DaradsHubAPI.Core.Model.Response
         public string? Caption { get; set; }
         public IEnumerable<string> ImageUrls { get; set; } = default!;
     }
+    public class SimilarProductResponse
+    {
+        public long Id { get; set; }
+        public long AgentId { get; set; }
+        public string? Description { get; set; }
+        public string? Caption { get; set; }
+        public string? Name { get; set; }
+        public decimal Price { get; set; }
+        public IEnumerable<string> ImageUrls { get; set; } = default!;
+    }
     public class LandingPageDigitalProductResponse
     {
         public long Id { get; set; }
