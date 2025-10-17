@@ -165,10 +165,11 @@ public class AccountService(IUnitOfWork _unitOfWork, IFileService _fileService) 
             PaidFromAccountName = r.PaidFromAccountName,
             PhoneNumber = r.PhoneNumber,
             Status = "Submitted",
-            WalletUserId = r.UserId,
+            WalletUserId = r.UserEmail,
           //  UpdateDate = GetLocalDateTime.CurrentDateTime()
         };
         await _unitOfWork.Users.SubmitCashPayment(entity);
+        //Send email to admin and customer 
         return new ApiResponse("Your payment details submitted",StatusEnum.Success,true);
     }
 }

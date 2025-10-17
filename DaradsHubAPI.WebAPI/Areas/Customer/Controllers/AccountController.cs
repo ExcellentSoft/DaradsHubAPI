@@ -1,6 +1,7 @@
 ﻿using Darads.CoreInfrastruture.Persistence.IIntegration;
 using DaradsHubAPI.Core.Model;
 using DaradsHubAPI.Core.Model.Response;
+using DaradsHubAPI.Core.Models;
 using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.WebAPI.Extensions;
 using Microsoft.AspNetCore.Mvc;
@@ -46,18 +47,18 @@ public class AccountController(IAccountService _accountService, IPaymentIOServic
         return ResponseCode(response);
     }
 
-    [HttpPatch("Submit-PaymentDetails")]
+    [HttpPost("Submit-PaymentDetails")]
     [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> SubmitPayD([FromBody] SubmitCashPayRequest request)
     {
         var email = User.Identity?.GetUserEmail() ?? "";
-        request.UserId = email;
+        request.UserEmail = email;
         var response = await _accountService.SubmitCashPay(request);
         return ResponseCode(response);
     }
     
-    [HttpPatch("Create-New-VIA")]
-    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    [HttpPost("Create-New-VIA")]
+    [ProducesResponseType(typeof(ApiResponse<Bankaccount2>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> CreateNewVirtualAccount(CreateVirtualParam param)
     {
         var email = User.Identity?.GetUserEmail() ?? "";
