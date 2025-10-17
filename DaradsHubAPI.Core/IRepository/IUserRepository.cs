@@ -37,4 +37,9 @@ public interface IUserRepository : IGenericRepository<userstb>
     Task<(bool status, string message)> UpdateAgentProfile(AgentProfileRequest request, string email, string imagePath);
     Task<(bool status, string message)> UpdateProfile(CustomerProfileRequest request, string email, string imagePath);
     Task<(bool status, string message, CustomerLoginResponse? cresponse)> VerifyUserAccount(string code);
+    Task SubmitCashPayment(CashPayment entity);
+    Task<IEnumerable<CashPayment>> SubmittedCashPayment(string userEmail);
+    Task<IEnumerable<CashPayment>> AllSubmittedCashPayment();
+    Task SaveNewTransaction(GwalletTran entity);
+    Task<wallettb> GetWallet(string UserId);
 }

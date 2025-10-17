@@ -104,5 +104,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public virtual DbSet<HubChatConversation> HubChatConversations { get; set; }
     public virtual DbSet<HubChatMessage> HubChatMessages { get; set; }
     public virtual DbSet<HubAgentProductSetting> HubAgentProductSettings { get; set; }
+    public virtual DbSet<CashPayment> CashPayment { get; set; }
 
 }

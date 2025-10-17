@@ -16,4 +16,5 @@ public interface IAccountService
     Task<ApiResponse<CustomerProfileResponse>> GetCustomerProfile(string email);
     Task<ApiResponse> UpdateAgentProfile(AgentProfileRequest request, string email);
     Task<ApiResponse> UpdateProfile(CustomerProfileRequest request, string email);
+    Task<ApiResponse> SubmitCashPay(SubmitCashPayRequest request);
 }

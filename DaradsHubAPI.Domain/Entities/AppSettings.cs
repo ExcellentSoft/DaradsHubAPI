@@ -38,4 +38,7 @@ public class AppSettings
     public string VPayPublicKey { get; set; }
     public string VPayUserName { get; set; }
     public string VPayPassword { get; set; }
+    public string PaymentioAPIKey { get; set; }
+    public string PaymentioApiSecret { get; set; }
+    public string PaymentioBusinessId { get; set; }
 }

@@ -2,7 +2,9 @@
 using DaradsHubAPI.Core.Model;
 using DaradsHubAPI.Core.Model.Response;
 using DaradsHubAPI.Core.Services.Interface;
+using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Shared.Concrete;
+using DaradsHubAPI.Shared.Customs;
 using DaradsHubAPI.Shared.Extentions;
 using DaradsHubAPI.Shared.Interface;
 using DaradsHubAPI.Shared.Static;
@@ -153,4 +155,20 @@ public class AccountService(IUnitOfWork _unitOfWork, IFileService _fileService) 
         return new ApiResponse(changePasswordResponse.message, StatusEnum.Success, changePasswordResponse.status);
     }
 
+    public async Task<ApiResponse> SubmitCashPay(SubmitCashPayRequest r)
+    {
+        
+        var entity = new CashPayment
+        {
+            DepositorName=r.DepositorName, Amount =r.Amount,PayDate=GetLocalDateTime.CurrentDateTime(),
+            BankName = r.BankName,
+            PaidFromAccountName = r.PaidFromAccountName,
+            PhoneNumber = r.PhoneNumber,
+            Status = "Submitted",
+            WalletUserId = r.UserId,
+          //  UpdateDate = GetLocalDateTime.CurrentDateTime()
+        };
+        await _unitOfWork.Users.SubmitCashPayment(entity);
+        return new ApiResponse("Your payment details submitted",StatusEnum.Success,true);
+    }
 }
