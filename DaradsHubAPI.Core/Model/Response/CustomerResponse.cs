@@ -223,7 +223,7 @@ public record ChangePasswordRequest
 }
 public record SubmitCashPayRequest
 {
-    public string UserId { get; set; }
+    public string UserEmail { get; set; }
     public string PhoneNumber { get; set; }
     public decimal Amount { get; set; }
     public string BankName { get; set; }
