@@ -40,7 +40,7 @@ public class AdminService(IUnitOfWork _unitOfWork, IEmailService _emailService) 
         {
             var email = string.Join(',', emails);
             if (!string.IsNullOrWhiteSpace(email))
-                _emailService.SendMail(email, request.Subject, request.Message, "Darads", useTemplate: true);
+                await _emailService.SendMail(email, request.Subject, request.Message, "Darads", useTemplate: true);
         }
         return new ApiResponse("Success", StatusEnum.Success, true);
     }

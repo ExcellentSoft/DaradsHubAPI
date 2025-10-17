@@ -45,4 +45,6 @@ public interface IProductRepository : IGenericRepository<HubAgentProduct>
     IQueryable<category> GetAgentCategories(string? searchText, int agentId);
     Task<List<AgentOrderListResponse>> GetAgentProductOrders(AgentProductOrderListRequest request);
     IQueryable<SimilarProductResponse> GetSimilarProducts(long productId);
+    Task<bool> CanAddPhysicalProduct(int userId);
+    Task<bool> CanAddDigitalProduct(int userId);
 }

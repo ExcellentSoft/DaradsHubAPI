@@ -83,6 +83,15 @@ public class ProductRepository(AppDbContext _context) : GenericRepository<HubAge
     #endregion
 
     #region Physical Product    
+
+    public async Task<bool> CanAddPhysicalProduct(int userId)
+    {
+        return await _context.CatalogueMappings.AnyAsync(r => r.AgentId == userId);
+    }
+    public async Task<bool> CanAddDigitalProduct(int userId)
+    {
+        return await _context.CatalogueMappings.AnyAsync(r => r.AgentId == userId);
+    }
     public IQueryable<HubProduct> GetHubProducts(string? searchText)
     {
         searchText = searchText?.Trim().ToLower();
