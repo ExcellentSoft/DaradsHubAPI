@@ -129,6 +129,10 @@ public class ProductService(IUnitOfWork _unitOfWork, IFileService _fileService) 
     public async Task<ApiResponse> AddProduct(AddAgentHubProductRequest model, string email)
     {
         var user = await _unitOfWork.Users.GetSingleWhereAsync(d => d.email == email);
+        if (!await _unitOfWork.Products.CanAddPhysicalProduct(user!.id))
+        {
+            return new ApiResponse("Permission to add physical products has not been granted yet.", StatusEnum.Validation, false);
+        }
         var prod = new HubAgentProduct
         {
             CategoryId = model.CategoryId,

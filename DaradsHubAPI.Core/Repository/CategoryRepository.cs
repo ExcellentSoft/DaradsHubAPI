@@ -15,6 +15,20 @@ namespace DaradsHubAPI.Core.Repository
             return newEntity.Entity!;
         }
 
+        public async Task CreateSubCategory(SubCategory model)
+        {
+            await _context.SubCategories.AddAsync(model);
+        }
+
+        public async Task DeleteSubCategories(int categoryId)
+        {
+            await _context.SubCategories.Where(r => r.CategoryId == categoryId).ExecuteDeleteAsync();
+        }
+        public async Task DeleteSubCategory(int subCategoryId)
+        {
+            await _context.SubCategories.Where(r => r.Id == subCategoryId).ExecuteDeleteAsync();
+        }
+
         public async Task<category?> GetCategoryById(int Id)
         {
             var category = await _context.categories.FirstOrDefaultAsync(s => s.id == Id);

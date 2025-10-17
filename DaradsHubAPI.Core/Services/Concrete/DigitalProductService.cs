@@ -50,6 +50,11 @@ public class DigitalProductService(IUnitOfWork _unitOfWork, IFileService _fileSe
     public async Task<ApiResponse> AddDigitalProduct(AddDigitalHubProductRequest model, string email)
     {
         var user = await _unitOfWork.Users.GetSingleWhereAsync(d => d.email == email && d.IsAgent == true);
+        if (!await _unitOfWork.Products.CanAddDigitalProduct(user!.id))
+        {
+            return new ApiResponse("Permission to add digital products has not been granted yet.", StatusEnum.Validation, false);
+        }
+
         var prod = new HubDigitalProduct
         {
             CatalogueId = model.CatalogueId,
