@@ -66,18 +66,5 @@ public class AccountController(IAccountService _accountService, IPaymentIOServic
         return ResponseCode(res);
     }
 
-    //create virtual account
-    //Submit-manualPayment details : CashPayment
-    /* 
-      SqlCommand cmd = new SqlCommand(InsertString, con);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@WalletUserId", txtUserWalletID.Text);
-                    cmd.Parameters.AddWithValue("@PhoneNumber", txtPhoneNumber.Text);
-                    cmd.Parameters.AddWithValue("@Amount", PaidAmount);
-                    cmd.Parameters.AddWithValue("@BankName", txtbankName.Text);
-                    cmd.Parameters.AddWithValue("@DepositorName", txtDname.Text);
-                    cmd.Parameters.AddWithValue("@PaidFromAccountName", txtPayfromAccount.Text);
-                    cmd.Parameters.AddWithValue("@PayDate", dt);
-                    cmd.Parameters.AddWithValue("@Status", "Submitted");
-     */
+     
 }
