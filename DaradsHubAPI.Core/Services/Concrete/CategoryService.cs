@@ -6,6 +6,7 @@ using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Shared.Interface;
 using DaradsHubAPI.Shared.Static;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
@@ -18,6 +19,11 @@ public class CategoryService(IUnitOfWork _unitOfWork, IFileService _fileService)
         string icon = "";
         if (string.IsNullOrEmpty(model.Name))
             return new ApiResponse("Category name is required.", StatusEnum.Validation, false);
+
+        if (_unitOfWork.Categories.Any(r => r.name == model.Name))
+        {
+            return new ApiResponse("Category name already  exist.", StatusEnum.Validation, false);
+        }
 
         if (model.Icon is not null)
         {
@@ -37,7 +43,80 @@ public class CategoryService(IUnitOfWork _unitOfWork, IFileService _fileService)
         return new ApiResponse("Category created successfully.", StatusEnum.Success, true);
     }
 
-    public async Task<CategoryResponse> GetById(int Id)
+    public async Task<ApiResponse> UpdateCategory(UpdateCategoryRequestModel model)
+    {
+        string icon = "";
+        var category = await _unitOfWork.Categories.GetSingleWhereAsync(cat => cat.id == model.Id);
+        if (category is null)
+        {
+            return new ApiResponse("Category record not found.", StatusEnum.Validation, false);
+        }
+
+        if (string.IsNullOrEmpty(model.Name))
+            return new ApiResponse("Category name is required.", StatusEnum.Validation, false);
+
+        if (_unitOfWork.Categories.Any(r => r.name == model.Name && r.id != model.Id))
+        {
+            return new ApiResponse("Category name already  exist.", StatusEnum.Validation, false);
+        }
+
+        if (model.Icon is not null)
+        {
+            var (status, msg, path) = await SaveCategoryImage(model.Icon);
+            if (!status)
+                return new ApiResponse(msg, StatusEnum.Validation, false);
+            icon = path ?? "";
+        }
+
+        category.name = model.Name;
+        category.Description = model.Description;
+        category.icon = string.IsNullOrEmpty(icon) ? category.icon : icon;
+
+        await _unitOfWork.Categories.Update(category);
+
+        return new ApiResponse("Category updated successfully.", StatusEnum.Success, true);
+    }
+
+    public async Task<ApiResponse> CreateUpdateSubCategory(CreateSubCategoryRequestModel model)
+    {
+        var category = await _unitOfWork.Categories.GetSingleWhereAsync(cat => cat.id == model.CategoryId);
+        if (category is null)
+        {
+            return new ApiResponse("Category record not found.", StatusEnum.Validation, false);
+        }
+        if (model.SubCategoryNames.Any())
+        {
+            await _unitOfWork.Categories.DeleteSubCategories(category.id);
+            foreach (var item in model.SubCategoryNames)
+            {
+                var sub = new SubCategory
+                {
+                    CategoryId = category.id,
+                    Name = item,
+                };
+                await _unitOfWork.Categories.CreateSubCategory(sub);
+            }
+        }
+
+        await _unitOfWork.Categories.SaveAsync();
+        return new ApiResponse("Successful.", StatusEnum.Success, true);
+    }
+
+    public async Task<ApiResponse> DeleteCategory(int categoryId)
+    {
+        await _unitOfWork.Categories.DeleteSubCategories(categoryId);
+        await _unitOfWork.Categories.DeleteWhere(cat => cat.id == categoryId);
+        return new ApiResponse("Category deleted successfully.", StatusEnum.Success, true);
+    }
+
+    public async Task<ApiResponse> DeleteSubCategory(int subCategoryId)
+    {
+        await _unitOfWork.Categories.DeleteSubCategory(subCategoryId);
+
+        return new ApiResponse("Sub category deleted successfully.", StatusEnum.Success, true);
+    }
+
+    public async Task<ApiResponse<CategoryResponse>> GetById(int Id)
     {
         var category = await _unitOfWork.Categories.GetSingleWhereAsync(s => s.id == Id);
         if (category is not null)
@@ -47,12 +126,17 @@ public class CategoryService(IUnitOfWork _unitOfWork, IFileService _fileService)
                 Description = category.Description,
                 Name = category.name,
                 Icon = category.icon,
-                Id = category.id
+                Id = category.id,
+                SubCategoryData = _unitOfWork.Categories.GetSubCategories(Id).Select(e => new SubCategoryDatum
+                {
+                    Id = e.Id,
+                    Name = e.Name
+                }).ToList()
             };
-            return newCategory;
+            return new ApiResponse<CategoryResponse> { Data = newCategory, Message = "Successful", StatusCode = StatusEnum.Success, Status = true };
 
         }
-        return new CategoryResponse { };
+        return new ApiResponse<CategoryResponse> { Message = "record not found", StatusCode = StatusEnum.NoRecordFound, Status = false };
     }
 
     public async Task<ApiResponse<IEnumerable<CategoryResponse>>> GetCategories(string? searchText)
@@ -129,41 +213,7 @@ public class CategoryService(IUnitOfWork _unitOfWork, IFileService _fileService)
         return await Task.FromResult(new ApiResponse<IEnumerable<IdNameRecord>> { Data = iAgent, Message = "Successful", Status = true, StatusCode = StatusEnum.Success });
     }
 
-    public async Task<ApiResponse> UpdateCategory(UpdateCategoryRequestModel model)
-    {
-        string icon = "";
-        var category = await _unitOfWork.Categories.GetSingleWhereAsync(cat => cat.id == model.Id);
-        if (category is null)
-        {
-            return new ApiResponse("Category record not found.", StatusEnum.Validation, false);
-        }
 
-        if (string.IsNullOrEmpty(model.Name))
-            return new ApiResponse("Category name is required.", StatusEnum.Validation, false);
-
-        if (model.Icon is not null)
-        {
-            var (status, msg, path) = await SaveCategoryImage(model.Icon);
-            if (!status)
-                return new ApiResponse(msg, StatusEnum.Validation, false);
-            icon = path ?? "";
-        }
-
-        category.name = model.Name;
-        category.Description = model.Description;
-        category.icon = string.IsNullOrEmpty(icon) ? category.icon : icon;
-
-        await _unitOfWork.Categories.Update(category);
-
-        return new ApiResponse("Category updated successfully.", StatusEnum.Success, true);
-    }
-
-    public async Task<ApiResponse> DeleteCategory(int categoryId)
-    {
-        await _unitOfWork.Categories.DeleteWhere(cat => cat.id == categoryId);
-
-        return new ApiResponse("Category deleted successfully.", StatusEnum.Success, true);
-    }
 
     private async Task<(bool status, string msg, string? path)> SaveCategoryImage(IFormFile file)
     {
