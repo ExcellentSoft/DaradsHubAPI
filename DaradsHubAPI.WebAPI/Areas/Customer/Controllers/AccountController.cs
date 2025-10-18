@@ -59,11 +59,11 @@ public class AccountController(IAccountService _accountService, IPaymentIOServic
     
     [HttpPost("Create-New-VIA")]
     [ProducesResponseType(typeof(ApiResponse<Bankaccount2>), (int)HttpStatusCode.OK)]
-    public async Task<IActionResult> CreateNewVirtualAccount(CreateVirtualParam param)
+    public async Task<IActionResult> CreateNewVirtualAccount()
     {
         var email = User.Identity?.GetUserEmail() ?? "";
 
-        var res = await _paymentIoService.CreateVirtualAccount(param.userEmail, "WB");
+        var res = await _paymentIoService.CreateVirtualAccount(email, "WB");
         return ResponseCode(res);
     }
 
