@@ -147,7 +147,12 @@ public class CategoryService(IUnitOfWork _unitOfWork, IFileService _fileService)
             Description = c.Description,
             Icon = c.icon,
             Id = c.id,
-            Name = c.name
+            Name = c.name,
+            SubCategoryData = _unitOfWork.Categories.GetSubCategories(c.id).Select(e => new SubCategoryDatum
+            {
+                Id = e.Id,
+                Name = e.Name
+            }).ToList()
         }).ToList();
 
         return await Task.FromResult(new ApiResponse<IEnumerable<CategoryResponse>> { Data = categories, Message = "Successful", Status = true, StatusCode = StatusEnum.Success });
