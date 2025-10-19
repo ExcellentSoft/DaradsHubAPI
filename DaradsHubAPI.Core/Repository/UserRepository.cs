@@ -23,7 +23,7 @@ using static DaradsHubAPI.Domain.Enums.Enum;
 namespace DaradsHubAPI.Core.Repository;
 public class UserRepository(AppDbContext _context, UserManager<User> _userManager, SignInManager<User> _signInManager, IServiceProvider _serviceProvider, IOptionsSnapshot<AppSettings> optionsSnapshot) : GenericRepository<userstb>(_context), IUserRepository
 {
-    public AppSettings _optionsSnapshot { get; } = optionsSnapshot.Value; 
+    public AppSettings _optionsSnapshot { get; } = optionsSnapshot.Value;
     private User? _user;
 
     public async Task<(bool status, string message, string? userId)> CreateCustomer(CreateCustomerRequest request)
@@ -119,7 +119,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         if (user.Is_customer.GetValueOrDefault() != 1 && user.Is_admin.GetValueOrDefault() != 1)
         {
             //is a agent
-            if (!customer!.IsAgent)
+            if (!customer!.IsAgent.GetValueOrDefault())
             {
                 return new(false, "Your onboarding registration is still pending. Kindly contact admin.", null);
             }
@@ -746,7 +746,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
             await scope.SendMail(request.Email, "Email Verification", message, "Darads", useTemplate: true);
 
             return new(true, message = $"Success! Kindly check your email and use the provided code to finalize your registration.", uCustomer.Id);
-       
+
         }
         catch (Exception)
         {

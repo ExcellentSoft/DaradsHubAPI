@@ -51,7 +51,7 @@ public class userstb
     public string AgentExperience { get; set; }
     public bool? IsVPayCreated { get; set; }
     public DateTime? VpayCreatedDate { get; set; }
-    public bool IsAgent { get; set; }
+    public bool? IsAgent { get; set; }
     public bool? IsOnline { get; set; }
     public bool? IsPublicAgent { get; set; }
 }
