@@ -75,6 +75,13 @@ namespace DaradsHubAPI.Core.Model.Request
         public NotificationType? NotificationType { get; set; }
     }
 
+    public record ReportAgentRequest
+    {
+        public int AgentId { get; set; }
+        public int CustomerId { get; set; }
+        public string Reason { get; set; } = default!;
+    }
+
     public record MessageListRequest
     {
         public int PageSize { get; set; } = 10;
@@ -110,5 +117,11 @@ namespace DaradsHubAPI.Core.Model.Request
         public int userId { get; set; }
         public bool? IsAgent { get; internal set; }
         public string? PhoneNumber { get; internal set; }
+    }
+
+    public record AgentDatum
+    {
+        public string? FullName { get; set; }
+        public string? Email { get; set; }
     }
 }

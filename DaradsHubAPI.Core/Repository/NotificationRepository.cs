@@ -4,6 +4,7 @@ using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.Infrastructure;
 using DaradsHubAPI.Shared.Customs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 
 namespace DaradsHubAPI.Core.Repository;
@@ -53,6 +54,32 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                           IsRead = m.IsRead,
                           MessageId = m.Id
                       };
+
+        return message;
+    }
+
+    public IQueryable<AgentDatum> GetUnreadChatMessages()
+    {
+        var last4hours = GetLocalDateTime.CurrentDateTime().AddHours(-4);
+        var message = (from c in _context.HubChatConversations
+                       join m in _context.HubChatMessages on c.Id equals m.ConversationId
+                       join u in _context.userstb on c.AgentId equals u.id
+                       where m.SentAt < last4hours && m.IsRead == false
+                       select u).GroupBy(g => new { g.email, g.fullname }).Select(r => new AgentDatum
+                       {
+                           Email = r.Key.email,
+                           FullName = r.Key.fullname,
+                       });
+
+        var _message = (from m in _context.HubChatMessages
+                        join c in _context.HubChatConversations on m.ConversationId equals c.Id
+                        join u in _context.userstb on c.AgentId equals u.id
+                        where m.SentAt < last4hours && m.IsRead == false
+                        select u).GroupBy(g => new { g.email, g.fullname }).Select(r => new AgentDatum
+                        {
+                            Email = r.Key.email,
+                            FullName = r.Key.fullname,
+                        }).ToList();
 
         return message;
     }
@@ -165,6 +192,12 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
         await _context.HubChatMessages.Where(n => n.ConversationId == conversationId && n.IsRead == false)
              .ExecuteUpdateAsync(s =>
              s.SetProperty(c => c.IsRead, true));
+    }
+
+    public async Task ReportAgent(ReportAgent report)
+    {
+        _context.ReportAgents.Add(report);
+        await _context.SaveChangesAsync();
     }
 
     public IQueryable<NotificationResponse> GetAllNotificationsAsync(NotificationListRequest request)

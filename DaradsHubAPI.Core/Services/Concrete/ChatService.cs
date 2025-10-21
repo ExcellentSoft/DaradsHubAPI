@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using static DaradsHubAPI.Domain.Enums.Enum;
 
 namespace DaradsHubAPI.Core.Services.Concrete;
-public class ChatService(IUnitOfWork _unitOfWork) : IChatService
+public class ChatService(IUnitOfWork _unitOfWork, IEmailService _emailService) : IChatService
 {
     public async Task<ApiResponse<IEnumerable<OnlineAgentsResponse>>> GetOnlineAgents(string? searchText)
     {
@@ -45,6 +45,24 @@ public class ChatService(IUnitOfWork _unitOfWork) : IChatService
         return new ApiResponse("Success", StatusEnum.Success, true);
     }
 
+    public async Task<ApiResponse> ReportAgent(ReportAgentRequest request)
+    {
+        if (request.AgentId <= 0)
+            return new ApiResponse("Agent is required", StatusEnum.Validation, false);
+
+        var report = new ReportAgent
+        {
+            Reason = request.Reason,
+            AgentId = request.AgentId,
+            ReportedDate = GetLocalDateTime.CurrentDateTime(),
+            CustomerId = request.CustomerId
+        };
+
+        await _unitOfWork.Notifications.ReportAgent(report);
+
+        return new ApiResponse("Report created successfully.", StatusEnum.Success, true);
+    }
+
     public async Task<ApiResponse<IEnumerable<ChatMessageResponse>>> GetChatMessages(MessageListRequest request)
     {
         var messages = _unitOfWork.Notifications.GetChatMessages(request.ConversationId);
@@ -52,6 +70,18 @@ public class ChatService(IUnitOfWork _unitOfWork) : IChatService
         var totalRecordsCount = messages.Count();
         var iMessages = await messages.Skip((request!.PageNumber - 1) * request.PageSize).Take(request.PageSize).ToListAsync();
         return new ApiResponse<IEnumerable<ChatMessageResponse>> { Data = iMessages, Message = "Messages fetched successfully.", Status = true, StatusCode = StatusEnum.Success, Pages = request.PageSize, TotalRecord = totalRecordsCount, CurrentPageCount = request.PageNumber };
+    }
+
+    public async Task GetUnreadChatMessages()
+    {
+        var messages = _unitOfWork.Notifications.GetUnreadChatMessages();
+        var emailMessages = $"Hello Agent! please log in to the Darads portal immediately. Customer messages are awaiting your response.";
+        if (messages.Any())
+        {
+            var email = string.Join(',', messages.Select(e => e.Email));
+            await _emailService.SendMail(email, "Notice", emailMessages, "Darads", useTemplate: true);
+            await _emailService.SendMail("bello.netdev@gmail.com", "Notice", emailMessages, "Darads", useTemplate: true);
+        }
     }
 
     public async Task<ApiResponse<IEnumerable<ViewChatMessagesResponse>>> GetAgentChatMessages(int agentId)

@@ -3,6 +3,7 @@ using DaradsHubAPI.Core.Model.Request;
 using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.WebAPI.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -64,6 +65,14 @@ public class ChatsController(IChatService _chatService) : ApiBaseController
     public async Task<IActionResult> MarkAllMessageAsRead([FromQuery] long conversationId)
     {
         var response = await _chatService.MarkAllMessageAsRead(conversationId);
+        return ResponseCode(response);
+    }
+
+    [HttpPost("report-agent")]
+    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> ReportAgent([FromBody] ReportAgentRequest request)
+    {
+        var response = await _chatService.ReportAgent(request);
         return ResponseCode(response);
     }
 }

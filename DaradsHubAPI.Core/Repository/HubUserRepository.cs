@@ -97,6 +97,31 @@ public class HubUserRepository(AppDbContext _context) : GenericRepository<userst
         return uquery;
     }
 
+    public IQueryable<ReportedAgentsResponse> GetReportedAgents()
+    {
+        var uquery = from r in _context.ReportAgents
+                     orderby r.ReportedDate descending
+
+                     select new ReportedAgentsResponse
+                     {
+                         Reason = r.Reason,
+                         ReportedDate = r.ReportedDate,
+                         AgentData = _context.userstb.Where(x => x.id == r.AgentId).Select(e => new UserDatum
+                         {
+                             FullName = e.fullname,
+                             Photo = e.Photo,
+                             PhoneNumber = e.phone
+                         }).FirstOrDefault(),
+                         CustomerData = _context.userstb.Where(x => x.id == r.CustomerId).Select(e => new UserDatum
+                         {
+                             FullName = e.fullname,
+                             Photo = e.Photo,
+                             PhoneNumber = e.phone
+                         }).FirstOrDefault()
+                     };
+        return uquery;
+    }
+
     public async Task<(bool status, string message, ShortAgentProfileResponse? res)> GetAgentProductProfile(int agentId)
     {
         var customerUser = await _context.userstb.FirstOrDefaultAsync(us => us.id == agentId);

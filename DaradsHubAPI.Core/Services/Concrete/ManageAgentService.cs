@@ -99,6 +99,13 @@ public class ManageAgentService(IUnitOfWork _unitOfWork, IFileService _fileServi
         return new ApiResponse<IEnumerable<AgentsListResponse>> { Message = "Successful", Status = true, Data = paginatedAgents, StatusCode = StatusEnum.Success, TotalRecord = totalProducts, Pages = request.PageSize, CurrentPageCount = request.PageNumber };
     }
 
+    public async Task<ApiResponse<IEnumerable<ReportedAgentsResponse>>> GetReportedAgents()
+    {
+        var response = await _unitOfWork.HubUsers.GetReportedAgents().Take(30).ToListAsync();
+
+        return new ApiResponse<IEnumerable<ReportedAgentsResponse>> { Message = "Successful", Status = true, Data = response, StatusCode = StatusEnum.Success };
+    }
+
     public async Task<ApiResponse<ShortAgentProfileResponse>> GetAgentProfile(int agentId)
     {
         var profileResponse = await _unitOfWork.HubUsers.GetAgentProductProfile(agentId);

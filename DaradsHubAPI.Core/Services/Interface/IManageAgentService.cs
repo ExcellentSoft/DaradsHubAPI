@@ -15,6 +15,7 @@ public interface IManageAgentService
     Task<ApiResponse<List<AgentOrderListResponse>>> GetAgentProductOrders(AgentProductOrderListRequest request);
     Task<ApiResponse<ShortAgentProfileResponse>> GetAgentProfile(int agentId);
     Task<ApiResponse<IEnumerable<AgentsListResponse>>> GetAgents(AgentsListRequest request);
+    Task<ApiResponse<IEnumerable<ReportedAgentsResponse>>> GetReportedAgents();
     Task<ApiResponse<bool>> ToggleVisibility(int agentId, bool isPublic);
     Task<ApiResponse> UpdateAgentStatus(AgentStatusRequest request);
     Task<ApiResponse> UpdateAgentVisibility(AgentVisibilityRequest request);

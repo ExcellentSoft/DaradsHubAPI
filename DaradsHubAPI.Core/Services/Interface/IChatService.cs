@@ -17,5 +17,7 @@ public interface IChatService
     Task<ApiResponse<IEnumerable<ChatMessageResponse>>> GetChatMessages(MessageListRequest request);
     Task<ApiResponse<IEnumerable<ViewChatMessagesResponse>>> GetCustomerChatMessages(int customerId);
     Task<ApiResponse<IEnumerable<OnlineAgentsResponse>>> GetOnlineAgents(string? searchText);
+    Task GetUnreadChatMessages();
     Task<ApiResponse> MarkAllMessageAsRead(long conversationId);
+    Task<ApiResponse> ReportAgent(ReportAgentRequest request);
 }
