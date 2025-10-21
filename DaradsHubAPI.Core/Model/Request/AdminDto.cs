@@ -162,6 +162,21 @@ public class CustomersListResponse
     public DateTime? JoinDate { get; set; }
 }
 
+public class ReportedAgentsResponse
+{
+    public UserDatum? AgentData { get; set; }
+    public UserDatum? CustomerData { get; set; }
+    public string Reason { get; set; } = default!;
+    public DateTime ReportedDate { get; set; }
+}
+
+public class UserDatum
+{
+    public string FullName { get; set; } = default!;
+    public string Photo { get; set; } = default!;
+    public string PhoneNumber { get; internal set; }
+}
+
 public class ProductTypeData
 {
     public string Digital { get; set; } = default!;

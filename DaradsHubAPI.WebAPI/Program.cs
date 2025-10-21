@@ -1,9 +1,11 @@
 using DaradsHubAPI.Core;
+using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.Infrastructure;
 using DaradsHubAPI.Shared;
 using DaradsHubAPI.WebAPI.ChatHelper;
 using DaradsHubAPI.WebAPI.Extensions;
 using DaradsHubAPI.WebAPI.Middleware;
+using Hangfire;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -44,6 +46,13 @@ builder.Services.AddApiVersioning(Options =>
 });
 
 builder.Services.AddSignalR();
+builder.Services.AddHangfire(config =>
+{
+    config.UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(builder.Configuration.GetConnectionString("mycon"));
+});
+builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 
@@ -57,6 +66,7 @@ app.UseMiddleware<ExceptionMiddleware>();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseStatusCodePages();
+app.UseHangfireDashboard();
 app.UseAuthorization();
 
 app.MapAreaControllerRoute(
@@ -76,5 +86,5 @@ app.MapAreaControllerRoute(
 
 app.MapControllers();
 app.MapHub<ChatHub>("/chatHub").RequireCors("AllowFrontend");
-
+RecurringJob.AddOrUpdate<IChatService>("Alert agent for unread messages", (e) => e.GetUnreadChatMessages(), "0 */6 * * *"); //run every 5 hours
 app.Run();

@@ -5,6 +5,7 @@ using DaradsHubAPI.Core.Services.Concrete;
 using DaradsHubAPI.Core.Services.Interface;
 using DaradsHubAPI.Domain.Entities;
 using DaradsHubAPI.WebAPI.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -127,6 +128,14 @@ public class ManageAgentController(IManageAgentService _agentService, IProductSe
     public async Task<IActionResult> ChangeWithdrawRequestStatus([FromBody] ChangeWithdrawalRequestStatus request)
     {
         var response = await _walletTransactionService.ChangeWithdrawRequestStatus(request);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("reported-agents")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ReportedAgentsResponse>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetReportedAgents()
+    {
+        var response = await _agentService.GetReportedAgents();
         return ResponseCode(response);
     }
 }

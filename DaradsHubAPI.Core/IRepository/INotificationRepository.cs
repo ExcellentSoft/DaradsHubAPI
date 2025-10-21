@@ -11,9 +11,11 @@ public interface INotificationRepository : IGenericRepository<HubNotification>
     IQueryable<ChatMessageResponse> GetChatMessages(long conversationId);
     IQueryable<ViewChatMessagesResponse> GetCustomerChatMessages(int customerId);
     Task<HubChatConversation> GetOrCreateConversation(CreateConversationRequest request);
+    IQueryable<AgentDatum> GetUnreadChatMessages();
     Task MarkAllMessageAsRead(long conversationId);
     Task MarkAllNotificationAsRead(string email);
     Task MarkNotificationAsRead(long id);
+    Task ReportAgent(ReportAgent report);
     Task SaveChatMessage(HubChatMessage entity);
     Task SaveNotification(HubNotification entity);
 }

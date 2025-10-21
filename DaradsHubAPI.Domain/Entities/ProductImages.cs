@@ -47,3 +47,13 @@ public class BlockedAgent
     public int AgentId { get; set; }
     public string Reason { get; set; } = default!;
 }
+
+public class ReportAgent
+{
+    [Key]
+    public long Id { get; set; }
+    public int AgentId { get; set; }
+    public int CustomerId { get; set; }
+    public string Reason { get; set; } = default!;
+    public DateTime ReportedDate { get; set; }
+}
