@@ -86,5 +86,5 @@ app.MapAreaControllerRoute(
 
 app.MapControllers();
 app.MapHub<ChatHub>("/chatHub").RequireCors("AllowFrontend");
-RecurringJob.AddOrUpdate<IChatService>("Alert agent for unread messages", (e) => e.GetUnreadChatMessages(), "0 */6 * * *"); //run every 5 hours
+RecurringJob.AddOrUpdate<IChatService>("Alert agent for unread messages", (e) => e.GetUnreadChatMessages(), "0 */6 * * *"); //run every 6 hours
 app.Run();
