@@ -58,6 +58,48 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
         return message;
     }
 
+    public IQueryable<ViewChatMessagesResponse> GetChatMessages()
+    {
+        var message = (from c in _context.HubChatConversations
+                       join m in _context.HubChatMessages on c.Id equals m.ConversationId
+                       join u in _context.userstb on m.SenderId equals u.id
+                       orderby m.SentAt descending
+                       select new { u, m, c }).GroupBy(g => g.c.Id).Select(w => new ViewChatMessagesResponse
+                       {
+                           ConversationId = w.Key,
+                           TotalPendingCount = w.Count(e => e.m.IsRead == false),
+                           LastMessage = w.Select(r => new LastMessage
+                           {
+                               Content = r.m.Content,
+                               SentAt = r.m.SentAt,
+                               CustomerDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.CustomerId).FirstOrDefault()).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
+                               }).FirstOrDefault(),
+                               AgentDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AgentId).FirstOrDefault()).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   PhoneNumber = e.phone,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
+                               }).FirstOrDefault(),
+                               AdminDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AdminId).FirstOrDefault()).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   PhoneNumber = e.phone,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
+                               }).FirstOrDefault()
+                           }).OrderBy(e => e.SentAt).LastOrDefault()
+                       });
+        return message;
+    }
+
     public IQueryable<AgentDatum> GetUnreadChatMessages()
     {
         var last4hours = GetLocalDateTime.CurrentDateTime().AddHours(-4);
@@ -113,6 +155,14 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                                    Photo = e.Photo,
                                    userId = e.id,
                                    IsAgent = e.IsAgent
+                               }).FirstOrDefault(),
+                               AdminDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AdminId).FirstOrDefault()).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   PhoneNumber = e.phone,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
                                }).FirstOrDefault()
                            }).OrderBy(e => e.SentAt).LastOrDefault()
                        });
@@ -143,6 +193,57 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                                    IsAgent = e.IsAgent
                                }).FirstOrDefault(),
                                AgentDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AgentId).FirstOrDefault()).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   PhoneNumber = e.phone,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
+                               }).FirstOrDefault(),
+                               AdminDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AdminId).FirstOrDefault()).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   PhoneNumber = e.phone,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
+                               }).FirstOrDefault()
+                           }).OrderBy(e => e.SentAt).LastOrDefault()
+                       });
+        return message;
+    }
+    public IQueryable<ViewChatMessagesResponse> GetAdminChatMessages(int adminId)
+    {
+        var message = (from c in _context.HubChatConversations
+                       where c.AdminId == adminId
+                       join m in _context.HubChatMessages on c.Id equals m.ConversationId
+                       join u in _context.userstb on m.SenderId equals u.id
+                       orderby m.SentAt descending
+                       select new { u, m, c }).GroupBy(g => g.c.Id).Select(w => new ViewChatMessagesResponse
+                       {
+                           ConversationId = w.Key,
+                           TotalPendingCount = w.Count(e => e.m.IsRead == false),
+                           LastMessage = w.Select(r => new LastMessage
+                           {
+                               Content = r.m.Content,
+                               SentAt = r.m.SentAt,
+                               CustomerDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.CustomerId).FirstOrDefault()).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   PhoneNumber = e.phone,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
+                               }).FirstOrDefault(),
+                               AgentDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AgentId).FirstOrDefault()).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   PhoneNumber = e.phone,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
+                               }).FirstOrDefault(),
+                               AdminDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AdminId).FirstOrDefault()).Select(e => new SenderDetails
                                {
                                    FullName = e.fullname,
                                    PhoneNumber = e.phone,
@@ -236,6 +337,53 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
             await _context.SaveChangesAsync();
         }
         return conversation;
+    }
+    public async Task<HubChatConversation> GetOrCreateAdminConversationWithCustomer(CreateAdminConversationWithCustomerRequest request)
+    {
+        var conversation = await _context.HubChatConversations
+            .FirstOrDefaultAsync(c => c.CustomerId == request.CustomerId && c.AdminId == request.AdminId);
+        if (conversation == null)
+        {
+            conversation = new HubChatConversation
+            {
+                CustomerId = request.CustomerId,
+                AdminId = request.AdminId,
+                DateCreated = GetLocalDateTime.CurrentDateTime()
+            };
+            _context.HubChatConversations.Add(conversation);
+            await _context.SaveChangesAsync();
+        }
+        return conversation;
+    }
+    public async Task<HubChatConversation> GetOrCreateAdminConversationWithAgent(CreateAdminConversationWithAgentRequest request)
+    {
+        var conversation = await _context.HubChatConversations
+            .FirstOrDefaultAsync(c => c.AgentId == request.AgentId && c.AdminId == request.AdminId);
+        if (conversation == null)
+        {
+            conversation = new HubChatConversation
+            {
+                AgentId = request.AgentId,
+                AdminId = request.AdminId,
+                DateCreated = GetLocalDateTime.CurrentDateTime()
+            };
+            _context.HubChatConversations.Add(conversation);
+            await _context.SaveChangesAsync();
+        }
+        return conversation;
+    }
+
+    public async Task<(bool status, string message)> JoinConversation(JoinConversationRequest request)
+    {
+        var conversation = await _context.HubChatConversations
+            .FirstOrDefaultAsync(c => c.Id == request.ConversationId);
+        if (conversation == null)
+        {
+            return new(false, "Conversation records not found.");
+        }
+        conversation.AdminId = request.AdminId;
+        await _context.SaveChangesAsync();
+        return new(true, "Success"); ;
     }
 
     #endregion
