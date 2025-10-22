@@ -118,6 +118,8 @@ namespace DaradsHubAPI.Core.Model.Request
         public string? Photo { get; set; }
         public int userId { get; set; }
         public bool? IsAgent { get; internal set; }
+        public int? IsCustomer { get; internal set; }
+        public int? IsAdmin { get; internal set; }
         public string? PhoneNumber { get; internal set; }
     }
 

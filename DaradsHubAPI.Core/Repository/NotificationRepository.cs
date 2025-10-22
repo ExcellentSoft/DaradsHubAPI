@@ -38,6 +38,7 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
         var message = from m in _context.HubChatMessages
                       where m.ConversationId == conversationId
                       join u in _context.userstb on m.SenderId equals u.id
+                      join su in _context.AspNetUsers on u.userid equals su.Id
                       orderby m.SentAt descending
                       select new ChatMessageResponse
                       {
@@ -46,7 +47,9 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                               FullName = u.fullname,
                               Photo = u.Photo,
                               userId = u.id,
-                              IsAgent = u.IsAgent
+                              IsAgent = u.IsAgent,
+                              IsAdmin = su.Is_admin,
+                              IsCustomer = su.Is_customer
                           },
                           Content = m.Content,
                           ConversationId = m.ConversationId,
@@ -72,37 +75,54 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                            {
                                Content = r.m.Content,
                                SentAt = r.m.SentAt,
-                               CustomerDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.CustomerId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault(),
-                               AgentDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AgentId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   PhoneNumber = e.phone,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault(),
-                               AdminDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AdminId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   PhoneNumber = e.phone,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault(),
-                               SenderDetails = _context.userstb.Where(e => e.id == w.Select(d => d.m.SenderId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   PhoneNumber = e.phone,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault()
+                               CustomerDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.c.CustomerId).FirstOrDefault())
+                                                  join su in _context.AspNetUsers on u.userid equals su.Id
+                                                  select new SenderDetails
+                                                  {
+                                                      FullName = u.fullname,
+                                                      Photo = u.Photo,
+                                                      userId = u.id,
+                                                      IsAgent = u.IsAgent,
+                                                      IsAdmin = su.Is_admin,
+                                                      IsCustomer = su.Is_customer,
+
+                                                  }).FirstOrDefault(),
+                               AgentDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.c.AgentId).FirstOrDefault())
+                                               join su in _context.AspNetUsers on u.userid equals su.Id
+                                               select new SenderDetails
+                                               {
+                                                   FullName = u.fullname,
+                                                   Photo = u.Photo,
+                                                   userId = u.id,
+                                                   IsAgent = u.IsAgent,
+                                                   IsAdmin = su.Is_admin,
+                                                   IsCustomer = su.Is_customer,
+
+                                               }).FirstOrDefault(),
+                               AdminDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.c.AdminId).FirstOrDefault())
+                                               join su in _context.AspNetUsers on u.userid equals su.Id
+                                               select new SenderDetails
+                                               {
+                                                   FullName = u.fullname,
+                                                   Photo = u.Photo,
+                                                   userId = u.id,
+                                                   IsAgent = u.IsAgent,
+                                                   IsAdmin = su.Is_admin,
+                                                   IsCustomer = su.Is_customer,
+
+                                               }).FirstOrDefault(),
+                               SenderDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.m.SenderId).FirstOrDefault())
+                                                join su in _context.AspNetUsers on u.userid equals su.Id
+                                                select new SenderDetails
+                                                {
+                                                    FullName = u.fullname,
+                                                    Photo = u.Photo,
+                                                    userId = u.id,
+                                                    IsAgent = u.IsAgent,
+                                                    IsAdmin = su.Is_admin,
+                                                    IsCustomer = su.Is_customer,
+
+                                                }).FirstOrDefault()
                            }).OrderBy(e => e.SentAt).LastOrDefault()
                        });
         return message;
@@ -149,37 +169,54 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                            {
                                Content = r.m.Content,
                                SentAt = r.m.SentAt,
-                               CustomerDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.CustomerId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault(),
-                               AgentDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AgentId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   PhoneNumber = e.phone,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault(),
-                               AdminDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AdminId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   PhoneNumber = e.phone,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault(),
-                               SenderDetails = _context.userstb.Where(e => e.id == w.Select(d => d.m.SenderId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   PhoneNumber = e.phone,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault()
+                               CustomerDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.c.CustomerId).FirstOrDefault())
+                                                  join su in _context.AspNetUsers on u.userid equals su.Id
+                                                  select new SenderDetails
+                                                  {
+                                                      FullName = u.fullname,
+                                                      Photo = u.Photo,
+                                                      userId = u.id,
+                                                      IsAgent = u.IsAgent,
+                                                      IsAdmin = su.Is_admin,
+                                                      IsCustomer = su.Is_customer,
+
+                                                  }).FirstOrDefault(),
+                               AgentDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.c.AgentId).FirstOrDefault())
+                                               join su in _context.AspNetUsers on u.userid equals su.Id
+                                               select new SenderDetails
+                                               {
+                                                   FullName = u.fullname,
+                                                   Photo = u.Photo,
+                                                   userId = u.id,
+                                                   IsAgent = u.IsAgent,
+                                                   IsAdmin = su.Is_admin,
+                                                   IsCustomer = su.Is_customer,
+
+                                               }).FirstOrDefault(),
+                               AdminDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.c.AdminId).FirstOrDefault())
+                                               join su in _context.AspNetUsers on u.userid equals su.Id
+                                               select new SenderDetails
+                                               {
+                                                   FullName = u.fullname,
+                                                   Photo = u.Photo,
+                                                   userId = u.id,
+                                                   IsAgent = u.IsAgent,
+                                                   IsAdmin = su.Is_admin,
+                                                   IsCustomer = su.Is_customer,
+
+                                               }).FirstOrDefault(),
+                               SenderDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.m.SenderId).FirstOrDefault())
+                                                join su in _context.AspNetUsers on u.userid equals su.Id
+                                                select new SenderDetails
+                                                {
+                                                    FullName = u.fullname,
+                                                    Photo = u.Photo,
+                                                    userId = u.id,
+                                                    IsAgent = u.IsAgent,
+                                                    IsAdmin = su.Is_admin,
+                                                    IsCustomer = su.Is_customer,
+
+                                                }).FirstOrDefault()
                            }).OrderBy(e => e.SentAt).LastOrDefault()
                        });
         return message;
@@ -200,38 +237,54 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                            {
                                Content = r.m.Content,
                                SentAt = r.m.SentAt,
-                               CustomerDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.CustomerId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   PhoneNumber = e.phone,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault(),
-                               AgentDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AgentId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   PhoneNumber = e.phone,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault(),
-                               AdminDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AdminId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   PhoneNumber = e.phone,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault(),
-                               SenderDetails = _context.userstb.Where(e => e.id == w.Select(d => d.m.SenderId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   PhoneNumber = e.phone,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault()
+                               CustomerDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.c.CustomerId).FirstOrDefault())
+                                                  join su in _context.AspNetUsers on u.userid equals su.Id
+                                                  select new SenderDetails
+                                                  {
+                                                      FullName = u.fullname,
+                                                      Photo = u.Photo,
+                                                      userId = u.id,
+                                                      IsAgent = u.IsAgent,
+                                                      IsAdmin = su.Is_admin,
+                                                      IsCustomer = su.Is_customer,
+
+                                                  }).FirstOrDefault(),
+                               AgentDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.c.AgentId).FirstOrDefault())
+                                               join su in _context.AspNetUsers on u.userid equals su.Id
+                                               select new SenderDetails
+                                               {
+                                                   FullName = u.fullname,
+                                                   Photo = u.Photo,
+                                                   userId = u.id,
+                                                   IsAgent = u.IsAgent,
+                                                   IsAdmin = su.Is_admin,
+                                                   IsCustomer = su.Is_customer,
+
+                                               }).FirstOrDefault(),
+                               AdminDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.c.AdminId).FirstOrDefault())
+                                               join su in _context.AspNetUsers on u.userid equals su.Id
+                                               select new SenderDetails
+                                               {
+                                                   FullName = u.fullname,
+                                                   Photo = u.Photo,
+                                                   userId = u.id,
+                                                   IsAgent = u.IsAgent,
+                                                   IsAdmin = su.Is_admin,
+                                                   IsCustomer = su.Is_customer,
+
+                                               }).FirstOrDefault(),
+                               SenderDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.m.SenderId).FirstOrDefault())
+                                                join su in _context.AspNetUsers on u.userid equals su.Id
+                                                select new SenderDetails
+                                                {
+                                                    FullName = u.fullname,
+                                                    Photo = u.Photo,
+                                                    userId = u.id,
+                                                    IsAgent = u.IsAgent,
+                                                    IsAdmin = su.Is_admin,
+                                                    IsCustomer = su.Is_customer,
+
+                                                }).FirstOrDefault()
                            }).OrderBy(e => e.SentAt).LastOrDefault()
                        });
         return message;
@@ -251,38 +304,54 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                            {
                                Content = r.m.Content,
                                SentAt = r.m.SentAt,
-                               CustomerDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.CustomerId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   PhoneNumber = e.phone,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault(),
-                               AgentDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AgentId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   PhoneNumber = e.phone,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault(),
-                               AdminDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AdminId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   PhoneNumber = e.phone,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault(),
-                               SenderDetails = _context.userstb.Where(e => e.id == w.Select(d => d.m.SenderId).FirstOrDefault()).Select(e => new SenderDetails
-                               {
-                                   FullName = e.fullname,
-                                   PhoneNumber = e.phone,
-                                   Photo = e.Photo,
-                                   userId = e.id,
-                                   IsAgent = e.IsAgent
-                               }).FirstOrDefault()
+                               CustomerDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.c.CustomerId).FirstOrDefault())
+                                                  join su in _context.AspNetUsers on u.userid equals su.Id
+                                                  select new SenderDetails
+                                                  {
+                                                      FullName = u.fullname,
+                                                      Photo = u.Photo,
+                                                      userId = u.id,
+                                                      IsAgent = u.IsAgent,
+                                                      IsAdmin = su.Is_admin,
+                                                      IsCustomer = su.Is_customer,
+
+                                                  }).FirstOrDefault(),
+                               AgentDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.c.AgentId).FirstOrDefault())
+                                               join su in _context.AspNetUsers on u.userid equals su.Id
+                                               select new SenderDetails
+                                               {
+                                                   FullName = u.fullname,
+                                                   Photo = u.Photo,
+                                                   userId = u.id,
+                                                   IsAgent = u.IsAgent,
+                                                   IsAdmin = su.Is_admin,
+                                                   IsCustomer = su.Is_customer,
+
+                                               }).FirstOrDefault(),
+                               AdminDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.c.AdminId).FirstOrDefault())
+                                               join su in _context.AspNetUsers on u.userid equals su.Id
+                                               select new SenderDetails
+                                               {
+                                                   FullName = u.fullname,
+                                                   Photo = u.Photo,
+                                                   userId = u.id,
+                                                   IsAgent = u.IsAgent,
+                                                   IsAdmin = su.Is_admin,
+                                                   IsCustomer = su.Is_customer,
+
+                                               }).FirstOrDefault(),
+                               SenderDetails = (from u in _context.userstb.Where(e => e.id == w.Select(d => d.m.SenderId).FirstOrDefault())
+                                                join su in _context.AspNetUsers on u.userid equals su.Id
+                                                select new SenderDetails
+                                                {
+                                                    FullName = u.fullname,
+                                                    Photo = u.Photo,
+                                                    userId = u.id,
+                                                    IsAgent = u.IsAgent,
+                                                    IsAdmin = su.Is_admin,
+                                                    IsCustomer = su.Is_customer,
+
+                                                }).FirstOrDefault()
                            }).OrderBy(e => e.SentAt).LastOrDefault()
                        });
         return message;
