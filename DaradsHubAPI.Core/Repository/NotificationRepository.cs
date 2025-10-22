@@ -94,6 +94,14 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                                    Photo = e.Photo,
                                    userId = e.id,
                                    IsAgent = e.IsAgent
+                               }).FirstOrDefault(),
+                               SenderDetails = _context.userstb.Where(e => e.id == w.Select(d => d.m.SenderId).FirstOrDefault()).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   PhoneNumber = e.phone,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
                                }).FirstOrDefault()
                            }).OrderBy(e => e.SentAt).LastOrDefault()
                        });
@@ -163,6 +171,14 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                                    Photo = e.Photo,
                                    userId = e.id,
                                    IsAgent = e.IsAgent
+                               }).FirstOrDefault(),
+                               SenderDetails = _context.userstb.Where(e => e.id == w.Select(d => d.m.SenderId).FirstOrDefault()).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   PhoneNumber = e.phone,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
                                }).FirstOrDefault()
                            }).OrderBy(e => e.SentAt).LastOrDefault()
                        });
@@ -207,6 +223,14 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                                    Photo = e.Photo,
                                    userId = e.id,
                                    IsAgent = e.IsAgent
+                               }).FirstOrDefault(),
+                               SenderDetails = _context.userstb.Where(e => e.id == w.Select(d => d.m.SenderId).FirstOrDefault()).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   PhoneNumber = e.phone,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
                                }).FirstOrDefault()
                            }).OrderBy(e => e.SentAt).LastOrDefault()
                        });
@@ -244,6 +268,14 @@ public class NotificationRepository(AppDbContext _context) : GenericRepository<H
                                    IsAgent = e.IsAgent
                                }).FirstOrDefault(),
                                AdminDetails = _context.userstb.Where(e => e.id == w.Select(d => d.c.AdminId).FirstOrDefault()).Select(e => new SenderDetails
+                               {
+                                   FullName = e.fullname,
+                                   PhoneNumber = e.phone,
+                                   Photo = e.Photo,
+                                   userId = e.id,
+                                   IsAgent = e.IsAgent
+                               }).FirstOrDefault(),
+                               SenderDetails = _context.userstb.Where(e => e.id == w.Select(d => d.m.SenderId).FirstOrDefault()).Select(e => new SenderDetails
                                {
                                    FullName = e.fullname,
                                    PhoneNumber = e.phone,

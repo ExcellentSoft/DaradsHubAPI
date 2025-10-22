@@ -110,6 +110,7 @@ namespace DaradsHubAPI.Core.Model.Request
         public SenderDetails? CustomerDetails { get; set; }
         public SenderDetails? AgentDetails { get; internal set; }
         public SenderDetails? AdminDetails { get; internal set; }
+        public SenderDetails? SenderDetails { get; internal set; }
     }
     public record SenderDetails
     {
