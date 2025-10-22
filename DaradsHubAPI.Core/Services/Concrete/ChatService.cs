@@ -29,6 +29,16 @@ public class ChatService(IUnitOfWork _unitOfWork, IEmailService _emailService) :
         var conversation = await _unitOfWork.Notifications.GetOrCreateConversation(request);
         return new ApiResponse<HubChatConversation> { Data = conversation, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
     }
+    public async Task<ApiResponse<HubChatConversation>> GetOrCreateAdminConversationWithAgent(CreateAdminConversationWithAgentRequest request)
+    {
+        var conversation = await _unitOfWork.Notifications.GetOrCreateAdminConversationWithAgent(request);
+        return new ApiResponse<HubChatConversation> { Data = conversation, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
+    }
+    public async Task<ApiResponse<HubChatConversation>> GetOrCreateAdminConversationWithCustomer(CreateAdminConversationWithCustomerRequest request)
+    {
+        var conversation = await _unitOfWork.Notifications.GetOrCreateAdminConversationWithCustomer(request);
+        return new ApiResponse<HubChatConversation> { Data = conversation, Message = "Successful", Status = true, StatusCode = StatusEnum.Success };
+    }
 
     public async Task<ApiResponse> ChangeAgentOnlineStatus(bool isOnline, int agentId)
     {
@@ -41,6 +51,17 @@ public class ChatService(IUnitOfWork _unitOfWork, IEmailService _emailService) :
         agent.IsOnline = isOnline;
         agent.ModifiedDate = GetLocalDateTime.CurrentDateTime();
         await _unitOfWork.Users.SaveAsync();
+
+        return new ApiResponse("Success", StatusEnum.Success, true);
+    }
+
+    public async Task<ApiResponse> JoinConversation(JoinConversationRequest request)
+    {
+        var (status, message) = await _unitOfWork.Notifications.JoinConversation(request);
+        if (!status)
+        {
+            return new ApiResponse(message, StatusEnum.Validation, false);
+        }
 
         return new ApiResponse("Success", StatusEnum.Success, true);
     }
@@ -80,7 +101,6 @@ public class ChatService(IUnitOfWork _unitOfWork, IEmailService _emailService) :
         {
             var email = string.Join(',', messages.Select(e => e.Email));
             await _emailService.SendMail(email, "Notice", emailMessages, "Darads", useTemplate: true);
-            await _emailService.SendMail("bello.netdev@gmail.com", "Notice", emailMessages, "Darads", useTemplate: true);
         }
     }
 
@@ -91,11 +111,25 @@ public class ChatService(IUnitOfWork _unitOfWork, IEmailService _emailService) :
         return new ApiResponse<IEnumerable<ViewChatMessagesResponse>> { Data = messages, Message = "Agent chats  fetched successfully.", Status = true, StatusCode = StatusEnum.Success };
     }
 
+    public async Task<ApiResponse<IEnumerable<ViewChatMessagesResponse>>> GetChatMessages()
+    {
+        var messages = await _unitOfWork.Notifications.GetChatMessages().ToListAsync();
+
+        return new ApiResponse<IEnumerable<ViewChatMessagesResponse>> { Data = messages, Message = "Chats Messages fetched successfully.", Status = true, StatusCode = StatusEnum.Success };
+    }
+
     public async Task<ApiResponse<IEnumerable<ViewChatMessagesResponse>>> GetCustomerChatMessages(int customerId)
     {
         var messages = await _unitOfWork.Notifications.GetCustomerChatMessages(customerId).ToListAsync();
 
         return new ApiResponse<IEnumerable<ViewChatMessagesResponse>> { Data = messages, Message = "Customer chats  fetched successfully.", Status = true, StatusCode = StatusEnum.Success };
+    }
+
+    public async Task<ApiResponse<IEnumerable<ViewChatMessagesResponse>>> GetAdminChatMessages(int adminId)
+    {
+        var messages = await _unitOfWork.Notifications.GetAdminChatMessages(adminId).ToListAsync();
+
+        return new ApiResponse<IEnumerable<ViewChatMessagesResponse>> { Data = messages, Message = "Admin chats  fetched successfully.", Status = true, StatusCode = StatusEnum.Success };
     }
 
     public async Task<ApiResponse> MarkAllMessageAsRead(long conversationId)

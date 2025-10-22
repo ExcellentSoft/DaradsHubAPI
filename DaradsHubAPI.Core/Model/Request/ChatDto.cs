@@ -17,3 +17,18 @@ public record CreateConversationRequest
     public int CustomerId { get; set; }
     public int AgentId { get; set; }
 }
+public record CreateAdminConversationWithAgentRequest
+{
+    public int AdminId { get; set; }
+    public int AgentId { get; set; }
+}
+public record CreateAdminConversationWithCustomerRequest
+{
+    public int AdminId { get; set; }
+    public int CustomerId { get; set; }
+}
+public record JoinConversationRequest
+{
+    public long ConversationId { get; set; }
+    public int AdminId { get; set; }
+}

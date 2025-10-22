@@ -75,4 +75,45 @@ public class ChatsController(IChatService _chatService) : ApiBaseController
         var response = await _chatService.ReportAgent(request);
         return ResponseCode(response);
     }
+
+
+    [HttpGet("admin/view-chats")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ViewChatMessagesResponse>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetChatMessages()
+    {
+        var response = await _chatService.GetChatMessages();
+        return ResponseCode(response);
+    }
+
+    [HttpPost("admin/join-conversation")]
+    [ProducesResponseType(typeof(ApiResponse), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> JoinConversation([FromBody] JoinConversationRequest request)
+    {
+        var response = await _chatService.JoinConversation(request);
+        return ResponseCode(response);
+    }
+
+    [HttpPost("admin/create-conversation-with-customer")]
+    [ProducesResponseType(typeof(ApiResponse<HubChatConversation>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetOrCreateAdminConversationWithCustomer([FromBody] CreateAdminConversationWithCustomerRequest request)
+    {
+        var response = await _chatService.GetOrCreateAdminConversationWithCustomer(request);
+        return ResponseCode(response);
+    }
+
+    [HttpPost("admin/create-conversation-with-agent")]
+    [ProducesResponseType(typeof(ApiResponse<HubChatConversation>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetOrCreateAdminConversationWithAgent([FromBody] CreateAdminConversationWithAgentRequest request)
+    {
+        var response = await _chatService.GetOrCreateAdminConversationWithAgent(request);
+        return ResponseCode(response);
+    }
+
+    [HttpGet("admin-chats")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ViewChatMessagesResponse>>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAdminChatMessages([FromQuery] int adminId)
+    {
+        var response = await _chatService.GetAdminChatMessages(adminId);
+        return ResponseCode(response);
+    }
 }
