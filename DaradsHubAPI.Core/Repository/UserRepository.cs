@@ -198,7 +198,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         if (user is null)
             return new(false, "User record not found, check and try again.", null);
         if (!await _userManager.CheckPasswordAsync(user!, request.PIN))
-            return new(false, "Unauthorized.", null);
+            return new(false, "The email address or password entered is incorrect.", null);
 
         try
         {
