@@ -157,19 +157,21 @@ public class AccountService(IUnitOfWork _unitOfWork, IFileService _fileService) 
 
     public async Task<ApiResponse> SubmitCashPay(SubmitCashPayRequest r)
     {
-        
+
         var entity = new CashPayment
         {
-            DepositorName=r.DepositorName, Amount =r.Amount,PayDate=GetLocalDateTime.CurrentDateTime(),
+            DepositorName = r.DepositorName,
+            Amount = r.Amount,
+            PayDate = GetLocalDateTime.CurrentDateTime(),
             BankName = r.BankName,
             PaidFromAccountName = r.PaidFromAccountName,
             PhoneNumber = r.PhoneNumber,
             Status = "Submitted",
             WalletUserId = r.UserEmail,
-          //  UpdateDate = GetLocalDateTime.CurrentDateTime()
+            //  UpdateDate = GetLocalDateTime.CurrentDateTime()
         };
         await _unitOfWork.Users.SubmitCashPayment(entity);
         //Send email to admin and customer 
-        return new ApiResponse("Your payment details submitted",StatusEnum.Success,true);
+        return new ApiResponse("Your payment details submitted", StatusEnum.Success, true);
     }
 }
