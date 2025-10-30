@@ -470,6 +470,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
         var response = new CustomerProfileResponse
         {
             Email = email,
+            FullName = customerUser.fullname,
             UserName = customerUser.username,
             PhoneNumber = customerUser.phone,
             Photo = customerUser.Photo,
@@ -482,6 +483,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
 
         return new(true, "Customer profile fetched successfully.", response);
     }
+
     public async Task<(bool status, string message, CustomerProfileResponse? res)> GetAdminProfile(string email)
     {
         var customerUser = await _context.userstb.FirstOrDefaultAsync(us => us.email == email);
@@ -604,8 +606,7 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
     }
     public async Task<(bool status, string message)> UpdateProfile(CustomerProfileRequest request, string email, string imagePath)
     {
-        var customerUser = await _context.userstb.Where(us => us.email == email).FirstOrDefaultAsync();
-        customerUser!.Photo = imagePath;
+
 
         if (_context.userstb.Any(us => us.phone == request.PhoneNumber && us.email != email))
         {
@@ -622,11 +623,13 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
             return new(false, result.Errors.Select(c => c.Description).FirstOrDefault() ?? "");
         }
 
-        var iCustomerUser = await _context.userstb.Where(us => us.email == email).ExecuteUpdateAsync(setter => setter
-                           .SetProperty(s => s.phone, request.PhoneNumber)
-                           .SetProperty(s => s.fullname, request.FullName)
-                           .SetProperty(s => s.Photo, string.IsNullOrEmpty(imagePath) ? customerUser.Photo : imagePath)
-                           .SetProperty(s => s.ModifiedDate, DateTime.Now));
+        var customerUser = await _context.userstb.Where(us => us.email == email).FirstOrDefaultAsync();
+        customerUser!.fullname = request.FullName;
+        customerUser.phone = request.PhoneNumber;
+        customerUser.Photo = string.IsNullOrEmpty(imagePath) ? customerUser.Photo : imagePath;
+        customerUser.ModifiedDate = GetLocalDateTime.CurrentDateTime();
+        await _context.SaveChangesAsync();
+
         var address = await _context.ShippingAddresses.FirstOrDefaultAsync(d => d.CustomerId == customerUser.id);
 
         if (address is null)
@@ -643,7 +646,6 @@ public class UserRepository(AppDbContext _context, UserManager<User> _userManage
             };
 
             _context.ShippingAddresses.Add(address);
-
         }
         else
         {
